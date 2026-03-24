@@ -62,7 +62,7 @@ Goal: make the current MVP consistently usable by early testers.
 - Add first-run checks for:
   - Ollama reachable
   - local model available
-  - `chromeai.local` reachable
+  - local bridge reachable at `127.0.0.1:8083`
 - Normalize output formatting for summarize, rewrite, and action extraction
 - Add preset prompts for:
   - summarize

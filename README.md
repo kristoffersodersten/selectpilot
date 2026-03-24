@@ -68,7 +68,7 @@ Most browser AI tools are thin wrappers around remote APIs. SelectPilot is built
 - Runs an agent-style workflow from the side panel with a user-editable prompt.
 - Stores license data locally and gates features by tier.
 - Enforces a local-only boundary for summarize, agent, and embed by ignoring Ollama cloud models.
-- Includes a local Python service, launchd wiring, and nginx proxy config for `http://chromeai.local`.
+- Includes a local Python service and launchd wiring for a direct local bridge at `http://127.0.0.1:8083`.
 - Keeps audio and vision flows as explicit experimental tools, not the main product promise.
 
 ## Project status
@@ -94,7 +94,8 @@ Most browser AI tools are thin wrappers around remote APIs. SelectPilot is built
 - `billing/`: Paddle checkout prototype
 - `licensing/`: local license storage and verification
 - `server/`: local Python service
-- `launchd/`, `nginx/`: local macOS setup
+- `launchd/`: local macOS setup
+- `nginx/`: legacy proxy config kept for reference, not required for the main install path
 
 ## Local setup
 
@@ -141,27 +142,11 @@ The bootstrapper will:
 - install the local LaunchAgent with the chosen profile
 - recommend a follow-up benchmark
 
-### 4. Add the local hostname
-
-Add this line to `/etc/hosts` if it is missing:
-
-```text
-127.0.0.1 chromeai.local
-```
-
-### 5. Install the nginx config
-
-```bash
-sudo cp nginx/chromeai.conf /usr/local/etc/nginx/nginx.conf
-sudo nginx -t
-sudo nginx -s reload
-```
-
-### 6. Load the unpacked extension
+### 4. Load the unpacked extension
 
 Open `chrome://extensions`, enable Developer Mode, choose `Load unpacked`, and select this project root.
 
-### 7. Make sure Ollama is running
+### 5. Make sure Ollama is running
 
 Examples:
 
@@ -172,7 +157,7 @@ ollama pull qwen2.5:0.5b
 ollama pull nomic-embed-text-v2-moe:latest
 ```
 
-### 8. Benchmark the profile
+### 6. Benchmark the profile
 
 After the local bridge is installed, run the built-in benchmark:
 
@@ -202,6 +187,7 @@ curl http://127.0.0.1:8083/health
 
 - The local Python service now forwards summarize, agent, and embed requests to Ollama and surfaces health information for the configured model.
 - The core privacy story is local-only for the selected-text path. Structured extraction requires an actual text selection, while summarize and ask can fall back to page text.
+- The main install path now talks directly to `127.0.0.1:8083`, which removes the old `nginx` and `/etc/hosts` steps from onboarding.
 - See [ZERO_LEAKAGE.md](./ZERO_LEAKAGE.md) for the exact claim and how to verify it.
 - Privacy-first is the product thesis, not a side feature.
 - Runtime JavaScript is generated from the `.ts` sources with `pnpm build` or `npm run build`.

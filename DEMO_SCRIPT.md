@@ -37,12 +37,12 @@ Show that the product is a privacy-first local execution layer for selected text
 
 6. Show the network boundary.
    - Open DevTools Network
-   - Filter for `chromeai.local`
+   - Filter for `127.0.0.1`
    - Point out that the extension talks to the local bridge only
 
 ## Suggested narration
 
-“SelectPilot is a privacy-first local execution layer for selected text. I highlight something on the web, open the side panel, and turn that selection into structured output using Ollama on my own machine. The bridge explicitly ignores Ollama cloud models, which you can verify in the health output. The extension talks only to `chromeai.local`, so the selected-text path stays on-device by design.”
+“SelectPilot is a privacy-first local execution layer for selected text. I highlight something on the web, open the side panel, and turn that selection into structured output using Ollama on my own machine. The bridge explicitly ignores Ollama cloud models, which you can verify in the health output. The extension talks directly to `127.0.0.1:8083`, so the selected-text path stays on-device by design.”
 
 ## What not to claim
 
@@ -55,4 +55,4 @@ Show that the product is a privacy-first local execution layer for selected text
 - Repo link
 - 60-90 second screen recording
 - Screenshot of `/health`
-- Screenshot of DevTools Network filtered to `chromeai.local`
+- Screenshot of DevTools Network filtered to `127.0.0.1`

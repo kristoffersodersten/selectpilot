@@ -6,7 +6,7 @@ The runtime is also profile-based: the product prefers the smallest viable local
 
 ## Core claim
 
-- Selected text is processed through a local bridge at `http://chromeai.local`.
+- Selected text is processed through a local bridge at `http://127.0.0.1:8083`.
 - The local bridge talks only to a locally running Ollama instance.
 - Cloud-hosted Ollama models are intentionally ignored for the core summarize, agent, and embed flows.
 - If a requested model is unavailable locally, the bridge falls back only to other local models.
@@ -30,7 +30,7 @@ The runtime is also profile-based: the product prefers the smallest viable local
 
 ## Allowed network boundary
 
-- Extension UI calls `http://chromeai.local`, which is mapped to `127.0.0.1`.
+- Extension UI calls `http://127.0.0.1:8083` directly.
 - The local bridge calls the configured Ollama base URL, which defaults to `http://127.0.0.1:11434`.
 - If only Ollama cloud models are installed, the bridge reports degraded health instead of sending selected text to them.
 
@@ -47,14 +47,14 @@ The runtime is also profile-based: the product prefers the smallest viable local
 ## How to verify
 
 1. Run `curl http://127.0.0.1:11434/api/tags` and confirm you have at least one local generation model installed.
-2. Run the local bridge and open `http://127.0.0.1:<port>/health`.
+2. Run the local bridge and open `http://127.0.0.1:8083/health`.
 3. Confirm the response includes:
    - `"privacy_mode": "local-only"`
    - `"model_available": true`
    - `"active_model"` set to a local model
    - `"ignored_remote_models"` listing any cloud models that were skipped
 4. Install or select the Fast profile and re-run the health check to confirm the smallest viable model is active.
-5. Open Chrome DevTools Network for the extension and verify requests are limited to `chromeai.local`.
+5. Open Chrome DevTools Network for the extension and verify requests are limited to `127.0.0.1:8083`.
 6. Verify there are no analytics or telemetry endpoints in the runtime path.
 
 ## Honest limitation

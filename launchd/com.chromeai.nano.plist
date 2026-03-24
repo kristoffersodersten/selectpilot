@@ -7,21 +7,21 @@
   <array>
     <string>/usr/bin/python3</string>
     <string>__PROJECT_ROOT__/server/nano_server.py</string>
-    <string>--port-range</string><string>8080-8100</string>
-    <string>--run-dir</string><string>/usr/local/var/run/chromeai</string>
-    <string>--log-dir</string><string>/usr/local/var/log/chromeai</string>
+    <string>--port</string><string>8083</string>
+    <string>--run-dir</string><string>__RUN_DIR__</string>
+    <string>--log-dir</string><string>__LOG_DIR__</string>
     <string>--binary-path</string><string>__PROJECT_ROOT__/server/nano_server.py</string>
   </array>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
-  <key>StandardOutPath</key><string>/usr/local/var/log/chromeai/nano.log</string>
-  <key>StandardErrorPath</key><string>/usr/local/var/log/chromeai/nano.err</string>
+  <key>StandardOutPath</key><string>__LOG_DIR__/nano.log</string>
+  <key>StandardErrorPath</key><string>__LOG_DIR__/nano.err</string>
   <key>WorkingDirectory</key><string>__PROJECT_ROOT__</string>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>CHROMEAI_PORT_INFO</key><string>/usr/local/var/run/chromeai/port.info</string>
-    <key>CHROMEAI_EXPECTED_PORT_FILE</key><string>/usr/local/var/run/chromeai/port.info</string>
-    <key>CHROMEAI_ALLOWED_RANGE</key><string>8080-8100</string>
+    <key>CHROMEAI_PORT_INFO</key><string>__RUN_DIR__/port.info</string>
+    <key>CHROMEAI_EXPECTED_PORT_FILE</key><string>__RUN_DIR__/port.info</string>
+    <key>CHROMEAI_ALLOWED_RANGE</key><string>8083</string>
     <key>CHROMEAI_OLLAMA_BASE_URL</key><string>__OLLAMA_BASE_URL__</string>
     <key>CHROMEAI_OLLAMA_MODEL</key><string>__OLLAMA_MODEL__</string>
     <key>CHROMEAI_OLLAMA_EMBED_MODEL</key><string>__OLLAMA_EMBED_MODEL__</string>

@@ -22,7 +22,7 @@
   <text x="588" y="286" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">LOCAL VERIFICATION</text>
   <text x="588" y="328" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="28" font-weight="600">Health output and network inspection</text>
   <rect x="588" y="362" width="568" height="232" rx="20" fill="#0F172A"/>
-  <text x="616" y="402" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="18">$ curl http://chromeai.local/health</text>
+  <text x="616" y="402" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="18">$ curl http://127.0.0.1:8083/health</text>
   <text x="616" y="442" fill="#93C5FD" font-family="SF Mono, Menlo, monospace" font-size="17">{</text>
   <text x="642" y="442" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="17">"ok": true,</text>
   <text x="642" y="474" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="17">"active_model": "qwen2.5:0.5b",</text>

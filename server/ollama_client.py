@@ -489,7 +489,7 @@ class OllamaClient:
     def benchmark(self) -> dict[str, Any]:
         started_at = perf_counter()
         extract_result = self.extract(
-            "Ship the beta on Friday. Update onboarding copy. Verify the nginx config before launch.",
+            "Ship the beta on Friday. Update onboarding copy. Validate the launch copy before publishing.",
             preset_key="action_brief",
             title="Launch prep",
             metadata={"benchmark": True},

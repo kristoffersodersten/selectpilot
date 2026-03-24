@@ -3,7 +3,6 @@ import argparse
 import hashlib
 import json
 import os
-import random
 import socket
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
@@ -12,8 +11,7 @@ from datetime import datetime, timezone
 from ollama_client import OllamaClient, OllamaError
 from runtime_profiles import build_bootstrap_commands, list_runtime_profiles, recommend_runtime_profile
 
-ALLOWED_MIN = 8080
-ALLOWED_MAX = 8100
+DEFAULT_PORT = 8083
 
 
 def verify_binary(path: Path, expected_hash: str | None = None) -> bool:
@@ -29,17 +27,6 @@ def verify_binary(path: Path, expected_hash: str | None = None) -> bool:
         print(f"binary hash mismatch: {digest} != {expected_hash}")
         return False
     return True
-
-
-def find_free_port(rng: range) -> int:
-    for _ in range(len(rng)):
-        port = random.choice(list(rng))
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            if s.connect_ex(("127.0.0.1", port)) != 0:
-                return port
-    raise RuntimeError("no free port in range")
-
-
 def ensure_dirs(path: Path):
     path.mkdir(parents=True, exist_ok=True)
 
@@ -206,9 +193,10 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--port-range', default='8080-8100')
-    parser.add_argument('--run-dir', default='/usr/local/var/run/chromeai')
-    parser.add_argument('--log-dir', default='/usr/local/var/log/chromeai')
+    parser.add_argument('--port', type=int, default=DEFAULT_PORT)
+    parser.add_argument('--port-range', default=None)
+    parser.add_argument('--run-dir', default=os.path.expanduser('~/Library/Application Support/SelectPilot/run'))
+    parser.add_argument('--log-dir', default=os.path.expanduser('~/Library/Logs/SelectPilot'))
     parser.add_argument('--binary-path', default=None)
     parser.add_argument('--binary-hash', default=None)
     args = parser.parse_args()
@@ -219,17 +207,13 @@ def main():
     ensure_dirs(log_dir)
     port_file = run_dir / 'port.info'
 
-    try:
-        pr = args.port_range.split('-')
-        rng = range(int(pr[0]), int(pr[1]) + 1)
-    except Exception:
-        rng = range(ALLOWED_MIN, ALLOWED_MAX + 1)
-
     binary_path = Path(args.binary_path) if args.binary_path else Path(__file__)
     expected = args.binary_hash or os.environ.get('CHROMEAI_BINARY_HASH')
     verify_binary(binary_path, expected)
-
-    port = find_free_port(rng)
+    port = args.port
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        if s.connect_ex(("127.0.0.1", port)) == 0:
+            raise RuntimeError(f"port {port} is already in use")
     write_port_info(port_file, port)
 
     server = HTTPServer(('127.0.0.1', port), Handler)

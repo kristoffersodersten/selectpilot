@@ -14,17 +14,11 @@
   - Generation: `qwen2.5:0.5b`
   - Embeddings: `nomic-embed-text-v2-moe:latest`
 - Verify loaded: `launchctl list | grep com.chromeai.nano`
-- Check logs: `tail -f /usr/local/var/log/chromeai/nano.log /usr/local/var/log/chromeai/nano.err`
-- Check port file: `cat /usr/local/var/run/chromeai/port.info`
-- Check listening port: `lsof -i :$(awk '{print $3}' /usr/local/var/run/chromeai/port.info 2>/dev/null | tr -dc '0-9')`
-
-## Nginx
-- Add to `/etc/hosts`: `127.0.0.1 chromeai.local`
-- Copy config: `sudo cp nginx/chromeai.conf /usr/local/etc/nginx/nginx.conf`
-- Test config: `sudo nginx -t`
-- Restart: `sudo nginx -s reload` or `sudo nginx`
+- Check logs: `tail -f ~/Library/Logs/SelectPilot/nano.log ~/Library/Logs/SelectPilot/nano.err`
+- Check port file: `cat ~/Library/Application\ Support/SelectPilot/run/port.info`
+- Check listening port: `lsof -i :8083`
 - Health check: `curl http://127.0.0.1:8083/health`
-- Verify proxy: `curl -H "Origin: chrome-extension://test" http://chromeai.local/summarize -d '{"text":"hello"}' -H 'Content-Type: application/json'`
+- Verify local bridge: `curl -H "Origin: chrome-extension://test" http://127.0.0.1:8083/summarize -d '{"text":"hello"}' -H 'Content-Type: application/json'`
 
 ## Ollama
 - Verify Ollama responds: `curl http://127.0.0.1:11434/api/tags`
@@ -43,19 +37,18 @@
 - Confirm the runtime strip shows the active model, ignored remote models, and local-only boundary.
 
 ## Endpoints direct
-- Summarize: `curl http://chromeai.local/summarize -H 'Content-Type: application/json' -d '{"text":"Sample sentence one. Sample sentence two."}'`
-- Extract: `curl http://chromeai.local/extract -H 'Content-Type: application/json' -d '{"preset":"action_brief","text":"Ship beta Friday. Update onboarding copy. Verify nginx config before launch.","title":"Launch prep","url":"https://example.com"}'`
-- Agent: `curl http://chromeai.local/agent -H 'Content-Type: application/json' -d '{"prompt":"Rewrite this as a crisp product pitch.","context":{"selection":"A browser tool that rewrites selected text locally.","url":"https://example.com","title":"Example"}}'`
-- Transcribe: `curl http://chromeai.local/transcribe -H 'Content-Type: application/json' -d '{"audioUrl":"file:///tmp/a.mp3"}'`
-- Vision: `curl http://chromeai.local/vision -H 'Content-Type: application/json' -d '{"imageBase64":"abc"}'`
-- Embed: `curl http://chromeai.local/embed -H 'Content-Type: application/json' -d '{"text":"embedding text"}'`
-- License: `curl http://chromeai.local/license/verify -H 'Content-Type: application/json' -d '{"token":"pro-123"}'`
+- Summarize: `curl http://127.0.0.1:8083/summarize -H 'Content-Type: application/json' -d '{"text":"Sample sentence one. Sample sentence two."}'`
+- Extract: `curl http://127.0.0.1:8083/extract -H 'Content-Type: application/json' -d '{"preset":"action_brief","text":"Ship beta Friday. Update onboarding copy. Validate launch copy before publishing.","title":"Launch prep","url":"https://example.com"}'`
+- Agent: `curl http://127.0.0.1:8083/agent -H 'Content-Type: application/json' -d '{"prompt":"Rewrite this as a crisp product pitch.","context":{"selection":"A browser tool that rewrites selected text locally.","url":"https://example.com","title":"Example"}}'`
+- Transcribe: `curl http://127.0.0.1:8083/transcribe -H 'Content-Type: application/json' -d '{"audioUrl":"file:///tmp/a.mp3"}'`
+- Vision: `curl http://127.0.0.1:8083/vision -H 'Content-Type: application/json' -d '{"imageBase64":"abc"}'`
+- Embed: `curl http://127.0.0.1:8083/embed -H 'Content-Type: application/json' -d '{"text":"embedding text"}'`
+- License: `curl http://127.0.0.1:8083/license/verify -H 'Content-Type: application/json' -d '{"token":"pro-123"}'`
 - Benchmark: `pnpm benchmark:local`
 
 ## Monitoring
-- Runtime errors: `tail -f /usr/local/var/log/chromeai/nano.err`
-- Ports: `cat /usr/local/var/run/chromeai/port.info`
-- Nginx access log (if enabled): `/usr/local/var/log/nginx/access.log`
+- Runtime errors: `tail -f ~/Library/Logs/SelectPilot/nano.err`
+- Ports: `cat ~/Library/Application\ Support/SelectPilot/run/port.info`
 - Benchmark targets for the Fast profile:
   - `Extract JSON`: should return quickly on short selections
   - `Summarize`: should feel immediate on normal paragraphs

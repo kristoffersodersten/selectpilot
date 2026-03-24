@@ -111,5 +111,5 @@ Generation model: $GEN_MODEL
 Embedding model: $EMBED_MODEL
 
 Next recommended command:
-  npm run benchmark:local
+  pnpm benchmark:local
 EOF

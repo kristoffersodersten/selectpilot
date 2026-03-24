@@ -322,19 +322,19 @@ async function request(type: string, payload: Record<string, unknown> = {}) {
 }
 
 async function fetchHealth() {
-  const res = await fetch('http://chromeai.local/health', { cache: 'no-store' });
+  const res = await fetch('http://127.0.0.1:8083/health', { cache: 'no-store' });
   if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
   return res.json();
 }
 
 async function fetchRuntimeProfiles() {
-  const res = await fetch('http://chromeai.local/profiles', { cache: 'no-store' });
+  const res = await fetch('http://127.0.0.1:8083/profiles', { cache: 'no-store' });
   if (!res.ok) throw new Error(`Profiles check failed: ${res.status}`);
   return (await res.json()) as RuntimeProfilesPayload;
 }
 
 async function runRuntimeBenchmark() {
-  const res = await fetch('http://chromeai.local/benchmark', {
+  const res = await fetch('http://127.0.0.1:8083/benchmark', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({}),

@@ -1,4 +1,4 @@
-export const API_BASE = 'http://chromeai.local';
+export const API_BASE = 'http://127.0.0.1:8083';
 export const endpoints = {
     summarize: `${API_BASE}/summarize`,
     extract: `${API_BASE}/extract`,
