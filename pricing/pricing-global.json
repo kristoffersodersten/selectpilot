@@ -1,0 +1,13 @@
+{
+  "trial": {
+    "enabled": true,
+    "duration_days": 7,
+    "access": "pro"
+  },
+  "tiers": {
+    "essential": 1.99,
+    "plus": 5.99,
+    "pro": 14.99
+  },
+  "offline_grace_days": 5
+}

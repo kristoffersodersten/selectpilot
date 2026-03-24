@@ -1,0 +1,5 @@
+.DS_Store
+node_modules/
+npm-debug.log*
+/usr/local/var/log/chromeai/
+/usr/local/var/run/chromeai/

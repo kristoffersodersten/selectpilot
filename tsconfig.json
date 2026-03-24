@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM"],
+    "types": ["chrome"],
+    "outDir": "./",
+    "rootDir": "./",
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "allowJs": true,
+    "noEmitOnError": false
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
+}

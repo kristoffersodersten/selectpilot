@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <div class="panel">
+    <header>
+      <div class="title">ChromeAI</div>
+      <div class="tier" id="tier"></div>
+    </header>
+    <section class="actions">
+      <button id="btn-summarize">Summarize</button>
+      <button id="btn-transcribe">Transcribe</button>
+      <button id="btn-vision">Vision OCR</button>
+      <button id="btn-agent">Agent Reason</button>
+    </section>
+    <section class="agent-prompt">
+      <label for="agent-prompt">Agent Prompt</label>
+      <textarea id="agent-prompt" rows="4">Reason over the captured context and produce structured output.</textarea>
+    </section>
+    <section class="status-bar" id="status-bar"></section>
+    <section class="workflow" id="workflow"></section>
+    <section class="exports" id="exports"></section>
+    <section class="status" id="status">Ready</section>
+  </div>
+  <script type="module" src="panel.js"></script>
+</body>
+</html>

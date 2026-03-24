@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.chromeai.nano</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/python3</string>
+    <string>__PROJECT_ROOT__/server/nano_server.py</string>
+    <string>--port-range</string><string>8080-8100</string>
+    <string>--run-dir</string><string>/usr/local/var/run/chromeai</string>
+    <string>--log-dir</string><string>/usr/local/var/log/chromeai</string>
+    <string>--binary-path</string><string>__PROJECT_ROOT__/server/nano_server.py</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
+  <key>StandardOutPath</key><string>/usr/local/var/log/chromeai/nano.log</string>
+  <key>StandardErrorPath</key><string>/usr/local/var/log/chromeai/nano.err</string>
+  <key>WorkingDirectory</key><string>__PROJECT_ROOT__</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>CHROMEAI_PORT_INFO</key><string>/usr/local/var/run/chromeai/port.info</string>
+    <key>CHROMEAI_EXPECTED_PORT_FILE</key><string>/usr/local/var/run/chromeai/port.info</string>
+    <key>CHROMEAI_ALLOWED_RANGE</key><string>8080-8100</string>
+    <key>CHROMEAI_BINARY_HASH</key><string>__BINARY_HASH__</string>
+  </dict>
+</dict>
+</plist>

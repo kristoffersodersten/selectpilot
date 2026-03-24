@@ -1,0 +1,120 @@
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.20);
+  --glass-border: rgba(255, 255, 255, 0.28);
+  --glass-blur: blur(32px) saturate(180%);
+  --glass-radius: 28px;
+  --panel-max-width: 420px;
+  --panel-padding: 24px;
+  --font: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-family: var(--font);
+  overflow: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.panel {
+  position: relative;
+  z-index: 1;
+  max-width: var(--panel-max-width);
+  margin: 12px auto;
+  padding: var(--panel-padding);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: none;
+  color: #0f172a;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.title { font-size: 18px; font-weight: 700; }
+
+.tier { font-size: 12px; padding: 6px 10px; border: 1px solid var(--glass-border); border-radius: 999px; backdrop-filter: var(--glass-blur); }
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.agent-prompt {
+  margin-bottom: 12px;
+}
+
+.agent-prompt label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.agent-prompt textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 88px;
+  padding: 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  background: rgba(255,255,255,0.28);
+  color: #0f172a;
+  resize: vertical;
+  font: inherit;
+}
+
+.actions button {
+  padding: 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  background: rgba(255,255,255,0.32);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.workflow, .exports {
+  margin-bottom: 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 12px;
+  background: rgba(255,255,255,0.24);
+}
+
+.status-bar {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.24);
+  font-size: 12px;
+}
+
+.status {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+pre {
+  white-space: pre-wrap;
+  background: rgba(15, 23, 42, 0.08);
+  padding: 8px;
+  border-radius: 12px;
+}

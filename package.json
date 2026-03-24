@@ -1,0 +1,16 @@
+{
+  "name": "chromeai-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Chrome extension MVP for local AI-assisted capture, summarization, and side-panel workflows.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "validate:server": "python3 server/nano_server.py --run-dir /tmp/chromeai-run --log-dir /tmp/chromeai-log"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.29",
+    "typescript": "^5.9.2"
+  }
+}

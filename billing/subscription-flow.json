@@ -1,0 +1,15 @@
+{
+  "trial": {
+    "enabled": true,
+    "duration_days": 7,
+    "access": "pro"
+  },
+  "steps": [
+    "check_license",
+    "apply_trial_if_eligible",
+    "present_checkout",
+    "verify_license",
+    "unlock_features"
+  ],
+  "offline_grace_days": 5
+}
