@@ -1,45 +1,40 @@
 <svg width="1280" height="800" viewBox="0 0 1280 800" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="1280" height="800" fill="#F3F5F8"/>
-  <rect x="40" y="40" width="1200" height="720" rx="34" fill="rgba(255,255,255,0.86)" stroke="#DCE3ED" stroke-width="2"/>
-  <text x="84" y="110" fill="#64748B" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="16" font-weight="700" letter-spacing="1.2">FIRST-RUN SETUP</text>
-  <text x="84" y="160" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="42" font-weight="600" letter-spacing="-1.6">Detect. Install. Benchmark. Assign profile.</text>
-  <text x="84" y="200" fill="#64748B" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="22">The smallest viable local model wins, not the biggest one your machine can survive.</text>
+  <rect x="52" y="44" width="1176" height="712" rx="34" fill="#FCFCFD" stroke="#DEE5EE" stroke-width="2"/>
 
-  <rect x="84" y="248" width="1112" height="100" rx="24" fill="#FFFFFF" stroke="#D7DEE9" stroke-width="2"/>
-  <text x="112" y="286" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">ENVIRONMENT TRUTH</text>
+  <text x="96" y="110" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="15" font-weight="700" letter-spacing="1.2">FIRST-RUN SETUP</text>
+  <text x="96" y="160" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="38" font-weight="600" letter-spacing="-1.2">Detect. Install. Benchmark. Assign profile.</text>
+  <text x="96" y="198" fill="#64748B" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="21">Choose the smallest viable model for the workload, not the biggest one the machine can tolerate.</text>
+
+  <rect x="96" y="238" width="1088" height="96" rx="24" fill="#FFFFFF" stroke="#D7DEE9" stroke-width="2"/>
+  <text x="124" y="274" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">ENVIRONMENT TRUTH</text>
   <g>
-    <rect x="112" y="302" width="164" height="28" rx="14" fill="#EEF2F7"/>
-    <text x="132" y="321" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="15" font-weight="600">Execution: Local</text>
-    <rect x="292" y="302" width="198" height="28" rx="14" fill="#EEF2F7"/>
-    <text x="312" y="321" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="15" font-weight="600">Model: qwen2.5:0.5b</text>
-    <rect x="506" y="302" width="246" height="28" rx="14" fill="#EEF2F7"/>
-    <text x="526" y="321" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="15" font-weight="600">Boundary: Selected text stays local</text>
-    <rect x="768" y="302" width="146" height="28" rx="14" fill="#EEF2F7"/>
-    <text x="788" y="321" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="15" font-weight="600">Profile: Fast</text>
-    <rect x="930" y="302" width="122" height="28" rx="14" fill="#EEF2F7"/>
-    <text x="950" y="321" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="15" font-weight="600">Health: 1934 ms</text>
+    <rect x="124" y="290" width="162" height="26" rx="13" fill="#EEF2F7"/>
+    <text x="144" y="307" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="14" font-weight="600">Execution: Local</text>
+    <rect x="302" y="290" width="188" height="26" rx="13" fill="#EEF2F7"/>
+    <text x="322" y="307" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="14" font-weight="600">Model: qwen2.5:0.5b</text>
+    <rect x="506" y="290" width="236" height="26" rx="13" fill="#EEF2F7"/>
+    <text x="526" y="307" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="14" font-weight="600">Boundary: Selected text stays local</text>
+    <rect x="758" y="290" width="134" height="26" rx="13" fill="#EEF2F7"/>
+    <text x="778" y="307" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="14" font-weight="600">Profile: Fast</text>
+    <rect x="908" y="290" width="124" height="26" rx="13" fill="#EEF2F7"/>
+    <text x="928" y="307" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="14" font-weight="600">Health: 1934 ms</text>
   </g>
 
-  <g>
-    <rect x="84" y="390" width="352" height="286" rx="24" fill="#FBFBFC" stroke="#E3E8EF"/>
-    <text x="112" y="430" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">FAST</text>
-    <text x="112" y="470" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="26" font-weight="600">Fast profile</text>
-    <text x="112" y="506" fill="#64748B" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="20">Smallest viable model for extraction, summaries, and short transforms.</text>
-    <rect x="112" y="548" width="146" height="44" rx="14" fill="#0F172A"/>
-    <text x="148" y="576" fill="#F8FAFC" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="18" font-weight="600">Recommended</text>
-  </g>
+  <rect x="96" y="386" width="320" height="246" rx="24" fill="#FBFBFC" stroke="#E3E8EF"/>
+  <text x="124" y="424" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">FAST</text>
+  <text x="124" y="462" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="28" font-weight="600">Fast profile</text>
+  <text x="124" y="498" fill="#64748B" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="19">Smallest viable model for extraction, summaries, and short transforms.</text>
+  <rect x="124" y="546" width="146" height="42" rx="14" fill="#0F172A"/>
+  <text x="160" y="573" fill="#F8FAFC" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="18" font-weight="600">Recommended</text>
 
-  <g>
-    <rect x="464" y="390" width="352" height="286" rx="24" fill="#FBFBFC" stroke="#E3E8EF"/>
-    <text x="492" y="430" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">BALANCED</text>
-    <text x="492" y="470" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="26" font-weight="600">Balanced profile</text>
-    <text x="492" y="506" fill="#64748B" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="20">Higher quality when the machine can justify it without overprovisioning.</text>
-  </g>
+  <rect x="480" y="386" width="320" height="246" rx="24" fill="#FBFBFC" stroke="#E3E8EF"/>
+  <text x="508" y="424" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">BALANCED</text>
+  <text x="508" y="462" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="28" font-weight="600">Balanced profile</text>
+  <text x="508" y="498" fill="#64748B" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="19">Higher quality when the machine can justify it without overprovisioning.</text>
 
-  <g>
-    <rect x="844" y="390" width="352" height="286" rx="24" fill="#FBFBFC" stroke="#E3E8EF"/>
-    <text x="872" y="430" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">ADVANCED</text>
-    <text x="872" y="470" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="26" font-weight="600">Advanced profile</text>
-    <text x="872" y="506" fill="#64748B" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="20">Manual opt-in for heavier reasoning. Never the default recommendation.</text>
-  </g>
+  <rect x="864" y="386" width="320" height="246" rx="24" fill="#FBFBFC" stroke="#E3E8EF"/>
+  <text x="892" y="424" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">ADVANCED</text>
+  <text x="892" y="462" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="28" font-weight="600">Advanced profile</text>
+  <text x="892" y="498" fill="#64748B" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="19">Manual opt-in for heavier reasoning. Never the default recommendation.</text>
 </svg>
