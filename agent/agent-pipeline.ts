@@ -44,7 +44,7 @@ function buildPrompt(
 
 export async function runPipeline(input: string, context: AgentContext, userPrompt?: string): Promise<AgentOutput> {
   const detected = detectInput(context);
-  const normalized = normalizeMarkdown(input || context.markdown || context.selection || '') || 'No content provided.';
+  const normalized = normalizeMarkdown(input || context.selection || context.pageText || context.markdown || '') || 'No content provided.';
   const contentClass = classifyContent(normalized);
   const chain = buildReasoningChain([
     `Detect input (${detected.summary})`,

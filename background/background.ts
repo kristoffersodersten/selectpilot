@@ -1,4 +1,4 @@
-import { summarize, transcribe, vision } from '../api/nano-client.js';
+import { extract, summarize, transcribe, vision } from '../api/nano-client.js';
 import { runPipeline } from '../agent/agent-pipeline.js';
 import { log, error } from '../utils/logger.js';
 import { requireFeature, getLicenseTier } from './tier-service.js';
@@ -30,14 +30,16 @@ async function collectContext(): Promise<AgentContext> {
     requestFromContent(tab.id, 'content:get_video')
   ]);
 
-  const text = (selection as any)?.text?.text || (doc as any)?.documentText?.text || '';
+  const selectionText = (selection as any)?.text?.text || '';
+  const documentText = (doc as any)?.documentText?.text || '';
   const url = (selection as any)?.text?.url || (doc as any)?.documentText?.url || tab.url;
   const title = (selection as any)?.text?.title || (doc as any)?.documentText?.title || tab.title;
 
   return {
     url: url || undefined,
     title: title || undefined,
-    selection: text,
+    selection: selectionText || undefined,
+    pageText: documentText || undefined,
     media: {
       audio: (audio as any)?.audio?.audioUrl,
       videoFrame: (video as any)?.video?.frame,
@@ -53,9 +55,16 @@ async function collectContext(): Promise<AgentContext> {
 
 async function handleSummarize(): Promise<any> {
   const context = await collectContext();
-  const text = context.selection || context.markdown || '';
+  const text = context.selection || context.pageText || context.markdown || '';
   const payload = { text, url: context.url, title: context.title, metadata: context.metadata };
   return summarize(payload);
+}
+
+async function handleExtract(preset?: string): Promise<any> {
+  const context = await collectContext();
+  const text = context.selection || '';
+  if (!text.trim()) throw new Error('Highlight text before extracting structured output');
+  return extract({ text, preset, url: context.url, title: context.title, metadata: context.metadata });
 }
 
 async function handleTranscribe(): Promise<any> {
@@ -79,7 +88,7 @@ async function handleAgent(prompt: string): Promise<any> {
   const tier = await getLicenseTier();
   if (tier === 'essential') throw new Error('Agent requires plus or pro tier');
   const context = await collectContext();
-  const content = context.selection || context.markdown || '';
+  const content = context.selection || context.pageText || context.markdown || '';
   return runPipeline(content, context, prompt);
 }
 
@@ -92,6 +101,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       }
       if (msg.type === 'panel:transcribe') {
         sendResponse(await handleTranscribe());
+        return;
+      }
+      if (msg.type === 'panel:extract') {
+        sendResponse(await handleExtract(msg.preset));
         return;
       }
       if (msg.type === 'panel:vision') {

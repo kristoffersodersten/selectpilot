@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Privacy-first local browser copilot for selected text, powered by Ollama.",
+  "description": "Privacy-first local execution layer for selected text, powered by Ollama.",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test tests/panel/*.test.mjs && python3 -m unittest discover -s tests/server -p 'test_*.py'",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "validate:server": "python3 server/nano_server.py --run-dir /tmp/chromeai-run --log-dir /tmp/chromeai-log"
   },

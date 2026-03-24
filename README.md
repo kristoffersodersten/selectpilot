@@ -1,6 +1,6 @@
 # SelectPilot
 
-SelectPilot is a privacy-first, local-first browser copilot for selected text. Highlight something on the web, open the side panel, and turn that selection into a summary, rewrite, action list, or prompted answer using Ollama running on your machine.
+SelectPilot is a privacy-first local execution layer for selected text. Highlight something on the web, open the side panel, and turn that selection into structured output, summaries, rewrites, or prompted answers using Ollama running on your machine.
 
 This is still an MVP, but the core loop is real and intentionally constrained: selected text is captured in the extension, routed through a local Python bridge, sent to a local Ollama model, and rendered back in a Chrome side panel without sending the selected-text path to hosted inference.
 
@@ -13,17 +13,18 @@ Most browser AI tools are thin wrappers around remote APIs. SelectPilot is built
 
 - Privacy first: the core selected-text path stays local by design.
 - Zero leakage on the main workflow: selected text is not sent to cloud-hosted Ollama models.
-- Useful before broad: summarize, rewrite, and extract actions from highlighted text quickly.
+- Useful before broad: summarize, rewrite, and extract structured output from highlighted text quickly.
 
 ## Privacy-first promise
 
-- `Summarize`, `Ask`, and `Embed` run through a local bridge and local Ollama models.
+- `Extract JSON`, `Summarize`, `Ask`, and `Embed` run through a local bridge and local Ollama models.
 - Cloud Ollama models are explicitly ignored for the core selected-text path.
 - No telemetry or analytics are part of the runtime flow.
 - The privacy boundary is visible and testable through the `/health` endpoint and DevTools network inspection.
 
 ## What it does
 
+- Extracts reusable JSON from selected text with preset schemas such as Action Brief, Generic JSON, Job Brief, and Decision Log.
 - Summarizes selected text or page content from the active tab via Ollama.
 - Rewrites or transforms selected text with prompted local model calls.
 - Extracts action items and next steps from highlighted content.
@@ -133,7 +134,8 @@ curl http://127.0.0.1:8083/health
 ## Notes
 
 - The local Python service now forwards summarize, agent, and embed requests to Ollama and surfaces health information for the configured model.
-- The core privacy story is local-only for the selected-text path. See [ZERO_LEAKAGE.md](./ZERO_LEAKAGE.md) for the exact claim and how to verify it.
+- The core privacy story is local-only for the selected-text path. Structured extraction requires an actual text selection, while summarize and ask can fall back to page text.
+- See [ZERO_LEAKAGE.md](./ZERO_LEAKAGE.md) for the exact claim and how to verify it.
 - Privacy-first is the product thesis, not a side feature.
 - Runtime JavaScript is generated from the `.ts` sources with `npm run build`.
 - The project is best presented as a focused selected-text MVP, not as a polished all-in-one browser assistant.

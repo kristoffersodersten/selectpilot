@@ -9,28 +9,34 @@
   <div class="panel">
     <header>
       <div>
-        <div class="eyebrow">Local-first copilot</div>
+        <div class="eyebrow">Privacy-first execution layer</div>
         <div class="title">SelectPilot</div>
       </div>
       <div class="tier" id="tier"></div>
     </header>
     <p class="lede">
-      Highlight text, open the side panel, and turn it into a summary, rewrite, or next step with your local Ollama setup.
+      Highlight text, open the side panel, and turn it into structured output with your local Ollama setup.
     </p>
     <section class="actions">
+      <button id="btn-extract">Extract JSON</button>
       <button id="btn-summarize">Summarize</button>
       <button id="btn-rewrite">Rewrite</button>
-      <button id="btn-actions">Extract actions</button>
+      <button id="btn-actions">Action brief</button>
       <button id="btn-ask">Ask Ollama</button>
     </section>
+    <section class="extract-config">
+      <label for="extract-preset">Structured extraction preset</label>
+      <select id="extract-preset"></select>
+      <p class="extract-help" id="extract-help"></p>
+    </section>
     <section class="agent-prompt">
-      <label for="agent-prompt">Custom prompt</label>
+      <label for="agent-prompt">Custom prompt for rewrite / ask</label>
       <textarea id="agent-prompt" rows="4">Turn the selected text into a concise, practical output.</textarea>
     </section>
     <section class="workflow" id="workflow">
       <div class="empty-state">
         <strong>Ready for selected text.</strong>
-        <span>Open a page, highlight content, then choose a transform.</span>
+        <span>Open a page, highlight content, then choose an action or a structured extraction preset.</span>
       </div>
     </section>
     <details class="advanced">

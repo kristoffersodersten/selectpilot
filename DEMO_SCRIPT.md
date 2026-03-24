@@ -2,7 +2,7 @@
 
 ## Goal
 
-Show that the product is a local-first selected-text copilot and that the privacy boundary is concrete, not marketing copy.
+Show that the product is a privacy-first local execution layer for selected text and that the privacy boundary is concrete, not marketing copy.
 
 ## Demo flow
 
@@ -21,10 +21,12 @@ Show that the product is a local-first selected-text copilot and that the privac
 3. Open the extension on a real page.
    - Highlight a paragraph
    - Open the side panel
-   - Click `Summarize`
+   - Click `Extract JSON`
+   - Pick `Action Brief` or `Job Brief`
 
 4. Show the result.
    - Call out that the output came from the local model
+   - Show the Markdown and JSON panes
    - Repeat with `Rewrite` or `Ask Ollama`
 
 5. Show the network boundary.
@@ -34,7 +36,7 @@ Show that the product is a local-first selected-text copilot and that the privac
 
 ## Suggested narration
 
-“SelectPilot is a local-first browser copilot for selected text. I highlight something on the web, open the side panel, and summarize or transform it using Ollama on my own machine. The bridge explicitly ignores Ollama cloud models, which you can verify in the health output. The extension talks only to `chromeai.local`, so the selected-text path stays on-device by design.”
+“SelectPilot is a privacy-first local execution layer for selected text. I highlight something on the web, open the side panel, and turn that selection into structured output using Ollama on my own machine. The bridge explicitly ignores Ollama cloud models, which you can verify in the health output. The extension talks only to `chromeai.local`, so the selected-text path stays on-device by design.”
 
 ## What not to claim
 

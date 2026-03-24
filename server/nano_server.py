@@ -77,6 +77,16 @@ def agent(payload: dict) -> dict:
     return OLLAMA.agent(prompt, ctx)
 
 
+def extract(payload: dict) -> dict:
+    return OLLAMA.extract(
+        payload.get("text", ""),
+        preset_key=payload.get("preset"),
+        title=payload.get("title"),
+        url=payload.get("url"),
+        metadata=payload.get("metadata"),
+    )
+
+
 def license_verify(payload: dict) -> dict:
     token = payload.get("token", "")
     tier = "pro" if "pro" in token else "plus" if "plus" in token else "essential"
@@ -145,6 +155,12 @@ class Handler(BaseHTTPRequestHandler):
         elif path == '/agent':
             try:
                 resp = agent(payload)
+            except OllamaError as e:
+                self._write_json(503, {"ok": False, "error": {"code": "ollama_unavailable", "message": str(e)}})
+                return
+        elif path == '/extract':
+            try:
+                resp = extract(payload)
             except OllamaError as e:
                 self._write_json(503, {"ok": False, "error": {"code": "ollama_unavailable", "message": str(e)}})
                 return

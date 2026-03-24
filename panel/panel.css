@@ -93,6 +93,37 @@ header {
   margin-bottom: 12px;
 }
 
+.extract-config {
+  margin-bottom: 12px;
+}
+
+.extract-config label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.extract-config select {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  font: inherit;
+}
+
+.extract-help {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .agent-prompt {
   margin-bottom: 12px;
 }
@@ -129,6 +160,13 @@ header {
   transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
 }
 
+.actions button:disabled,
+.advanced-grid button:disabled {
+  opacity: 0.5;
+  cursor: progress;
+  transform: none;
+}
+
 .actions button:hover,
 .advanced-grid button:hover {
   transform: translateY(-1px);
@@ -148,6 +186,11 @@ header {
   gap: 8px;
 }
 
+.output-grid {
+  display: grid;
+  gap: 12px;
+}
+
 .output-eyebrow {
   font-size: 10px;
   letter-spacing: 0.12em;
@@ -158,6 +201,28 @@ header {
 .output-card h3 {
   margin: 0;
   font-size: 15px;
+}
+
+.output-meta {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.export-actions button {
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .status-bar {
@@ -222,7 +287,8 @@ pre {
   margin: 0;
   white-space: pre-wrap;
   background: rgba(255,255,255,0.05);
-  padding: 8px;
+  padding: 10px;
   border-radius: 12px;
   color: var(--text);
+  overflow-x: auto;
 }

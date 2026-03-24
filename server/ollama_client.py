@@ -7,6 +7,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
+from extraction_presets import get_extraction_preset, render_extraction_markdown
+
 
 def _json_loads_maybe(value: Any) -> Any:
     if isinstance(value, (dict, list)):
@@ -291,7 +293,7 @@ class OllamaClient:
     def agent(self, prompt: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
         model = self.active_generation_model(self._model_names(local_only=True))
         context = context or {}
-        selected_text = str(context.get("selection") or context.get("markdown") or "").strip()
+        selected_text = str(context.get("selection") or context.get("pageText") or context.get("markdown") or "").strip()
         schema = {
             "type": "object",
             "properties": {
@@ -395,6 +397,70 @@ class OllamaClient:
             "reasoning": reasoning,
             "markdown": markdown,
             "json": details,
+            "model": response.get("model", model),
+            "source": "ollama",
+            "raw_response": raw_response,
+        }
+
+    def extract(
+        self,
+        text: str,
+        preset_key: str | None = None,
+        title: str | None = None,
+        url: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        model = self.active_generation_model(self._model_names(local_only=True))
+        preset = get_extraction_preset(preset_key)
+        prompt = (
+            "You are SelectPilot, a privacy-first local execution layer for selected text.\n"
+            "Turn the selected text into structured, actionable JSON only.\n"
+            f"Preset: {preset.label}\n"
+            f"Preset description: {preset.description}\n"
+            f"Instructions:\n{preset.instructions}\n\n"
+            f"Title: {title or ''}\n"
+            f"URL: {url or ''}\n"
+            f"Metadata: {json.dumps(metadata or {}, ensure_ascii=True)}\n\n"
+            f"Selected text:\n{text.strip()}"
+        )
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "system": "You generate clean structured extraction results for highlighted browser text.",
+            "stream": False,
+            "format": preset.schema,
+            "options": {"temperature": 0.1},
+        }
+        response = self._request_json("/api/generate", payload)
+        raw_response = str(response.get("response", "")).strip()
+        content = _parse_jsonish(raw_response)
+        if not isinstance(content, dict):
+            content = {}
+
+        normalized: dict[str, Any] = {}
+        schema_props = preset.schema.get("properties", {})
+        for key, prop in schema_props.items():
+            raw_value = content.get(key)
+            if prop.get("type") == "array":
+                if isinstance(raw_value, list):
+                    normalized[key] = [str(item).strip() for item in raw_value if str(item).strip()]
+                elif isinstance(raw_value, str) and raw_value.strip():
+                    normalized[key] = [raw_value.strip()]
+                else:
+                    normalized[key] = []
+            else:
+                normalized[key] = str(raw_value or "").strip()
+
+        if not any(normalized.values()):
+            normalized[preset.intro_key] = raw_response or "No extraction produced."
+
+        markdown = render_extraction_markdown(preset, normalized)
+        return {
+            "preset": preset.key,
+            "label": preset.label,
+            "description": preset.description,
+            "json": normalized,
+            "markdown": markdown,
             "model": response.get("model", model),
             "source": "ollama",
             "raw_response": raw_response,

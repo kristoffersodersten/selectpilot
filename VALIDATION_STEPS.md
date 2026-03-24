@@ -29,11 +29,13 @@
 - Load unpacked: `chrome://extensions` → enable Developer Mode → Load unpacked → select the project root.
 - Open popup → open side panel.
 - Highlight text on a page.
-- Trigger buttons: Summarize, Rewrite, Extract actions, Ask Ollama.
+- Trigger buttons: `Extract JSON`, `Summarize`, `Rewrite`, `Action brief`, `Ask Ollama`.
+- Change the extraction preset and verify the JSON pane and export buttons update.
 - Use Advanced tools only for experimental Transcribe/Vision flows.
 
 ## Endpoints direct
 - Summarize: `curl http://chromeai.local/summarize -H 'Content-Type: application/json' -d '{"text":"Sample sentence one. Sample sentence two."}'`
+- Extract: `curl http://chromeai.local/extract -H 'Content-Type: application/json' -d '{"preset":"action_brief","text":"Ship beta Friday. Update onboarding copy. Verify nginx config before launch.","title":"Launch prep","url":"https://example.com"}'`
 - Agent: `curl http://chromeai.local/agent -H 'Content-Type: application/json' -d '{"prompt":"Rewrite this as a crisp product pitch.","context":{"selection":"A browser tool that rewrites selected text locally.","url":"https://example.com","title":"Example"}}'`
 - Transcribe: `curl http://chromeai.local/transcribe -H 'Content-Type: application/json' -d '{"audioUrl":"file:///tmp/a.mp3"}'`
 - Vision: `curl http://chromeai.local/vision -H 'Content-Type: application/json' -d '{"imageBase64":"abc"}'`

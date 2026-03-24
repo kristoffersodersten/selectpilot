@@ -1,4 +1,4 @@
-import { summarize, transcribe, vision } from '../api/nano-client.js';
+import { extract, summarize, transcribe, vision } from '../api/nano-client.js';
 import { runPipeline } from '../agent/agent-pipeline.js';
 import { log, error } from '../utils/logger.js';
 import { requireFeature, getLicenseTier } from './tier-service.js';
@@ -27,13 +27,15 @@ async function collectContext() {
         requestFromContent(tab.id, 'content:get_audio'),
         requestFromContent(tab.id, 'content:get_video')
     ]);
-    const text = selection?.text?.text || doc?.documentText?.text || '';
+    const selectionText = selection?.text?.text || '';
+    const documentText = doc?.documentText?.text || '';
     const url = selection?.text?.url || doc?.documentText?.url || tab.url;
     const title = selection?.text?.title || doc?.documentText?.title || tab.title;
     return {
         url: url || undefined,
         title: title || undefined,
-        selection: text,
+        selection: selectionText || undefined,
+        pageText: documentText || undefined,
         media: {
             audio: audio?.audio?.audioUrl,
             videoFrame: video?.video?.frame,
@@ -48,9 +50,16 @@ async function collectContext() {
 }
 async function handleSummarize() {
     const context = await collectContext();
-    const text = context.selection || context.markdown || '';
+    const text = context.selection || context.pageText || context.markdown || '';
     const payload = { text, url: context.url, title: context.title, metadata: context.metadata };
     return summarize(payload);
+}
+async function handleExtract(preset) {
+    const context = await collectContext();
+    const text = context.selection || '';
+    if (!text.trim())
+        throw new Error('Highlight text before extracting structured output');
+    return extract({ text, preset, url: context.url, title: context.title, metadata: context.metadata });
 }
 async function handleTranscribe() {
     const { allowed } = await requireFeature('audio_transcription');
@@ -76,7 +85,7 @@ async function handleAgent(prompt) {
     if (tier === 'essential')
         throw new Error('Agent requires plus or pro tier');
     const context = await collectContext();
-    const content = context.selection || context.markdown || '';
+    const content = context.selection || context.pageText || context.markdown || '';
     return runPipeline(content, context, prompt);
 }
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -88,6 +97,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
             }
             if (msg.type === 'panel:transcribe') {
                 sendResponse(await handleTranscribe());
+                return;
+            }
+            if (msg.type === 'panel:extract') {
+                sendResponse(await handleExtract(msg.preset));
                 return;
             }
             if (msg.type === 'panel:vision') {

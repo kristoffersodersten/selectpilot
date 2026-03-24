@@ -3,6 +3,9 @@ import { apiRequest } from './request.js';
 export async function summarize(payload) {
     return apiRequest(endpoints.summarize, { body: payload });
 }
+export async function extract(payload) {
+    return apiRequest(endpoints.extract, { body: payload });
+}
 export async function transcribe(payload) {
     return apiRequest(endpoints.transcribe, { body: payload });
 }

@@ -39,7 +39,7 @@ function buildPrompt(normalized, context, contentClass, detected, userPrompt) {
 }
 export async function runPipeline(input, context, userPrompt) {
     const detected = detectInput(context);
-    const normalized = normalizeMarkdown(input || context.markdown || context.selection || '') || 'No content provided.';
+    const normalized = normalizeMarkdown(input || context.selection || context.pageText || context.markdown || '') || 'No content provided.';
     const contentClass = classifyContent(normalized);
     const chain = buildReasoningChain([
         `Detect input (${detected.summary})`,
