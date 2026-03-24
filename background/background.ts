@@ -92,6 +92,17 @@ async function handleAgent(prompt: string): Promise<any> {
   return runPipeline(content, context, prompt);
 }
 
+async function handleSelectionPreview(): Promise<any> {
+  const context = await collectContext();
+  return {
+    selection: context.selection || '',
+    pageText: context.pageText || '',
+    title: context.title || '',
+    url: context.url || '',
+    hasSelection: Boolean(context.selection && context.selection.trim()),
+  };
+}
+
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   (async () => {
     try {
@@ -117,6 +128,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       }
       if (msg.type === 'panel:get_tier') {
         sendResponse({ tier: await getLicenseTier() });
+        return;
+      }
+      if (msg.type === 'panel:get_selection_preview') {
+        sendResponse(await handleSelectionPreview());
         return;
       }
     } catch (e: any) {

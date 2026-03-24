@@ -7,48 +7,115 @@
 </head>
 <body>
   <div class="panel">
-    <header>
-      <div>
+    <header class="panel-header">
+      <div class="identity">
         <div class="eyebrow">Privacy-first execution layer</div>
-        <div class="title">SelectPilot</div>
+        <div class="title-row">
+          <div class="title">SelectPilot</div>
+          <div class="tier" id="tier"></div>
+        </div>
       </div>
-      <div class="tier" id="tier"></div>
+      <button class="ghost-button" id="btn-refresh" type="button">Refresh</button>
     </header>
-    <p class="lede">
-      Highlight text, open the side panel, and turn it into structured output with your local Ollama setup.
-    </p>
-    <section class="actions">
-      <button id="btn-extract">Extract JSON</button>
-      <button id="btn-summarize">Summarize</button>
-      <button id="btn-rewrite">Rewrite</button>
-      <button id="btn-actions">Action brief</button>
-      <button id="btn-ask">Ask Ollama</button>
-    </section>
-    <section class="extract-config">
-      <label for="extract-preset">Structured extraction preset</label>
-      <select id="extract-preset"></select>
-      <p class="extract-help" id="extract-help"></p>
-    </section>
-    <section class="agent-prompt">
-      <label for="agent-prompt">Custom prompt for rewrite / ask</label>
-      <textarea id="agent-prompt" rows="4">Turn the selected text into a concise, practical output.</textarea>
-    </section>
-    <section class="workflow" id="workflow">
-      <div class="empty-state">
-        <strong>Ready for selected text.</strong>
-        <span>Open a page, highlight content, then choose an action or a structured extraction preset.</span>
+
+    <section class="truth-strip" aria-label="Environment truth">
+      <div class="truth-chip">
+        <span class="truth-label">Execution</span>
+        <strong id="truth-execution">Detecting</strong>
+      </div>
+      <div class="truth-chip">
+        <span class="truth-label">Model</span>
+        <strong id="truth-model">Checking</strong>
+      </div>
+      <div class="truth-chip">
+        <span class="truth-label">Boundary</span>
+        <strong id="truth-boundary">Local-only</strong>
+      </div>
+      <div class="truth-chip">
+        <span class="truth-label">Profile</span>
+        <strong id="truth-profile">Pending</strong>
+      </div>
+      <div class="truth-chip">
+        <span class="truth-label">Health</span>
+        <strong id="truth-latency">Measuring</strong>
       </div>
     </section>
-    <details class="advanced">
-      <summary>Advanced tools</summary>
-      <div class="advanced-grid">
-        <button id="btn-transcribe">Transcribe</button>
-        <button id="btn-vision">Vision OCR</button>
+
+    <section class="runtime-state" id="runtime-state"></section>
+
+    <section class="selection-shell" id="selection-shell">
+      <div class="section-kicker">Selection</div>
+      <div class="selection-card" id="selection-card"></div>
+    </section>
+
+    <section class="workspace">
+      <div class="workspace-header">
+        <div>
+          <div class="section-kicker">Primary action</div>
+          <h2>Turn selected text into structure</h2>
+        </div>
+        <p class="workspace-note">Readable output and reusable JSON, generated locally.</p>
       </div>
-    </details>
+
+      <button class="primary-action" id="btn-extract" type="button">Extract JSON</button>
+
+      <section class="extract-config">
+        <label for="extract-preset">Structured extraction preset</label>
+        <select id="extract-preset"></select>
+        <p class="extract-help" id="extract-help"></p>
+      </section>
+
+      <section class="secondary-actions">
+        <div class="section-kicker">Secondary transforms</div>
+        <div class="secondary-grid">
+          <button id="btn-actions" type="button">Action brief</button>
+          <button id="btn-summarize" type="button">Summarize</button>
+          <button id="btn-rewrite" type="button">Rewrite</button>
+          <button id="btn-ask" type="button">Ask</button>
+        </div>
+      </section>
+
+      <section class="agent-prompt">
+        <label for="agent-prompt">Prompt field for rewrite and ask</label>
+        <textarea id="agent-prompt" rows="3">Turn the selected text into a concise, practical output.</textarea>
+      </section>
+
+      <details class="advanced">
+        <summary>Advanced tools</summary>
+        <div class="advanced-grid">
+          <button id="btn-transcribe" type="button">Transcribe</button>
+          <button id="btn-vision" type="button">Vision OCR</button>
+        </div>
+      </details>
+    </section>
+
+    <section class="result-shell">
+      <div class="result-header">
+        <div>
+          <div class="section-kicker">Result</div>
+          <h2 id="result-title">Ready</h2>
+          <p class="result-meta" id="result-meta">Highlight text to begin.</p>
+        </div>
+        <div class="result-tabs" role="tablist" aria-label="Result view">
+          <button class="result-tab is-active" id="tab-readable" type="button" role="tab" aria-selected="true">Readable</button>
+          <button class="result-tab" id="tab-structured" type="button" role="tab" aria-selected="false">Structured</button>
+        </div>
+      </div>
+
+      <section class="workflow" id="workflow">
+        <div class="empty-state">
+          <strong>Ready for selected text.</strong>
+          <span>Highlight content, then run the primary action to generate structured output locally.</span>
+        </div>
+      </section>
+    </section>
+
     <section class="exports" id="exports"></section>
-    <section class="status-bar" id="status-bar"></section>
-    <section class="status" id="status">Ready</section>
+
+    <footer class="status-footer">
+      <section class="status-bar" id="status-bar"></section>
+      <section class="status" id="status">Ready</section>
+    </footer>
   </div>
   <script type="module" src="panel.js"></script>
 </body>
