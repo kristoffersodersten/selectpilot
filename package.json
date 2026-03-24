@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Chrome extension MVP for local AI-assisted capture, summarization, and side-panel workflows.",
+  "description": "Privacy-first local browser copilot for selected text, powered by Ollama.",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",

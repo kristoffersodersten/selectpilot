@@ -1,11 +1,26 @@
 # SelectPilot
 
-SelectPilot is a local-first browser copilot for selected text. Highlight something on the web, open the side panel, and turn that selection into a summary, rewrite, action list, or prompted answer using Ollama running on your machine.
+SelectPilot is a privacy-first, local-first browser copilot for selected text. Highlight something on the web, open the side panel, and turn that selection into a summary, rewrite, action list, or prompted answer using Ollama running on your machine.
 
-This is still an MVP, but the core loop is now real: selected text is captured in the extension, routed through a local Python bridge, sent to Ollama, and rendered back in a Chrome side panel.
+This is still an MVP, but the core loop is real and intentionally constrained: selected text is captured in the extension, routed through a local Python bridge, sent to a local Ollama model, and rendered back in a Chrome side panel without sending the selected-text path to hosted inference.
 
 For the privacy boundary and verification checklist, see [ZERO_LEAKAGE.md](./ZERO_LEAKAGE.md).
 For a fast application-ready walkthrough, see [DEMO_SCRIPT.md](./DEMO_SCRIPT.md).
+
+## Why this exists
+
+Most browser AI tools are thin wrappers around remote APIs. SelectPilot is built around a narrower promise:
+
+- Privacy first: the core selected-text path stays local by design.
+- Zero leakage on the main workflow: selected text is not sent to cloud-hosted Ollama models.
+- Useful before broad: summarize, rewrite, and extract actions from highlighted text quickly.
+
+## Privacy-first promise
+
+- `Summarize`, `Ask`, and `Embed` run through a local bridge and local Ollama models.
+- Cloud Ollama models are explicitly ignored for the core selected-text path.
+- No telemetry or analytics are part of the runtime flow.
+- The privacy boundary is visible and testable through the `/health` endpoint and DevTools network inspection.
 
 ## What it does
 
@@ -14,9 +29,9 @@ For a fast application-ready walkthrough, see [DEMO_SCRIPT.md](./DEMO_SCRIPT.md)
 - Extracts action items and next steps from highlighted content.
 - Runs an agent-style workflow from the side panel with a user-editable prompt.
 - Stores license data locally and gates features by tier.
+- Enforces a local-only boundary for summarize, agent, and embed by ignoring Ollama cloud models.
 - Includes a local Python service, launchd wiring, and nginx proxy config for `http://chromeai.local`.
 - Keeps audio and vision flows as explicit experimental tools, not the main product promise.
-- Enforces a local-only boundary for summarize, agent, and embed by ignoring Ollama cloud models.
 
 ## Project status
 
@@ -66,7 +81,7 @@ npm run build
 If you want a specific Ollama model, set it before running the script:
 
 ```bash
-CHROMEAI_OLLAMA_MODEL=glm-5:cloud ./scripts/install-macos-local.sh
+CHROMEAI_OLLAMA_MODEL=qwen2.5:0.5b ./scripts/install-macos-local.sh
 ```
 
 ### 4. Add the local hostname
@@ -119,5 +134,6 @@ curl http://127.0.0.1:8083/health
 
 - The local Python service now forwards summarize, agent, and embed requests to Ollama and surfaces health information for the configured model.
 - The core privacy story is local-only for the selected-text path. See [ZERO_LEAKAGE.md](./ZERO_LEAKAGE.md) for the exact claim and how to verify it.
+- Privacy-first is the product thesis, not a side feature.
 - Runtime JavaScript is generated from the `.ts` sources with `npm run build`.
 - The project is best presented as a focused selected-text MVP, not as a polished all-in-one browser assistant.

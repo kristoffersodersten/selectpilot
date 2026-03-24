@@ -1,12 +1,13 @@
 # Zero Leakage Spec
 
-This project is designed around a local-only privacy boundary for the core selected-text workflow.
+This project is designed around a privacy-first, local-only boundary for the core selected-text workflow.
 
 ## Core claim
 
 - Selected text is processed through a local bridge at `http://chromeai.local`.
 - The local bridge talks only to a locally running Ollama instance.
 - Cloud-hosted Ollama models are intentionally ignored for the core summarize, agent, and embed flows.
+- If a requested model is unavailable locally, the bridge falls back only to other local models.
 
 ## What runs locally
 
@@ -28,6 +29,11 @@ This project is designed around a local-only privacy boundary for the core selec
 - Extension UI calls `http://chromeai.local`, which is mapped to `127.0.0.1`.
 - The local bridge calls the configured Ollama base URL, which defaults to `http://127.0.0.1:11434`.
 - If only Ollama cloud models are installed, the bridge reports degraded health instead of sending selected text to them.
+
+## Product framing
+
+- Privacy-first is the main differentiator for the selected-text workflow.
+- The repo should be understood as a utility product with a strict local boundary, not as a generic browser AI wrapper.
 
 ## Experimental surfaces
 
