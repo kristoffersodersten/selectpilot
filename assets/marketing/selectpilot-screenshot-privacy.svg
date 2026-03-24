@@ -1,0 +1,33 @@
+<svg width="1280" height="800" viewBox="0 0 1280 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="800" fill="#F3F5F8"/>
+  <rect x="40" y="40" width="1200" height="720" rx="34" fill="rgba(255,255,255,0.86)" stroke="#DCE3ED" stroke-width="2"/>
+  <text x="84" y="110" fill="#64748B" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="16" font-weight="700" letter-spacing="1.2">ZERO LEAKAGE</text>
+  <text x="84" y="160" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="42" font-weight="600" letter-spacing="-1.6">Make the privacy boundary visible.</text>
+  <text x="84" y="200" fill="#64748B" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="22">No telemetry. No cloud inference on the selected-text path. No ambiguity about where execution happens.</text>
+
+  <rect x="84" y="246" width="430" height="410" rx="26" fill="#FFFFFF" stroke="#D7DEE9" stroke-width="2"/>
+  <text x="114" y="288" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">BOUNDARY PANEL</text>
+  <text x="114" y="332" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="30" font-weight="600">Selected text stays local</text>
+  <text x="114" y="374" fill="#64748B" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="21">The core path is deliberately constrained to a local bridge and local Ollama models.</text>
+  <g>
+    <rect x="114" y="420" width="286" height="42" rx="14" fill="#EEF2F7"/>
+    <text x="136" y="447" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="18" font-weight="600">Execution geography: Local</text>
+    <rect x="114" y="478" width="326" height="42" rx="14" fill="#EEF2F7"/>
+    <text x="136" y="505" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="18" font-weight="600">Remote Ollama models: Ignored</text>
+    <rect x="114" y="536" width="234" height="42" rx="14" fill="#EEF2F7"/>
+    <text x="136" y="563" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="18" font-weight="600">Telemetry: None</text>
+  </g>
+
+  <rect x="548" y="246" width="648" height="410" rx="26" fill="#FFFFFF" stroke="#D7DEE9" stroke-width="2"/>
+  <text x="578" y="288" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">LOCAL VERIFICATION</text>
+  <text x="578" y="332" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="30" font-weight="600">Health output and network inspection</text>
+  <rect x="578" y="368" width="588" height="256" rx="20" fill="#0F172A"/>
+  <text x="606" y="408" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="18">$ curl http://chromeai.local/health</text>
+  <text x="606" y="448" fill="#93C5FD" font-family="SF Mono, Menlo, monospace" font-size="18">{</text>
+  <text x="634" y="448" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="18">"ok": true,</text>
+  <text x="634" y="482" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="18">"active_model": "qwen2.5:0.5b",</text>
+  <text x="634" y="516" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="18">"privacy_mode": "local-only",</text>
+  <text x="634" y="550" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="18">"ignored_remote_models": ["llama3.2:cloud"],</text>
+  <text x="634" y="584" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="18">"notes": "selected-text path stays local"</text>
+  <text x="606" y="618" fill="#93C5FD" font-family="SF Mono, Menlo, monospace" font-size="18">}</text>
+</svg>
