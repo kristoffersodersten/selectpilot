@@ -93,6 +93,22 @@ function deriveProfile(model) {
         return 'Advanced';
     return 'Balanced';
 }
+function getEffectiveRecommendedProfileKey() {
+    return benchmarkSnapshot?.recommended_profile || runtimeProfilesPayload.recommended_profile;
+}
+function getEffectiveRecommendedProfile() {
+    return getRuntimeProfile(getEffectiveRecommendedProfileKey());
+}
+function getEffectiveRecommendationReason() {
+    if (!benchmarkSnapshot)
+        return runtimeProfilesPayload.reason;
+    const benchmarkProfile = getRuntimeProfile(benchmarkSnapshot.recommended_profile).label;
+    const autoProfile = getRuntimeProfile(benchmarkSnapshot.auto_profile || runtimeProfilesPayload.recommended_profile).label;
+    if (benchmarkSnapshot.recommended_profile === (benchmarkSnapshot.auto_profile || runtimeProfilesPayload.recommended_profile)) {
+        return `Benchmark confirms the ${benchmarkProfile} profile for this workload.`;
+    }
+    return `Benchmark overrides the hardware heuristic: use ${benchmarkProfile} for this workload instead of the auto ${autoProfile} profile.`;
+}
 function renderResultBody() {
     clearNode(workflow);
     if (!workflow)
@@ -311,8 +327,9 @@ function renderRuntimeState() {
     runtimeStateEl.classList.add('is-visible');
     const profilesGrid = document.createElement('div');
     profilesGrid.className = 'profile-grid';
+    const effectiveRecommendedProfileKey = getEffectiveRecommendedProfileKey();
     for (const profile of runtimeProfilesPayload.profiles) {
-        profilesGrid.append(createProfileCard(profile, runtimeProfilesPayload.recommended_profile));
+        profilesGrid.append(createProfileCard(profile, effectiveRecommendedProfileKey));
     }
     if (runtimeSnapshot.ok) {
         const wrapper = document.createElement('div');
@@ -333,7 +350,7 @@ function renderRuntimeState() {
         const benchmarkCopy = document.createElement('p');
         benchmarkCopy.className = 'selection-copy';
         if (benchmarkSnapshot) {
-            benchmarkCopy.textContent = `Current model recommends ${getRuntimeProfile(benchmarkSnapshot.recommended_profile).label}. Auto policy would choose ${getRuntimeProfile(benchmarkSnapshot.auto_profile || runtimeProfilesPayload.recommended_profile).label}.`;
+            benchmarkCopy.textContent = getEffectiveRecommendationReason();
         }
         else {
             benchmarkCopy.textContent = 'Run a local benchmark to confirm that the current runtime matches the smallest viable profile for this machine.';
@@ -342,10 +359,10 @@ function renderRuntimeState() {
         const benchmarkMetrics = document.createElement('div');
         benchmarkMetrics.className = 'runtime-grid';
         if (benchmarkSnapshot) {
-            benchmarkMetrics.append(buildMetric('Extract JSON', `${benchmarkSnapshot.extract_latency_ms} ms`), buildMetric('Summarize', `${benchmarkSnapshot.summarize_latency_ms} ms`), buildMetric('Recommended', getRuntimeProfile(benchmarkSnapshot.recommended_profile).label));
+            benchmarkMetrics.append(buildMetric('Extract JSON', `${benchmarkSnapshot.extract_latency_ms} ms`), buildMetric('Summarize', `${benchmarkSnapshot.summarize_latency_ms} ms`), buildMetric('Recommended', getEffectiveRecommendedProfile().label));
         }
         else {
-            benchmarkMetrics.append(buildMetric('Extract JSON', 'Pending'), buildMetric('Summarize', 'Pending'), buildMetric('Recommended', getRuntimeProfile(runtimeProfilesPayload.recommended_profile).label));
+            benchmarkMetrics.append(buildMetric('Extract JSON', 'Pending'), buildMetric('Summarize', 'Pending'), buildMetric('Recommended', getEffectiveRecommendedProfile().label));
         }
         benchmarkBlock.append(benchmarkMetrics);
         const benchmarkActions = document.createElement('div');
@@ -380,7 +397,7 @@ function renderRuntimeState() {
     });
     const wrapper = document.createElement('div');
     wrapper.className = 'runtime-grid';
-    const recommended = getRuntimeProfile(runtimeProfilesPayload.recommended_profile);
+    const recommended = getEffectiveRecommendedProfile();
     wrapper.append(buildMetric('Recommended profile', recommended.label), buildMetric('Generation model', recommended.generation_model), buildMetric('Embedding model', recommended.embedding_model));
     const actions = document.createElement('div');
     actions.className = 'runtime-actions';
@@ -405,13 +422,13 @@ function renderRuntimeState() {
         note.textContent = runtimeSnapshot.error || runtimeSnapshot.hint || '';
         const reason = document.createElement('p');
         reason.className = 'runtime-copy';
-        reason.textContent = runtimeProfilesPayload.reason;
+        reason.textContent = getEffectiveRecommendationReason();
         runtimeStateEl.append(header, copy, wrapper, list, actions, reason, profilesGrid, note);
         return;
     }
     const reason = document.createElement('p');
     reason.className = 'runtime-copy';
-    reason.textContent = runtimeProfilesPayload.reason;
+    reason.textContent = getEffectiveRecommendationReason();
     runtimeStateEl.append(header, copy, wrapper, list, actions, reason, profilesGrid);
 }
 function renderSelectionState() {
@@ -490,7 +507,7 @@ async function refreshRuntime() {
         if (truthBoundaryEl)
             truthBoundaryEl.textContent = runtimeSnapshot.privacyMode === 'local-only' ? 'Selected text stays local' : runtimeSnapshot.privacyMode;
         if (truthProfileEl)
-            truthProfileEl.textContent = deriveProfile(runtimeSnapshot.activeModel);
+            truthProfileEl.textContent = getEffectiveRecommendedProfile().label;
         if (truthLatencyEl)
             truthLatencyEl.textContent = runtimeSnapshot.latencyMs ? `${runtimeSnapshot.latencyMs} ms` : 'Measured';
         setStatusBar(runtimeSnapshot.ok
@@ -523,7 +540,7 @@ async function refreshRuntime() {
         if (truthBoundaryEl)
             truthBoundaryEl.textContent = 'Local-only pending';
         if (truthProfileEl)
-            truthProfileEl.textContent = 'Fast';
+            truthProfileEl.textContent = getEffectiveRecommendedProfile().label;
         if (truthLatencyEl)
             truthLatencyEl.textContent = 'Unavailable';
         setStatusBar(`Local runtime unavailable · setup required`);
@@ -599,7 +616,7 @@ async function doBenchmark() {
     setStatus('Benchmarking local runtime...');
     benchmarkSnapshot = await runRuntimeBenchmark();
     if (truthProfileEl)
-        truthProfileEl.textContent = getRuntimeProfile(benchmarkSnapshot.recommended_profile).label;
+        truthProfileEl.textContent = getEffectiveRecommendedProfile().label;
     if (truthLatencyEl)
         truthLatencyEl.textContent = `${benchmarkSnapshot.extract_latency_ms} ms`;
     renderRuntimeState();

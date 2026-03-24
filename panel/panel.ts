@@ -148,6 +148,24 @@ function deriveProfile(model: string): string {
   return 'Balanced';
 }
 
+function getEffectiveRecommendedProfileKey(): string {
+  return benchmarkSnapshot?.recommended_profile || runtimeProfilesPayload.recommended_profile;
+}
+
+function getEffectiveRecommendedProfile() {
+  return getRuntimeProfile(getEffectiveRecommendedProfileKey());
+}
+
+function getEffectiveRecommendationReason(): string {
+  if (!benchmarkSnapshot) return runtimeProfilesPayload.reason;
+  const benchmarkProfile = getRuntimeProfile(benchmarkSnapshot.recommended_profile).label;
+  const autoProfile = getRuntimeProfile(benchmarkSnapshot.auto_profile || runtimeProfilesPayload.recommended_profile).label;
+  if (benchmarkSnapshot.recommended_profile === (benchmarkSnapshot.auto_profile || runtimeProfilesPayload.recommended_profile)) {
+    return `Benchmark confirms the ${benchmarkProfile} profile for this workload.`;
+  }
+  return `Benchmark overrides the hardware heuristic: use ${benchmarkProfile} for this workload instead of the auto ${autoProfile} profile.`;
+}
+
 function renderResultBody() {
   clearNode(workflow);
   if (!workflow) return;
@@ -409,8 +427,9 @@ function renderRuntimeState() {
   runtimeStateEl.classList.add('is-visible');
   const profilesGrid = document.createElement('div');
   profilesGrid.className = 'profile-grid';
+  const effectiveRecommendedProfileKey = getEffectiveRecommendedProfileKey();
   for (const profile of runtimeProfilesPayload.profiles) {
-    profilesGrid.append(createProfileCard(profile, runtimeProfilesPayload.recommended_profile));
+    profilesGrid.append(createProfileCard(profile, effectiveRecommendedProfileKey));
   }
 
   if (runtimeSnapshot.ok) {
@@ -439,7 +458,7 @@ function renderRuntimeState() {
     const benchmarkCopy = document.createElement('p');
     benchmarkCopy.className = 'selection-copy';
     if (benchmarkSnapshot) {
-      benchmarkCopy.textContent = `Current model recommends ${getRuntimeProfile(benchmarkSnapshot.recommended_profile).label}. Auto policy would choose ${getRuntimeProfile(benchmarkSnapshot.auto_profile || runtimeProfilesPayload.recommended_profile).label}.`;
+      benchmarkCopy.textContent = getEffectiveRecommendationReason();
     } else {
       benchmarkCopy.textContent = 'Run a local benchmark to confirm that the current runtime matches the smallest viable profile for this machine.';
     }
@@ -451,13 +470,13 @@ function renderRuntimeState() {
       benchmarkMetrics.append(
         buildMetric('Extract JSON', `${benchmarkSnapshot.extract_latency_ms} ms`),
         buildMetric('Summarize', `${benchmarkSnapshot.summarize_latency_ms} ms`),
-        buildMetric('Recommended', getRuntimeProfile(benchmarkSnapshot.recommended_profile).label),
+        buildMetric('Recommended', getEffectiveRecommendedProfile().label),
       );
     } else {
       benchmarkMetrics.append(
         buildMetric('Extract JSON', 'Pending'),
         buildMetric('Summarize', 'Pending'),
-        buildMetric('Recommended', getRuntimeProfile(runtimeProfilesPayload.recommended_profile).label),
+        buildMetric('Recommended', getEffectiveRecommendedProfile().label),
       );
     }
     benchmarkBlock.append(benchmarkMetrics);
@@ -499,7 +518,7 @@ function renderRuntimeState() {
 
   const wrapper = document.createElement('div');
   wrapper.className = 'runtime-grid';
-  const recommended = getRuntimeProfile(runtimeProfilesPayload.recommended_profile);
+  const recommended = getEffectiveRecommendedProfile();
   wrapper.append(
     buildMetric('Recommended profile', recommended.label),
     buildMetric('Generation model', recommended.generation_model),
@@ -532,14 +551,14 @@ function renderRuntimeState() {
     note.textContent = runtimeSnapshot.error || runtimeSnapshot.hint || '';
     const reason = document.createElement('p');
     reason.className = 'runtime-copy';
-    reason.textContent = runtimeProfilesPayload.reason;
+    reason.textContent = getEffectiveRecommendationReason();
     runtimeStateEl.append(header, copy, wrapper, list, actions, reason, profilesGrid, note);
     return;
   }
 
   const reason = document.createElement('p');
   reason.className = 'runtime-copy';
-  reason.textContent = runtimeProfilesPayload.reason;
+  reason.textContent = getEffectiveRecommendationReason();
   runtimeStateEl.append(header, copy, wrapper, list, actions, reason, profilesGrid);
 }
 
@@ -618,7 +637,7 @@ async function refreshRuntime() {
     if (truthExecutionEl) truthExecutionEl.textContent = runtimeSnapshot.ok ? 'Local' : 'Degraded';
     if (truthModelEl) truthModelEl.textContent = runtimeSnapshot.activeModel;
     if (truthBoundaryEl) truthBoundaryEl.textContent = runtimeSnapshot.privacyMode === 'local-only' ? 'Selected text stays local' : runtimeSnapshot.privacyMode;
-    if (truthProfileEl) truthProfileEl.textContent = deriveProfile(runtimeSnapshot.activeModel);
+    if (truthProfileEl) truthProfileEl.textContent = getEffectiveRecommendedProfile().label;
     if (truthLatencyEl) truthLatencyEl.textContent = runtimeSnapshot.latencyMs ? `${runtimeSnapshot.latencyMs} ms` : 'Measured';
     setStatusBar(
       runtimeSnapshot.ok
@@ -647,7 +666,7 @@ async function refreshRuntime() {
     if (truthExecutionEl) truthExecutionEl.textContent = 'Offline';
     if (truthModelEl) truthModelEl.textContent = 'Unavailable';
     if (truthBoundaryEl) truthBoundaryEl.textContent = 'Local-only pending';
-    if (truthProfileEl) truthProfileEl.textContent = 'Fast';
+    if (truthProfileEl) truthProfileEl.textContent = getEffectiveRecommendedProfile().label;
     if (truthLatencyEl) truthLatencyEl.textContent = 'Unavailable';
     setStatusBar(`Local runtime unavailable · setup required`);
     setStatus(runtimeSnapshot.error || 'Ollama health check failed');
@@ -727,7 +746,7 @@ async function doAsk() {
 async function doBenchmark() {
   setStatus('Benchmarking local runtime...');
   benchmarkSnapshot = await runRuntimeBenchmark();
-  if (truthProfileEl) truthProfileEl.textContent = getRuntimeProfile(benchmarkSnapshot.recommended_profile).label;
+  if (truthProfileEl) truthProfileEl.textContent = getEffectiveRecommendedProfile().label;
   if (truthLatencyEl) truthLatencyEl.textContent = `${benchmarkSnapshot.extract_latency_ms} ms`;
   renderRuntimeState();
   setStatus('Benchmark complete');
