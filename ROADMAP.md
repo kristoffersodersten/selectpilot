@@ -53,6 +53,9 @@ Goal: make the current MVP consistently usable by early testers.
 
 ### Must ship
 
+- First-run runtime bootstrap with `Detect -> Install -> Benchmark -> Assign profile`
+- Profile presets for `Fast`, `Balanced`, and `Advanced`
+- Smallest-viable-model selection for the selected-text workload
 - Improve selected-text capture reliability across more sites
 - Add loading, error, and empty-state handling for all core actions
 - Add visible Ollama status in the side panel
@@ -74,12 +77,14 @@ Goal: make the current MVP consistently usable by early testers.
 - Add a settings page section called `Privacy Boundary`
 - Add a `local-only` indicator and a degraded-state warning if no local model is available
 - Refuse core execution when only cloud Ollama models are present
+- Keep profile selection and benchmark interpretation on-device
 
 ### Exit criteria
 
 - A new tester can install and use the selected-text flow without repo spelunking
 - The product fails clearly, not silently
 - Privacy-first behavior is visible in both UI and docs
+- The default Fast profile is usable on modest hardware without manual tuning
 
 ## Phase 2: Paid Utility Foundations
 

@@ -2,12 +2,15 @@
 
 This project is designed around a privacy-first, local-only boundary for the core selected-text workflow.
 
+The runtime is also profile-based: the product prefers the smallest viable local model for the selected-text workload, then lets the user move up to Balanced or Advanced only if the hardware and latency profile justify it.
+
 ## Core claim
 
 - Selected text is processed through a local bridge at `http://chromeai.local`.
 - The local bridge talks only to a locally running Ollama instance.
 - Cloud-hosted Ollama models are intentionally ignored for the core summarize, agent, and embed flows.
 - If a requested model is unavailable locally, the bridge falls back only to other local models.
+- The first-run flow is expected to detect the runtime, install the small local profile, benchmark it, and assign the result before the extension is treated as ready.
 
 ## What runs locally
 
@@ -15,6 +18,7 @@ This project is designed around a privacy-first, local-only boundary for the cor
 - Embeddings through a local Ollama embedding model.
 - Context handling in the extension service worker and the local Python bridge.
 - License storage in Chrome local storage.
+- Profile selection and benchmark interpretation stay on-device.
 
 ## What never leaves by default
 
@@ -49,8 +53,9 @@ This project is designed around a privacy-first, local-only boundary for the cor
    - `"model_available": true`
    - `"active_model"` set to a local model
    - `"ignored_remote_models"` listing any cloud models that were skipped
-4. Open Chrome DevTools Network for the extension and verify requests are limited to `chromeai.local`.
-5. Verify there are no analytics or telemetry endpoints in the runtime path.
+4. Install or select the Fast profile and re-run the health check to confirm the smallest viable model is active.
+5. Open Chrome DevTools Network for the extension and verify requests are limited to `chromeai.local`.
+6. Verify there are no analytics or telemetry endpoints in the runtime path.
 
 ## Honest limitation
 

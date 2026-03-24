@@ -10,6 +10,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 from ollama_client import OllamaClient, OllamaError
+from runtime_profiles import build_bootstrap_commands, list_runtime_profiles, recommend_runtime_profile
 
 ALLOWED_MIN = 8080
 ALLOWED_MAX = 8100
@@ -48,6 +49,7 @@ def write_port_info(port_file: Path, port: int):
 
 
 OLLAMA = OllamaClient()
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def transcribe(payload: dict) -> dict:
@@ -86,6 +88,27 @@ def extract(payload: dict) -> dict:
         metadata=payload.get("metadata"),
     )
 
+def runtime_profiles() -> dict:
+    recommendation = recommend_runtime_profile()
+    profiles = []
+    for item in list_runtime_profiles():
+        commands = build_bootstrap_commands(item["key"], PROJECT_ROOT)
+        profiles.append({**item, **commands})
+    return {
+        "profiles": profiles,
+        **recommendation,
+    }
+
+
+def benchmark_runtime() -> dict:
+    recommendation = recommend_runtime_profile()
+    result = OLLAMA.benchmark()
+    return {
+        **result,
+        "auto_profile": recommendation["recommended_profile"],
+        "auto_profile_reason": recommendation["reason"],
+    }
+
 
 def license_verify(payload: dict) -> dict:
     token = payload.get("token", "")
@@ -120,6 +143,9 @@ class Handler(BaseHTTPRequestHandler):
                 "service": self.server_version,
                 "ollama": health,
             })
+            return
+        if self.path.rstrip('/') == '/profiles':
+            self._write_json(200, runtime_profiles())
             return
         self._write_json(404, {"error": "not_found"})
 
@@ -166,6 +192,12 @@ class Handler(BaseHTTPRequestHandler):
                 return
         elif path == '/license/verify':
             resp = license_verify(payload)
+        elif path == '/benchmark':
+            try:
+                resp = benchmark_runtime()
+            except OllamaError as e:
+                self._write_json(503, {"ok": False, "error": {"code": "ollama_unavailable", "message": str(e)}})
+                return
         else:
             self._write_json(404, {"error": "not_found"})
             return

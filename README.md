@@ -4,6 +4,14 @@ SelectPilot is a privacy-first local execution layer for selected text. Highligh
 
 This is still an MVP, but the core loop is real and intentionally constrained: selected text is captured in the extension, routed through a local Python bridge, sent to a local Ollama model, and rendered back in a Chrome side panel without sending the selected-text path to hosted inference.
 
+The recommended first-run flow is profile-based:
+
+- `Fast`: smallest viable local model for extraction and short transforms
+- `Balanced`: better quality when the machine can handle it
+- `Advanced`: manual opt-in for heavier local models
+
+The setup flow is `Detect -> Install -> Benchmark -> Assign profile`, with the smallest viable model chosen for the selected-text workload rather than the largest model the machine can tolerate.
+
 For the privacy boundary and verification checklist, see [ZERO_LEAKAGE.md](./ZERO_LEAKAGE.md).
 For a fast application-ready walkthrough, see [DEMO_SCRIPT.md](./DEMO_SCRIPT.md).
 
@@ -73,17 +81,28 @@ npm install
 npm run build
 ```
 
-### 3. Install the local macOS LaunchAgent
+### 3. Bootstrap the local runtime
+
+Recommended:
 
 ```bash
-./scripts/install-macos-local.sh
+npm run bootstrap:local
 ```
 
-If you want a specific Ollama model, set it before running the script:
+Explicit profile examples:
 
 ```bash
-CHROMEAI_OLLAMA_MODEL=qwen2.5:0.5b ./scripts/install-macos-local.sh
+npm run bootstrap:local -- --profile fast
+npm run bootstrap:local -- --profile balanced
+npm run bootstrap:local -- --profile advanced
 ```
+
+The bootstrapper will:
+
+- install Ollama with Homebrew if needed
+- pull the selected generation and embedding models
+- install the local LaunchAgent with the chosen profile
+- recommend a follow-up benchmark
 
 ### 4. Add the local hostname
 
@@ -113,7 +132,18 @@ Examples:
 ollama serve
 ollama list
 ollama pull qwen2.5:0.5b
+ollama pull nomic-embed-text-v2-moe:latest
 ```
+
+### 8. Benchmark the profile
+
+After the local bridge is installed, run the built-in benchmark:
+
+```bash
+npm run benchmark:local
+```
+
+If the Fast profile is too slow on your machine, move up to Balanced. If the machine is powerful and you want better output, opt into Advanced manually.
 
 ## Validation
 

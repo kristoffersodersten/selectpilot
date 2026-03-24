@@ -1,6 +1,7 @@
 import json
 import os
 import re
+from time import perf_counter
 from dataclasses import dataclass
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -483,4 +484,38 @@ class OllamaClient:
             "vector": vector,
             "model": response.get("model", model),
             "source": "ollama",
+        }
+
+    def benchmark(self) -> dict[str, Any]:
+        started_at = perf_counter()
+        extract_result = self.extract(
+            "Ship the beta on Friday. Update onboarding copy. Verify the nginx config before launch.",
+            preset_key="action_brief",
+            title="Launch prep",
+            metadata={"benchmark": True},
+        )
+        extract_latency_ms = round((perf_counter() - started_at) * 1000)
+
+        summarize_started_at = perf_counter()
+        summarize_result = self.summarize(
+            "SelectPilot turns selected text into structured, actionable output locally via Ollama.",
+            title="SelectPilot",
+            metadata={"benchmark": True},
+        )
+        summarize_latency_ms = round((perf_counter() - summarize_started_at) * 1000)
+
+        profile = "fast"
+        if extract_latency_ms > 4500 or summarize_latency_ms > 5500:
+            profile = "balanced"
+        if extract_latency_ms > 9000 or summarize_latency_ms > 11000:
+            profile = "advanced"
+
+        return {
+            "ok": True,
+            "active_model": extract_result.get("model") or self.config.model,
+            "extract_latency_ms": extract_latency_ms,
+            "summarize_latency_ms": summarize_latency_ms,
+            "recommended_profile": profile,
+            "result_shape": sorted((extract_result.get("json") or {}).keys()),
+            "notes": "Benchmark reflects local structured extraction and summary latency on the current machine.",
         }

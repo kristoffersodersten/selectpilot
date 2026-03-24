@@ -8,7 +8,7 @@ Show that the product is a privacy-first local execution layer for selected text
 
 1. Open Ollama and confirm a local model is installed.
    - Show `ollama list`
-   - Point out the local generation model, for example `qwen2.5:0.5b`
+   - Point out the Fast profile model, for example `qwen2.5:0.5b`
 
 2. Start the local bridge and show health.
    - Run the bridge
@@ -17,6 +17,7 @@ Show that the product is a privacy-first local execution layer for selected text
      - `privacy_mode: "local-only"`
      - `active_model`
      - `ignored_remote_models`
+   - Explain that the app chooses the smallest viable model for the workload, not the largest available one
 
 3. Open the extension on a real page.
    - Highlight a paragraph
@@ -29,7 +30,12 @@ Show that the product is a privacy-first local execution layer for selected text
    - Show the Markdown and JSON panes
    - Repeat with `Rewrite` or `Ask Ollama`
 
-5. Show the network boundary.
+5. Show the benchmark boundary.
+   - Explain that Fast is the default profile
+   - Mention that Balanced and Advanced are opt-in if the machine needs them
+   - State that the first-run path is detect, install, benchmark, assign profile
+
+6. Show the network boundary.
    - Open DevTools Network
    - Filter for `chromeai.local`
    - Point out that the extension talks to the local bridge only

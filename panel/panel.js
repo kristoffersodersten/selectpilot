@@ -1,5 +1,6 @@
 import { $ } from '../utils/dom.js';
 import { EXTRACTION_PRESETS, getExtractionPreset } from './extraction-presets.js';
+import { getRuntimeProfile, RUNTIME_PROFILES } from './runtime-profiles.js';
 const workflow = $('#workflow');
 const exportsEl = $('#exports');
 const runtimeStateEl = $('#runtime-state');
@@ -40,6 +41,12 @@ let selectionPreview = {
 };
 let currentResultView = 'readable';
 let lastResult = null;
+let runtimeProfilesPayload = {
+    profiles: RUNTIME_PROFILES,
+    recommended_profile: 'fast',
+    reason: 'The smallest viable profile is the safest starting point.',
+};
+let benchmarkSnapshot = null;
 const FAST_INSTALL_COMMANDS = [
     'ollama pull qwen2.5:0.5b',
     'ollama pull nomic-embed-text-v2-moe:latest',
@@ -199,6 +206,23 @@ async function fetchHealth() {
         throw new Error(`Health check failed: ${res.status}`);
     return res.json();
 }
+async function fetchRuntimeProfiles() {
+    const res = await fetch('http://chromeai.local/profiles', { cache: 'no-store' });
+    if (!res.ok)
+        throw new Error(`Profiles check failed: ${res.status}`);
+    return (await res.json());
+}
+async function runRuntimeBenchmark() {
+    const res = await fetch('http://chromeai.local/benchmark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+        cache: 'no-store',
+    });
+    if (!res.ok)
+        throw new Error(`Benchmark failed: ${res.status}`);
+    return (await res.json());
+}
 function syncControlAvailability() {
     const runtimeReady = runtimeSnapshot.ok;
     const selectionReady = selectionPreview.hasSelection;
@@ -230,29 +254,109 @@ function syncPresetHelp() {
     if (extractHelpEl)
         extractHelpEl.textContent = preset.description;
 }
+function buildMetric(label, value) {
+    const metric = document.createElement('div');
+    metric.className = 'runtime-metric';
+    const kicker = document.createElement('span');
+    kicker.className = 'section-kicker';
+    kicker.textContent = label;
+    const strong = document.createElement('strong');
+    strong.textContent = value;
+    metric.append(kicker, strong);
+    return metric;
+}
+function createProfileCard(profile, recommendedKey, copyLabel = 'Copy command') {
+    const card = document.createElement('div');
+    card.className = 'profile-card';
+    if (profile.key === recommendedKey)
+        card.classList.add('is-recommended');
+    const header = document.createElement('div');
+    header.className = 'profile-header';
+    const title = document.createElement('div');
+    title.className = 'profile-title';
+    title.textContent = profile.label;
+    header.append(title);
+    if (profile.key === recommendedKey) {
+        const badge = document.createElement('span');
+        badge.className = 'profile-badge';
+        badge.textContent = 'Recommended';
+        header.append(badge);
+    }
+    const description = document.createElement('p');
+    description.className = 'selection-copy';
+    description.textContent = profile.description;
+    const stack = document.createElement('div');
+    stack.className = 'profile-stack';
+    stack.append(buildMetric('Generation', profile.generation_model), buildMetric('Embedding', profile.embedding_model), buildMetric('Latency', profile.target_latency));
+    const intendedFor = document.createElement('p');
+    intendedFor.className = 'selection-copy';
+    intendedFor.textContent = profile.intended_for;
+    const actions = document.createElement('div');
+    actions.className = 'runtime-actions';
+    const copyButton = document.createElement('button');
+    copyButton.type = 'button';
+    copyButton.textContent = copyLabel;
+    copyButton.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(profile.command);
+        setStatus(`${profile.label} bootstrap command copied`);
+    });
+    actions.append(copyButton);
+    card.append(header, description, stack, intendedFor, actions);
+    return card;
+}
 function renderRuntimeState() {
     clearNode(runtimeStateEl);
     if (!runtimeStateEl)
         return;
     runtimeStateEl.classList.add('is-visible');
+    const profilesGrid = document.createElement('div');
+    profilesGrid.className = 'profile-grid';
+    for (const profile of runtimeProfilesPayload.profiles) {
+        profilesGrid.append(createProfileCard(profile, runtimeProfilesPayload.recommended_profile));
+    }
     if (runtimeSnapshot.ok) {
         const wrapper = document.createElement('div');
         wrapper.className = 'runtime-grid';
-        const metrics = [
-            ['Execution', 'Local-only ready'],
-            ['Provider', 'Ollama on-device'],
-            ['Ignored remote', `${runtimeSnapshot.ignoredRemoteCount} models`],
-        ];
-        for (const [label, value] of metrics) {
-            const metric = document.createElement('div');
-            metric.className = 'runtime-metric';
-            metric.innerHTML = `<span class="section-kicker">${label}</span><strong>${value}</strong>`;
-            wrapper.append(metric);
-        }
+        wrapper.append(buildMetric('Execution', 'Local-only ready'), buildMetric('Provider', 'Ollama on-device'), buildMetric('Ignored remote', `${runtimeSnapshot.ignoredRemoteCount} models`));
         const copy = document.createElement('p');
         copy.className = 'runtime-copy';
         copy.textContent = `Runtime ready. ${runtimeSnapshot.activeModel} is active locally, and the selected-text path stays inside the local bridge.`;
-        runtimeStateEl.append(wrapper, copy);
+        const benchmarkBlock = document.createElement('div');
+        benchmarkBlock.className = 'benchmark-block';
+        const benchmarkHeader = document.createElement('div');
+        benchmarkHeader.className = 'profile-header';
+        const benchmarkTitle = document.createElement('div');
+        benchmarkTitle.className = 'profile-title';
+        benchmarkTitle.textContent = 'Profile fit';
+        benchmarkHeader.append(benchmarkTitle);
+        benchmarkBlock.append(benchmarkHeader);
+        const benchmarkCopy = document.createElement('p');
+        benchmarkCopy.className = 'selection-copy';
+        if (benchmarkSnapshot) {
+            benchmarkCopy.textContent = `Current model recommends ${getRuntimeProfile(benchmarkSnapshot.recommended_profile).label}. Auto policy would choose ${getRuntimeProfile(benchmarkSnapshot.auto_profile || runtimeProfilesPayload.recommended_profile).label}.`;
+        }
+        else {
+            benchmarkCopy.textContent = 'Run a local benchmark to confirm that the current runtime matches the smallest viable profile for this machine.';
+        }
+        benchmarkBlock.append(benchmarkCopy);
+        const benchmarkMetrics = document.createElement('div');
+        benchmarkMetrics.className = 'runtime-grid';
+        if (benchmarkSnapshot) {
+            benchmarkMetrics.append(buildMetric('Extract JSON', `${benchmarkSnapshot.extract_latency_ms} ms`), buildMetric('Summarize', `${benchmarkSnapshot.summarize_latency_ms} ms`), buildMetric('Recommended', getRuntimeProfile(benchmarkSnapshot.recommended_profile).label));
+        }
+        else {
+            benchmarkMetrics.append(buildMetric('Extract JSON', 'Pending'), buildMetric('Summarize', 'Pending'), buildMetric('Recommended', getRuntimeProfile(runtimeProfilesPayload.recommended_profile).label));
+        }
+        benchmarkBlock.append(benchmarkMetrics);
+        const benchmarkActions = document.createElement('div');
+        benchmarkActions.className = 'runtime-actions';
+        const benchmarkButton = document.createElement('button');
+        benchmarkButton.type = 'button';
+        benchmarkButton.id = 'btn-run-benchmark';
+        benchmarkButton.textContent = benchmarkSnapshot ? 'Run benchmark again' : 'Run benchmark';
+        benchmarkActions.append(benchmarkButton);
+        benchmarkBlock.append(benchmarkActions);
+        runtimeStateEl.append(wrapper, copy, benchmarkBlock, profilesGrid);
         return;
     }
     const header = document.createElement('div');
@@ -276,24 +380,15 @@ function renderRuntimeState() {
     });
     const wrapper = document.createElement('div');
     wrapper.className = 'runtime-grid';
-    const metrics = [
-        ['Recommended profile', 'Fast'],
-        ['Generation model', 'qwen2.5:0.5b'],
-        ['Embedding model', 'nomic-embed-text-v2-moe:latest'],
-    ];
-    for (const [label, value] of metrics) {
-        const metric = document.createElement('div');
-        metric.className = 'runtime-metric';
-        metric.innerHTML = `<span class="section-kicker">${label}</span><strong>${value}</strong>`;
-        wrapper.append(metric);
-    }
+    const recommended = getRuntimeProfile(runtimeProfilesPayload.recommended_profile);
+    wrapper.append(buildMetric('Recommended profile', recommended.label), buildMetric('Generation model', recommended.generation_model), buildMetric('Embedding model', recommended.embedding_model));
     const actions = document.createElement('div');
     actions.className = 'runtime-actions';
     const copySetup = document.createElement('button');
     copySetup.type = 'button';
-    copySetup.textContent = 'Copy setup commands';
+    copySetup.textContent = 'Copy recommended command';
     copySetup.addEventListener('click', async () => {
-        await navigator.clipboard.writeText(FAST_INSTALL_COMMANDS);
+        await navigator.clipboard.writeText(recommended.command || FAST_INSTALL_COMMANDS);
         setStatus('Setup commands copied');
     });
     actions.append(copySetup);
@@ -308,10 +403,16 @@ function renderRuntimeState() {
         const note = document.createElement('p');
         note.className = 'runtime-copy';
         note.textContent = runtimeSnapshot.error || runtimeSnapshot.hint || '';
-        runtimeStateEl.append(header, copy, wrapper, list, actions, note);
+        const reason = document.createElement('p');
+        reason.className = 'runtime-copy';
+        reason.textContent = runtimeProfilesPayload.reason;
+        runtimeStateEl.append(header, copy, wrapper, list, actions, reason, profilesGrid, note);
         return;
     }
-    runtimeStateEl.append(header, copy, wrapper, list, actions);
+    const reason = document.createElement('p');
+    reason.className = 'runtime-copy';
+    reason.textContent = runtimeProfilesPayload.reason;
+    runtimeStateEl.append(header, copy, wrapper, list, actions, reason, profilesGrid);
 }
 function renderSelectionState() {
     clearNode(selectionCardEl);
@@ -360,6 +461,16 @@ async function refreshTier() {
 async function refreshRuntime() {
     const startedAt = performance.now();
     try {
+        try {
+            runtimeProfilesPayload = await fetchRuntimeProfiles();
+        }
+        catch (_e) {
+            runtimeProfilesPayload = {
+                profiles: RUNTIME_PROFILES,
+                recommended_profile: 'fast',
+                reason: 'The smallest viable profile is the safest starting point.',
+            };
+        }
         const health = await fetchHealth();
         runtimeSnapshot = {
             ok: Boolean(health?.ok),
@@ -388,6 +499,12 @@ async function refreshRuntime() {
         renderRuntimeState();
     }
     catch (e) {
+        runtimeProfilesPayload = {
+            profiles: RUNTIME_PROFILES,
+            recommended_profile: 'fast',
+            reason: 'The runtime is unavailable, so the smallest viable profile is the safest starting point.',
+        };
+        benchmarkSnapshot = null;
         runtimeSnapshot = {
             ok: false,
             reachable: false,
@@ -478,6 +595,16 @@ async function doAsk() {
     renderExports({ markdown, json: res.json || {}, basename: 'selectpilot-answer' });
     setStatus('Done');
 }
+async function doBenchmark() {
+    setStatus('Benchmarking local runtime...');
+    benchmarkSnapshot = await runRuntimeBenchmark();
+    if (truthProfileEl)
+        truthProfileEl.textContent = getRuntimeProfile(benchmarkSnapshot.recommended_profile).label;
+    if (truthLatencyEl)
+        truthLatencyEl.textContent = `${benchmarkSnapshot.extract_latency_ms} ms`;
+    renderRuntimeState();
+    setStatus('Benchmark complete');
+}
 function bindActions() {
     const wrap = (fn) => async () => {
         isBusy = true;
@@ -527,6 +654,14 @@ function bindActions() {
         setStatus('Done');
     })());
     extractPresetEl?.addEventListener('change', () => syncPresetHelp());
+    runtimeStateEl?.addEventListener('click', (event) => {
+        const target = event.target;
+        if (!target)
+            return;
+        if (target.id === 'btn-run-benchmark') {
+            void wrap(() => doBenchmark())();
+        }
+    });
     tabReadableEl?.addEventListener('click', () => {
         currentResultView = 'readable';
         updateResultChrome();

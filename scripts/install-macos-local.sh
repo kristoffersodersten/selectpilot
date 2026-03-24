@@ -6,7 +6,7 @@ TEMPLATE="$ROOT/launchd/com.chromeai.nano.plist"
 DEST="${HOME}/Library/LaunchAgents/com.chromeai.nano.plist"
 HASH="$(shasum -a 256 "$ROOT/server/nano_server.py" | awk '{print $1}')"
 OLLAMA_BASE_URL="${CHROMEAI_OLLAMA_BASE_URL:-http://127.0.0.1:11434}"
-OLLAMA_MODEL="${CHROMEAI_OLLAMA_MODEL:-llama3.2}"
+OLLAMA_MODEL="${CHROMEAI_OLLAMA_MODEL:-qwen2.5:0.5b}"
 OLLAMA_EMBED_MODEL="${CHROMEAI_OLLAMA_EMBED_MODEL:-nomic-embed-text-v2-moe:latest}"
 
 mkdir -p "${HOME}/Library/LaunchAgents"
@@ -33,4 +33,5 @@ Next steps:
      $ROOT
   4. Current Ollama base URL: $OLLAMA_BASE_URL
   5. Current Ollama model: $OLLAMA_MODEL
+  6. Run 'npm run benchmark:local' to validate latency on this machine.
 EOF
