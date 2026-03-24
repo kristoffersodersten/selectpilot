@@ -22,6 +22,9 @@
     <key>CHROMEAI_PORT_INFO</key><string>/usr/local/var/run/chromeai/port.info</string>
     <key>CHROMEAI_EXPECTED_PORT_FILE</key><string>/usr/local/var/run/chromeai/port.info</string>
     <key>CHROMEAI_ALLOWED_RANGE</key><string>8080-8100</string>
+    <key>CHROMEAI_OLLAMA_BASE_URL</key><string>__OLLAMA_BASE_URL__</string>
+    <key>CHROMEAI_OLLAMA_MODEL</key><string>__OLLAMA_MODEL__</string>
+    <key>CHROMEAI_OLLAMA_EMBED_MODEL</key><string>__OLLAMA_EMBED_MODEL__</string>
     <key>CHROMEAI_BINARY_HASH</key><string>__BINARY_HASH__</string>
   </dict>
 </dict>

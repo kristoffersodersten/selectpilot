@@ -9,6 +9,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from datetime import datetime, timezone
 
+from ollama_client import OllamaClient, OllamaError
+
 ALLOWED_MIN = 8080
 ALLOWED_MAX = 8100
 
@@ -45,11 +47,7 @@ def write_port_info(port_file: Path, port: int):
     port_file.write_text(f"set $nano_port {port};\n", encoding="utf-8")
 
 
-def summarize(text: str) -> dict:
-    sentences = [s.strip() for s in text.replace("\n", " ").split(".") if s.strip()]
-    summary = ". ".join(sentences[:3]) + ("." if sentences else "")
-    markdown = f"## Summary\n\n{summary}\n\n**Sentences:** {len(sentences)}"
-    return {"summary": summary, "markdown": markdown}
+OLLAMA = OllamaClient()
 
 
 def transcribe(payload: dict) -> dict:
@@ -67,34 +65,22 @@ def vision(payload: dict) -> dict:
 
 def embed(payload: dict) -> dict:
     text = payload.get("text", "")
-    vec = []
-    seed = hashlib.sha256(text.encode("utf-8")).digest()
-    while len(vec) < 128:
-        seed = hashlib.sha256(seed).digest()
-        vec.extend([(b - 128) / 128 for b in seed])
-    return {"vector": vec[:128]}
+    try:
+        return OLLAMA.embed(text)
+    except OllamaError as e:
+        raise RuntimeError(str(e)) from e
 
 
 def agent(payload: dict) -> dict:
     prompt = payload.get("prompt", "")
     ctx = payload.get("context", {})
-    reasoning = [
-        "1. Detect input",
-        "2. Classify content",
-        "3. Normalize markdown",
-        "4. Optional multimodal extraction",
-        "5. Execute reasoning chain",
-        "6. Produce structured output"
-    ]
-    markdown = f"### Agent Response\n\nPrompt: {prompt}\n\nContext keys: {list(ctx.keys())}"
-    json_out = {"prompt": prompt, "context_keys": list(ctx.keys()), "ts": datetime.now(timezone.utc).isoformat()}
-    return {"reasoning": reasoning, "markdown": markdown, "json": json_out}
+    return OLLAMA.agent(prompt, ctx)
 
 
 def license_verify(payload: dict) -> dict:
     token = payload.get("token", "")
     tier = "pro" if "pro" in token else "plus" if "plus" in token else "essential"
-    now = int(datetime.utcnow().timestamp() * 1000)
+    now = int(datetime.now(timezone.utc).timestamp() * 1000)
     return {"token": token, "tier": tier, "issuedAt": now, "expiresAt": now + 30 * 24 * 60 * 60 * 1000}
 
 
@@ -118,7 +104,12 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path.rstrip('/') == '/health':
-            self._write_json(200, {"ok": True, "service": self.server_version})
+            health = OLLAMA.health()
+            self._write_json(200, {
+                "ok": bool(health.get("reachable")) and bool(health.get("model_available")),
+                "service": self.server_version,
+                "ollama": health,
+            })
             return
         self._write_json(404, {"error": "not_found"})
 
@@ -131,15 +122,32 @@ class Handler(BaseHTTPRequestHandler):
             payload = {}
         path = self.path.rstrip('/')
         if path == '/summarize':
-            resp = summarize(payload.get('text', ''))
+            try:
+                resp = OLLAMA.summarize(
+                    payload.get('text', ''),
+                    title=payload.get('title'),
+                    url=payload.get('url'),
+                    metadata=payload.get('metadata'),
+                )
+            except OllamaError as e:
+                self._write_json(503, {"ok": False, "error": {"code": "ollama_unavailable", "message": str(e)}})
+                return
         elif path == '/transcribe':
             resp = transcribe(payload)
         elif path == '/vision':
             resp = vision(payload)
         elif path == '/embed':
-            resp = embed(payload)
+            try:
+                resp = embed(payload)
+            except RuntimeError as e:
+                self._write_json(503, {"ok": False, "error": {"code": "ollama_unavailable", "message": str(e)}})
+                return
         elif path == '/agent':
-            resp = agent(payload)
+            try:
+                resp = agent(payload)
+            except OllamaError as e:
+                self._write_json(503, {"ok": False, "error": {"code": "ollama_unavailable", "message": str(e)}})
+                return
         elif path == '/license/verify':
             resp = license_verify(payload)
         else:

@@ -3,6 +3,7 @@
 ## Build
 - Install deps: `npm install`
 - Generate runtime JS: `npm run build`
+- Confirm typecheck: `npm run typecheck`
 
 ## LaunchAgent
 - Install: `launchctl unload ~/Library/LaunchAgents/com.chromeai.nano.plist 2>/dev/null || true`
@@ -20,17 +21,23 @@
 - Health check: `curl http://127.0.0.1:8083/health`
 - Verify proxy: `curl -H "Origin: chrome-extension://test" http://chromeai.local/summarize -d '{"text":"hello"}' -H 'Content-Type: application/json'`
 
+## Ollama
+- Verify Ollama responds: `curl http://127.0.0.1:11434/api/tags`
+- If you want a specific model for the LaunchAgent: `CHROMEAI_OLLAMA_MODEL=glm-5:cloud ./scripts/install-macos-local.sh`
+
 ## Extension
 - Load unpacked: `chrome://extensions` → enable Developer Mode → Load unpacked → select the project root.
 - Open popup → open side panel.
-- Trigger buttons: Summarize, Transcribe (with <audio> on page), Vision (with image/video), Agent.
+- Highlight text on a page.
+- Trigger buttons: Summarize, Rewrite, Extract actions, Ask Ollama.
+- Use Advanced tools only for experimental Transcribe/Vision flows.
 
 ## Endpoints direct
 - Summarize: `curl http://chromeai.local/summarize -H 'Content-Type: application/json' -d '{"text":"Sample sentence one. Sample sentence two."}'`
+- Agent: `curl http://chromeai.local/agent -H 'Content-Type: application/json' -d '{"prompt":"Rewrite this as a crisp product pitch.","context":{"selection":"A browser tool that rewrites selected text locally.","url":"https://example.com","title":"Example"}}'`
 - Transcribe: `curl http://chromeai.local/transcribe -H 'Content-Type: application/json' -d '{"audioUrl":"file:///tmp/a.mp3"}'`
 - Vision: `curl http://chromeai.local/vision -H 'Content-Type: application/json' -d '{"imageBase64":"abc"}'`
 - Embed: `curl http://chromeai.local/embed -H 'Content-Type: application/json' -d '{"text":"embedding text"}'`
-- Agent: `curl http://chromeai.local/agent -H 'Content-Type: application/json' -d '{"prompt":"do it","context":{"foo":"bar"}}'`
 - License: `curl http://chromeai.local/license/verify -H 'Content-Type: application/json' -d '{"token":"pro-123"}'`
 
 ## Monitoring

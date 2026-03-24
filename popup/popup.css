@@ -1,18 +1,48 @@
 body {
   margin: 0;
-  padding: 12px;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #0f172a;
-  color: #f8fafc;
+  min-width: 260px;
+  padding: 14px;
+  font-family: "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(125, 211, 252, 0.24), transparent 36%),
+    linear-gradient(180deg, #060914 0%, #0b1020 100%);
+  color: #e5eef8;
 }
+
+.popup {
+  display: grid;
+  gap: 10px;
+}
+
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+
+h1 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+p {
+  margin: 0;
+  color: #9bb0c8;
+  line-height: 1.4;
+  font-size: 13px;
+}
+
 button {
   width: 100%;
   padding: 12px;
-  border: none;
-  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 14px;
   font-weight: 600;
   cursor: pointer;
-  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  background: linear-gradient(135deg, #38bdf8, #8b5cf6);
   color: #fff;
+  box-shadow: 0 14px 30px rgba(56, 189, 248, 0.2);
 }
 button:active { opacity: 0.9; }

@@ -39,7 +39,7 @@ function buildPrompt(
   const goal = userPrompt?.trim()
     ? `User goal: ${userPrompt.trim()}`
     : 'User goal: Summarize and structure the captured context.';
-  return `You are the local ChromeAI agent. Input type: ${detected}. Classification: ${contentClass}.\n${goal}\n${meta}\n\nContent:\n${normalized}`;
+  return `You are the local SelectPilot agent. Input type: ${detected}. Classification: ${contentClass}.\n${goal}\n${meta}\n\nContent:\n${normalized}`;
 }
 
 export async function runPipeline(input: string, context: AgentContext, userPrompt?: string): Promise<AgentOutput> {

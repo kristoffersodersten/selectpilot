@@ -1,16 +1,22 @@
-# ChromeAI Extension
+# SelectPilot
 
-ChromeAI is a Chrome extension MVP for local AI-assisted browser workflows. It captures text, audio, and video context from the active tab, sends that context to a local service, and renders the results in a side panel with lightweight licensing and pricing hooks.
+SelectPilot is a local-first browser copilot for selected text. Highlight something on the web, open the side panel, and turn that selection into a summary, rewrite, action list, or prompted answer using Ollama running on your machine.
 
-This is not a polished product release. It is a working prototype intended to prove end-to-end extension architecture quickly: capture, side-panel UX, local API bridge, feature gating, and early monetization concepts.
+This is still an MVP, but the core loop is now real: selected text is captured in the extension, routed through a local Python bridge, sent to Ollama, and rendered back in a Chrome side panel.
+
+For the privacy boundary and verification checklist, see [ZERO_LEAKAGE.md](./ZERO_LEAKAGE.md).
+For a fast application-ready walkthrough, see [DEMO_SCRIPT.md](./DEMO_SCRIPT.md).
 
 ## What it does
 
-- Summarizes selected text or page content from the active tab.
-- Detects `<audio>` and `<video>` elements for transcription and frame capture flows.
+- Summarizes selected text or page content from the active tab via Ollama.
+- Rewrites or transforms selected text with prompted local model calls.
+- Extracts action items and next steps from highlighted content.
 - Runs an agent-style workflow from the side panel with a user-editable prompt.
 - Stores license data locally and gates features by tier.
 - Includes a local Python service, launchd wiring, and nginx proxy config for `http://chromeai.local`.
+- Keeps audio and vision flows as explicit experimental tools, not the main product promise.
+- Enforces a local-only boundary for summarize, agent, and embed by ignoring Ollama cloud models.
 
 ## Project status
 
@@ -18,9 +24,10 @@ This is not a polished product release. It is a working prototype intended to pr
 - Side panel UI: implemented
 - Content capture: implemented
 - Local service layer: implemented
+- Ollama integration for summarize/agent/embed: implemented
 - Tiering and pricing model: implemented
 - Billing and license verification flows: prototype
-- Local AI backend: stubbed MVP, not production inference
+- Audio and vision tools: prototype
 
 ## Repo layout
 
@@ -56,6 +63,12 @@ npm run build
 ./scripts/install-macos-local.sh
 ```
 
+If you want a specific Ollama model, set it before running the script:
+
+```bash
+CHROMEAI_OLLAMA_MODEL=glm-5:cloud ./scripts/install-macos-local.sh
+```
+
 ### 4. Add the local hostname
 
 Add this line to `/etc/hosts` if it is missing:
@@ -76,6 +89,16 @@ sudo nginx -s reload
 
 Open `chrome://extensions`, enable Developer Mode, choose `Load unpacked`, and select this project root.
 
+### 7. Make sure Ollama is running
+
+Examples:
+
+```bash
+ollama serve
+ollama list
+ollama pull qwen2.5:0.5b
+```
+
 ## Validation
 
 For a concise manual test checklist, see [VALIDATION_STEPS.md](./VALIDATION_STEPS.md).
@@ -94,6 +117,7 @@ curl http://127.0.0.1:8083/health
 
 ## Notes
 
-- The local Python service currently returns deterministic prototype responses. It is intentionally lightweight so the extension workflow can be exercised without a full inference stack.
+- The local Python service now forwards summarize, agent, and embed requests to Ollama and surfaces health information for the configured model.
+- The core privacy story is local-only for the selected-text path. See [ZERO_LEAKAGE.md](./ZERO_LEAKAGE.md) for the exact claim and how to verify it.
 - Runtime JavaScript is generated from the `.ts` sources with `npm run build`.
-- The project is best presented as an MVP or prototype, not as a production-ready extension.
+- The project is best presented as a focused selected-text MVP, not as a polished all-in-one browser assistant.

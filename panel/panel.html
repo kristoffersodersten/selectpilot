@@ -8,22 +8,40 @@
 <body>
   <div class="panel">
     <header>
-      <div class="title">ChromeAI</div>
+      <div>
+        <div class="eyebrow">Local-first copilot</div>
+        <div class="title">SelectPilot</div>
+      </div>
       <div class="tier" id="tier"></div>
     </header>
+    <p class="lede">
+      Highlight text, open the side panel, and turn it into a summary, rewrite, or next step with your local Ollama setup.
+    </p>
     <section class="actions">
       <button id="btn-summarize">Summarize</button>
-      <button id="btn-transcribe">Transcribe</button>
-      <button id="btn-vision">Vision OCR</button>
-      <button id="btn-agent">Agent Reason</button>
+      <button id="btn-rewrite">Rewrite</button>
+      <button id="btn-actions">Extract actions</button>
+      <button id="btn-ask">Ask Ollama</button>
     </section>
     <section class="agent-prompt">
-      <label for="agent-prompt">Agent Prompt</label>
-      <textarea id="agent-prompt" rows="4">Reason over the captured context and produce structured output.</textarea>
+      <label for="agent-prompt">Custom prompt</label>
+      <textarea id="agent-prompt" rows="4">Turn the selected text into a concise, practical output.</textarea>
     </section>
-    <section class="status-bar" id="status-bar"></section>
-    <section class="workflow" id="workflow"></section>
+    <section class="workflow" id="workflow">
+      <div class="empty-state">
+        <strong>Ready for selected text.</strong>
+        <span>Open a page, highlight content, then choose a transform.</span>
+      </div>
+    </section>
+    <details class="advanced">
+      <summary>Advanced tools</summary>
+      <div class="advanced-grid">
+        <button id="btn-transcribe">Transcribe</button>
+        <button id="btn-vision">Vision OCR</button>
+      </div>
+    </details>
     <section class="exports" id="exports"></section>
+    <section class="status-bar" id="status-bar"></section>
     <section class="status" id="status">Ready</section>
   </div>
   <script type="module" src="panel.js"></script>
