@@ -8,7 +8,6 @@ async function getActiveTab() {
 }
 async function requestFromContent(tabId, type) {
     try {
-        // @ts-ignore
         const res = await chrome.tabs.sendMessage(tabId, { type });
         return res;
     }

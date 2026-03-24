@@ -1,14 +1,14 @@
 # Validation Steps (macOS)
 
 ## Build
-- Install deps: `npm install`
-- Generate runtime JS: `npm run build`
-- Confirm typecheck: `npm run typecheck`
+- Install deps: `pnpm install` (or `npm install`)
+- Generate runtime JS: `pnpm build`
+- Confirm typecheck: `pnpm typecheck`
 
 ## LaunchAgent
 - Install: `launchctl unload ~/Library/LaunchAgents/com.chromeai.nano.plist 2>/dev/null || true`
-- Bootstrap: `npm run bootstrap:local`
-- Explicit profiles: `npm run bootstrap:local -- --profile fast|balanced|advanced`
+- Bootstrap: `pnpm bootstrap:local`
+- Explicit profiles: `pnpm bootstrap:local -- --profile fast|balanced|advanced`
 - Default profile: `Fast`
 - Recommended models:
   - Generation: `qwen2.5:0.5b`
@@ -29,9 +29,9 @@
 ## Ollama
 - Verify Ollama responds: `curl http://127.0.0.1:11434/api/tags`
 - Install the Fast profile models first:
-  - `npm run bootstrap:local -- --profile fast`
-- If Fast is too slow or low quality, rerun with `npm run bootstrap:local -- --profile balanced`
-- For heavier local reasoning, opt into `npm run bootstrap:local -- --profile advanced`
+  - `pnpm bootstrap:local -- --profile fast`
+- If Fast is too slow or low quality, rerun with `pnpm bootstrap:local -- --profile balanced`
+- For heavier local reasoning, opt into `pnpm bootstrap:local -- --profile advanced`
 
 ## Extension
 - Load unpacked: `chrome://extensions` → enable Developer Mode → Load unpacked → select the project root.
@@ -50,7 +50,7 @@
 - Vision: `curl http://chromeai.local/vision -H 'Content-Type: application/json' -d '{"imageBase64":"abc"}'`
 - Embed: `curl http://chromeai.local/embed -H 'Content-Type: application/json' -d '{"text":"embedding text"}'`
 - License: `curl http://chromeai.local/license/verify -H 'Content-Type: application/json' -d '{"token":"pro-123"}'`
-- Benchmark: `npm run benchmark:local`
+- Benchmark: `pnpm benchmark:local`
 
 ## Monitoring
 - Runtime errors: `tail -f /usr/local/var/log/chromeai/nano.err`

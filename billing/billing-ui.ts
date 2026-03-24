@@ -1,6 +1,6 @@
 import { openCheckout } from './paddle-checkout.js';
 import { getPricing } from '../background/tier-service.js';
-import { $, button, setHTML } from '../utils/dom.js';
+import { button, setHTML } from '../utils/dom.js';
 
 export async function mountBillingUI(root: HTMLElement): Promise<void> {
   const pricing = await getPricing();

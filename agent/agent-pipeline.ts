@@ -11,7 +11,7 @@ function detectInput(context: AgentContext): { kind: 'text' | 'audio' | 'video' 
 function classifyContent(markdown: string): string {
   if (/```/m.test(markdown)) return 'technical_markdown';
   if (markdown.length > 1200) return 'longform';
-  if (/\[[^\]]+\]\([^\)]+\)/.test(markdown)) return 'linked';
+  if (/\[[^\]]+\]\([^)]+\)/.test(markdown)) return 'linked';
   return 'shortform';
 }
 

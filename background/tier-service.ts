@@ -1,7 +1,6 @@
 import { verifyLicense } from '../licensing/license-verifier.js';
 import { loadLicense, saveLicense } from '../licensing/license-storage.js';
 import { log } from '../utils/logger.js';
-import { nowISO } from '../utils/time.js';
 
 export type PricingConfig = {
   trial: { enabled: boolean; duration_days: number; access: 'pro' | 'plus' | 'essential' };

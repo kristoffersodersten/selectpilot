@@ -11,7 +11,6 @@ async function getActiveTab(): Promise<chrome.tabs.Tab | null> {
 
 async function requestFromContent<T>(tabId: number, type: string): Promise<T | null> {
   try {
-    // @ts-ignore
     const res = await chrome.tabs.sendMessage(tabId, { type });
     return res as T;
   } catch (e) {

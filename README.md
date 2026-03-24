@@ -71,6 +71,14 @@ Most browser AI tools are thin wrappers around remote APIs. SelectPilot is built
 
 ### 1. Install dev dependencies
 
+Preferred:
+
+```bash
+pnpm install
+```
+
+Fallback:
+
 ```bash
 npm install
 ```
@@ -78,7 +86,7 @@ npm install
 ### 2. Build JavaScript from TypeScript
 
 ```bash
-npm run build
+pnpm build
 ```
 
 ### 3. Bootstrap the local runtime
@@ -86,15 +94,15 @@ npm run build
 Recommended:
 
 ```bash
-npm run bootstrap:local
+pnpm bootstrap:local
 ```
 
 Explicit profile examples:
 
 ```bash
-npm run bootstrap:local -- --profile fast
-npm run bootstrap:local -- --profile balanced
-npm run bootstrap:local -- --profile advanced
+pnpm bootstrap:local -- --profile fast
+pnpm bootstrap:local -- --profile balanced
+pnpm bootstrap:local -- --profile advanced
 ```
 
 The bootstrapper will:
@@ -140,7 +148,7 @@ ollama pull nomic-embed-text-v2-moe:latest
 After the local bridge is installed, run the built-in benchmark:
 
 ```bash
-npm run benchmark:local
+pnpm benchmark:local
 ```
 
 If the Fast profile is too slow on your machine, move up to Balanced. If the machine is powerful and you want better output, opt into Advanced manually.
@@ -152,7 +160,7 @@ For a concise manual test checklist, see [VALIDATION_STEPS.md](./VALIDATION_STEP
 You can also run the local service directly:
 
 ```bash
-npm run validate:server
+pnpm validate:server
 ```
 
 And verify it responds:
@@ -167,5 +175,5 @@ curl http://127.0.0.1:8083/health
 - The core privacy story is local-only for the selected-text path. Structured extraction requires an actual text selection, while summarize and ask can fall back to page text.
 - See [ZERO_LEAKAGE.md](./ZERO_LEAKAGE.md) for the exact claim and how to verify it.
 - Privacy-first is the product thesis, not a side feature.
-- Runtime JavaScript is generated from the `.ts` sources with `npm run build`.
+- Runtime JavaScript is generated from the `.ts` sources with `pnpm build` or `npm run build`.
 - The project is best presented as a focused selected-text MVP, not as a polished all-in-one browser assistant.

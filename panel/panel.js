@@ -85,16 +85,6 @@ function shorten(text, max = 220) {
         return trimmed;
     return `${trimmed.slice(0, max - 1).trimEnd()}…`;
 }
-function deriveProfile(model) {
-    const normalized = model.toLowerCase();
-    if (!normalized || normalized === 'unknown' || normalized === 'unavailable')
-        return 'Pending';
-    if (normalized.includes('0.5b') || normalized.includes('1b') || normalized.includes('mini') || normalized.includes('small'))
-        return 'Fast';
-    if (normalized.includes('70b') || normalized.includes('120b') || normalized.includes('advanced') || normalized.includes('coder'))
-        return 'Advanced';
-    return 'Balanced';
-}
 function getEffectiveRecommendedProfileKey() {
     return benchmarkSnapshot?.recommended_profile || runtimeProfilesPayload.recommended_profile;
 }
@@ -504,7 +494,7 @@ async function refreshRuntime() {
         try {
             runtimeProfilesPayload = await fetchRuntimeProfiles();
         }
-        catch (_e) {
+        catch {
             runtimeProfilesPayload = {
                 profiles: RUNTIME_PROFILES,
                 recommended_profile: 'fast',
