@@ -1,5 +1,7 @@
 # SelectPilot
 
+![SelectPilot hero](./assets/marketing/selectpilot-store-hero.png)
+
 SelectPilot is a privacy-first local execution layer for selected text. Highlight something on the web, open the side panel, and turn that selection into structured output, summaries, rewrites, or prompted answers using Ollama running on your machine.
 
 This is still an MVP, but the core loop is real and intentionally constrained: selected text is captured in the extension, routed through a local Python bridge, sent to a local Ollama model, and rendered back in a Chrome side panel without sending the selected-text path to hosted inference.
@@ -14,6 +16,20 @@ The setup flow is `Detect -> Install -> Benchmark -> Assign profile`, with the s
 
 For the privacy boundary and verification checklist, see [ZERO_LEAKAGE.md](./ZERO_LEAKAGE.md).
 For a fast application-ready walkthrough, see [DEMO_SCRIPT.md](./DEMO_SCRIPT.md).
+
+## Product visuals
+
+### Structured extraction
+
+![Structured extraction](./assets/marketing/selectpilot-screenshot-extract.png)
+
+### Runtime setup
+
+![Runtime setup](./assets/marketing/selectpilot-screenshot-runtime.png)
+
+### Privacy boundary
+
+![Privacy boundary](./assets/marketing/selectpilot-screenshot-privacy.png)
 
 ## Why this exists
 
