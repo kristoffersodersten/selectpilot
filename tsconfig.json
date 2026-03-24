@@ -10,7 +10,7 @@
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "strict": false,
+    "strict": true,
     "allowJs": true,
     "noEmitOnError": false
   },
