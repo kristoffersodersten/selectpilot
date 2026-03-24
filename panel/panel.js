@@ -1,4 +1,5 @@
 import { $ } from '../utils/dom.js';
+import { getJSON, setJSON } from '../utils/storage.js';
 import { EXTRACTION_PRESETS, getExtractionPreset } from './extraction-presets.js';
 import { getRuntimeProfile, RUNTIME_PROFILES } from './runtime-profiles.js';
 const workflow = $('#workflow');
@@ -47,6 +48,7 @@ let runtimeProfilesPayload = {
     reason: 'The smallest viable profile is the safest starting point.',
 };
 let benchmarkSnapshot = null;
+const BENCHMARK_CACHE_KEY = 'selectpilot_runtime_benchmark_v1';
 const FAST_INSTALL_COMMANDS = [
     'ollama pull qwen2.5:0.5b',
     'ollama pull nomic-embed-text-v2-moe:latest',
@@ -108,6 +110,27 @@ function getEffectiveRecommendationReason() {
         return `Benchmark confirms the ${benchmarkProfile} profile for this workload.`;
     }
     return `Benchmark overrides the hardware heuristic: use ${benchmarkProfile} for this workload instead of the auto ${autoProfile} profile.`;
+}
+async function loadBenchmarkSnapshot() {
+    const cached = await getJSON(BENCHMARK_CACHE_KEY);
+    if (!cached || !cached.recommended_profile)
+        return;
+    benchmarkSnapshot = cached;
+}
+async function persistBenchmarkSnapshot(snapshot) {
+    if (!snapshot) {
+        await chrome.storage.local.remove(BENCHMARK_CACHE_KEY);
+        return;
+    }
+    await setJSON(BENCHMARK_CACHE_KEY, { ...snapshot, benchmarked_at: Date.now() });
+}
+async function reconcileBenchmarkSnapshot() {
+    if (!benchmarkSnapshot || !runtimeSnapshot.ok)
+        return;
+    if (benchmarkSnapshot.active_model === runtimeSnapshot.activeModel)
+        return;
+    benchmarkSnapshot = null;
+    await persistBenchmarkSnapshot(null);
 }
 function renderResultBody() {
     clearNode(workflow);
@@ -513,6 +536,7 @@ async function refreshRuntime() {
         setStatusBar(runtimeSnapshot.ok
             ? `${runtimeSnapshot.activeModel} ready locally · ${runtimeSnapshot.ignoredRemoteCount} remote models ignored`
             : `Runtime degraded · ${runtimeSnapshot.hint || 'local model required'}`);
+        await reconcileBenchmarkSnapshot();
         renderRuntimeState();
     }
     catch (e) {
@@ -615,6 +639,7 @@ async function doAsk() {
 async function doBenchmark() {
     setStatus('Benchmarking local runtime...');
     benchmarkSnapshot = await runRuntimeBenchmark();
+    await persistBenchmarkSnapshot(benchmarkSnapshot);
     if (truthProfileEl)
         truthProfileEl.textContent = getEffectiveRecommendedProfile().label;
     if (truthLatencyEl)
@@ -697,10 +722,14 @@ function bindActions() {
 }
 populatePresetOptions();
 bindActions();
-refreshTier();
-renderRuntimeState();
-renderSelectionState();
-updateResultChrome();
-renderResultBody();
-renderExports({});
-void Promise.all([refreshRuntime(), refreshSelectionPreview()]);
+async function initialize() {
+    await loadBenchmarkSnapshot();
+    refreshTier();
+    renderRuntimeState();
+    renderSelectionState();
+    updateResultChrome();
+    renderResultBody();
+    renderExports({});
+    await Promise.all([refreshRuntime(), refreshSelectionPreview()]);
+}
+void initialize();

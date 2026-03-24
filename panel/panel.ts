@@ -1,4 +1,5 @@
 import { $ } from '../utils/dom.js';
+import { getJSON, setJSON } from '../utils/storage.js';
 import { EXTRACTION_PRESETS, getExtractionPreset, type ExtractionPresetKey } from './extraction-presets.js';
 import { getRuntimeProfile, RUNTIME_PROFILES, type RuntimeProfile } from './runtime-profiles.js';
 
@@ -53,6 +54,7 @@ type BenchmarkSnapshot = {
   recommended_profile: string;
   auto_profile?: string;
   auto_profile_reason?: string;
+  benchmarked_at?: number;
 };
 
 type SelectionPreview = {
@@ -97,6 +99,7 @@ let runtimeProfilesPayload: RuntimeProfilesPayload = {
   reason: 'The smallest viable profile is the safest starting point.',
 };
 let benchmarkSnapshot: BenchmarkSnapshot | null = null;
+const BENCHMARK_CACHE_KEY = 'selectpilot_runtime_benchmark_v1';
 
 const FAST_INSTALL_COMMANDS = [
   'ollama pull qwen2.5:0.5b',
@@ -164,6 +167,27 @@ function getEffectiveRecommendationReason(): string {
     return `Benchmark confirms the ${benchmarkProfile} profile for this workload.`;
   }
   return `Benchmark overrides the hardware heuristic: use ${benchmarkProfile} for this workload instead of the auto ${autoProfile} profile.`;
+}
+
+async function loadBenchmarkSnapshot() {
+  const cached = await getJSON<BenchmarkSnapshot>(BENCHMARK_CACHE_KEY);
+  if (!cached || !cached.recommended_profile) return;
+  benchmarkSnapshot = cached;
+}
+
+async function persistBenchmarkSnapshot(snapshot: BenchmarkSnapshot | null) {
+  if (!snapshot) {
+    await chrome.storage.local.remove(BENCHMARK_CACHE_KEY);
+    return;
+  }
+  await setJSON(BENCHMARK_CACHE_KEY, { ...snapshot, benchmarked_at: Date.now() });
+}
+
+async function reconcileBenchmarkSnapshot() {
+  if (!benchmarkSnapshot || !runtimeSnapshot.ok) return;
+  if (benchmarkSnapshot.active_model === runtimeSnapshot.activeModel) return;
+  benchmarkSnapshot = null;
+  await persistBenchmarkSnapshot(null);
 }
 
 function renderResultBody() {
@@ -644,6 +668,7 @@ async function refreshRuntime() {
         ? `${runtimeSnapshot.activeModel} ready locally · ${runtimeSnapshot.ignoredRemoteCount} remote models ignored`
         : `Runtime degraded · ${runtimeSnapshot.hint || 'local model required'}`
     );
+    await reconcileBenchmarkSnapshot();
     renderRuntimeState();
   } catch (e: any) {
     runtimeProfilesPayload = {
@@ -746,6 +771,7 @@ async function doAsk() {
 async function doBenchmark() {
   setStatus('Benchmarking local runtime...');
   benchmarkSnapshot = await runRuntimeBenchmark();
+  await persistBenchmarkSnapshot(benchmarkSnapshot);
   if (truthProfileEl) truthProfileEl.textContent = getEffectiveRecommendedProfile().label;
   if (truthLatencyEl) truthLatencyEl.textContent = `${benchmarkSnapshot.extract_latency_ms} ms`;
   renderRuntimeState();
@@ -829,10 +855,16 @@ function bindActions() {
 
 populatePresetOptions();
 bindActions();
-refreshTier();
-renderRuntimeState();
-renderSelectionState();
-updateResultChrome();
-renderResultBody();
-renderExports({});
-void Promise.all([refreshRuntime(), refreshSelectionPreview()]);
+
+async function initialize() {
+  await loadBenchmarkSnapshot();
+  refreshTier();
+  renderRuntimeState();
+  renderSelectionState();
+  updateResultChrome();
+  renderResultBody();
+  renderExports({});
+  await Promise.all([refreshRuntime(), refreshSelectionPreview()]);
+}
+
+void initialize();
