@@ -19,17 +19,30 @@ For a fast application-ready walkthrough, see [DEMO_SCRIPT.md](./DEMO_SCRIPT.md)
 
 ## Product visuals
 
-### Structured extraction
+<p align="center">
+  <img src="./assets/marketing/selectpilot-screenshot-extract.png" alt="SelectPilot structured extraction" width="1080">
+</p>
+<p align="center">
+  <strong>Structured extraction</strong><br>
+  Turn selected text into reusable JSON instead of another blob of generated prose.
+</p>
 
-![Structured extraction](./assets/marketing/selectpilot-screenshot-extract.png)
-
-### Runtime setup
-
-![Runtime setup](./assets/marketing/selectpilot-screenshot-runtime.png)
-
-### Privacy boundary
-
-![Privacy boundary](./assets/marketing/selectpilot-screenshot-privacy.png)
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="./assets/marketing/selectpilot-screenshot-runtime.png" alt="SelectPilot runtime setup" width="100%">
+      <br><br>
+      <strong>Runtime setup</strong><br>
+      Detect the local runtime, benchmark the workload, and choose the smallest viable model profile.
+    </td>
+    <td width="50%" valign="top">
+      <img src="./assets/marketing/selectpilot-screenshot-privacy.png" alt="SelectPilot privacy boundary" width="100%">
+      <br><br>
+      <strong>Privacy boundary</strong><br>
+      Make the local-only execution path visible through the environment truth strip and health output.
+    </td>
+  </tr>
+</table>
 
 ## Why this exists
 
