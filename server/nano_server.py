@@ -191,12 +191,35 @@ class Handler(BaseHTTPRequestHandler):
         self._write_json(200, resp)
 
 
+def _default_run_dir() -> str:
+    env = os.environ.get('CHROMEAI_RUN_DIR')
+    if env:
+        return env
+    import platform
+    if platform.system() == 'Darwin':
+        return os.path.expanduser('~/Library/Application Support/SelectPilot/run')
+    return os.path.expanduser('~/.local/share/SelectPilot/run')
+
+
+def _default_log_dir() -> str:
+    env = os.environ.get('CHROMEAI_LOG_DIR')
+    if env:
+        return env
+    import platform
+    if platform.system() == 'Darwin':
+        return os.path.expanduser('~/Library/Logs/SelectPilot')
+    return os.path.expanduser('~/.local/share/SelectPilot/logs')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=DEFAULT_PORT)
     parser.add_argument('--port-range', default=None)
-    parser.add_argument('--run-dir', default=os.path.expanduser('~/Library/Application Support/SelectPilot/run'))
-    parser.add_argument('--log-dir', default=os.path.expanduser('~/Library/Logs/SelectPilot'))
+    parser.add_argument('--bind', default=os.environ.get('CHROMEAI_BIND_HOST', '127.0.0.1'),
+                        help='Address to bind the server to (default: 127.0.0.1; '
+                             'override with CHROMEAI_BIND_HOST env var)')
+    parser.add_argument('--run-dir', default=_default_run_dir())
+    parser.add_argument('--log-dir', default=_default_log_dir())
     parser.add_argument('--binary-path', default=None)
     parser.add_argument('--binary-hash', default=None)
     args = parser.parse_args()
@@ -211,13 +234,14 @@ def main():
     expected = args.binary_hash or os.environ.get('CHROMEAI_BINARY_HASH')
     verify_binary(binary_path, expected)
     port = args.port
+    bind = args.bind
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        if s.connect_ex(("127.0.0.1", port)) == 0:
+        if s.connect_ex((bind, port)) == 0:
             raise RuntimeError(f"port {port} is already in use")
     write_port_info(port_file, port)
 
-    server = HTTPServer(('127.0.0.1', port), Handler)
-    print(f"nano server listening on {port}")
+    server = HTTPServer((bind, port), Handler)
+    print(f"nano server listening on {bind}:{port}")
     server.serve_forever()
 
 
