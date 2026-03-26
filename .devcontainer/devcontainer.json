@@ -1,0 +1,32 @@
+{
+  "name": "SelectPilot",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12"
+    }
+  },
+  "forwardPorts": [8083],
+  "portsAttributes": {
+    "8083": {
+      "label": "Nano Server",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "corepack enable && corepack prepare pnpm@10.33.0 --activate && pnpm install",
+  "remoteEnv": {
+    "CHROMEAI_BIND_HOST": "0.0.0.0",
+    "CHROMEAI_RUN_DIR": "/tmp/selectpilot/run",
+    "CHROMEAI_LOG_DIR": "/tmp/selectpilot/logs"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "saoudrizwan.claude-dev",
+        "dbaeumer.vscode-eslint",
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ]
+    }
+  }
+}
