@@ -2,35 +2,36 @@
   <rect width="1280" height="800" fill="#F3F5F8"/>
   <rect x="52" y="44" width="1176" height="712" rx="34" fill="#FCFCFD" stroke="#DEE5EE" stroke-width="2"/>
 
-  <text x="96" y="110" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="15" font-weight="700" letter-spacing="1.2">PRIMARY ACTION</text>
-  <text x="96" y="160" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="38" font-weight="600" letter-spacing="-1.2">Extract JSON from selected text</text>
-  <text x="96" y="198" fill="#64748B" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="21">Readable output and reusable structure, generated locally.</text>
+  <text x="96" y="108" fill="#6B7280" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="1.1">PRIMARY ACTION</text>
+  <text x="96" y="154" fill="#0F172A" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="34" font-weight="700">Extract JSON from selected text</text>
+  <text x="96" y="188" fill="#64748B" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="19">Readable output and reusable structure, generated locally.</text>
 
-  <rect x="96" y="242" width="458" height="138" rx="24" fill="#FBFBFC" stroke="#E3E8EF"/>
-  <text x="124" y="278" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">SELECTION</text>
-  <text x="124" y="318" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="22" font-weight="600">We need a practical rollout plan</text>
-  <text x="124" y="348" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="22" font-weight="600">for the next 30 days.</text>
+  <rect x="96" y="226" width="470" height="146" rx="22" fill="#FBFBFC" stroke="#E3E8EF"/>
+  <text x="124" y="260" fill="#6B7280" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="1">SELECTION</text>
+  <text x="124" y="298" fill="#0F172A" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="20" font-weight="600">We need a practical rollout plan</text>
+  <text x="124" y="328" fill="#0F172A" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="20" font-weight="600">for the next 30 days.</text>
 
-  <rect x="96" y="418" width="176" height="54" rx="18" fill="#0F172A"/>
-  <text x="140" y="452" fill="#F8FAFC" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="21" font-weight="600">Extract JSON</text>
+  <rect x="96" y="400" width="210" height="56" rx="16" fill="#0F172A"/>
+  <text x="201" y="436" fill="#F8FAFC" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="21" font-weight="700">Extract JSON</text>
 
-  <rect x="96" y="536" width="400" height="112" rx="22" fill="#FFFFFF" stroke="#D7DEE9" stroke-width="2"/>
-  <text x="124" y="572" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">WHY IT FEELS DIFFERENT</text>
-  <text x="124" y="610" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="24" font-weight="600">Not a chat wrapper.</text>
-  <text x="124" y="642" fill="#64748B" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="20">It turns selected text into structure you can act on.</text>
+  <rect x="96" y="516" width="438" height="128" rx="22" fill="#FFFFFF" stroke="#D7DEE9" stroke-width="2"/>
+  <text x="124" y="552" fill="#6B7280" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="1">WHY IT FEELS DIFFERENT</text>
+  <text x="124" y="588" fill="#0F172A" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="25" font-weight="700">Not a chat wrapper.</text>
+  <text x="124" y="620" fill="#64748B" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="19">It turns selected text into structure you can act on.</text>
 
-  <rect x="612" y="122" width="560" height="550" rx="28" fill="#FFFFFF" stroke="#D7DEE9" stroke-width="2"/>
-  <rect x="638" y="150" width="508" height="58" rx="18" fill="#F7F8FA" stroke="#E3E8EF"/>
-  <text x="660" y="186" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="13" font-weight="700" letter-spacing="1.2">STRUCTURED RESULT</text>
-  <rect x="638" y="236" width="508" height="404" rx="24" fill="#FBFBFC" stroke="#E3E8EF"/>
-  <text x="664" y="276" fill="#0F172A" font-family="SF Mono, Menlo, monospace" font-size="17">{</text>
-  <text x="690" y="276" fill="#334155" font-family="SF Mono, Menlo, monospace" font-size="17">"summary": "Create a focused 30-day rollout",</text>
-  <text x="690" y="308" fill="#334155" font-family="SF Mono, Menlo, monospace" font-size="17">"action_items": [</text>
-  <text x="716" y="340" fill="#334155" font-family="SF Mono, Menlo, monospace" font-size="17">"Define one paid utility path",</text>
-  <text x="716" y="372" fill="#334155" font-family="SF Mono, Menlo, monospace" font-size="17">"Record 60-second demo",</text>
-  <text x="716" y="404" fill="#334155" font-family="SF Mono, Menlo, monospace" font-size="17">"Ship landing copy"</text>
-  <text x="690" y="436" fill="#334155" font-family="SF Mono, Menlo, monospace" font-size="17">],</text>
-  <text x="690" y="468" fill="#334155" font-family="SF Mono, Menlo, monospace" font-size="17">"risks": ["Scope drift", "Weak positioning"],</text>
-  <text x="690" y="500" fill="#334155" font-family="SF Mono, Menlo, monospace" font-size="17">"follow_ups": ["Benchmark onboarding UX"]</text>
-  <text x="664" y="532" fill="#0F172A" font-family="SF Mono, Menlo, monospace" font-size="17">}</text>
+  <rect x="602" y="116" width="578" height="556" rx="26" fill="#FFFFFF" stroke="#D7DEE9" stroke-width="2"/>
+  <rect x="630" y="146" width="522" height="58" rx="16" fill="#F7F8FA" stroke="#E3E8EF"/>
+  <text x="654" y="182" fill="#6B7280" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="1">STRUCTURED RESULT</text>
+  <rect x="630" y="228" width="522" height="416" rx="22" fill="#FBFBFC" stroke="#E3E8EF"/>
+
+  <text x="656" y="266" fill="#0F172A" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">{</text>
+  <text x="680" y="266" fill="#334155" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">"summary": "Create a focused 30-day rollout",</text>
+  <text x="680" y="296" fill="#334155" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">"action_items": [</text>
+  <text x="704" y="326" fill="#334155" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">"Define one paid utility path",</text>
+  <text x="704" y="356" fill="#334155" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">"Record 60-second demo",</text>
+  <text x="704" y="386" fill="#334155" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">"Ship landing copy"</text>
+  <text x="680" y="416" fill="#334155" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">],</text>
+  <text x="680" y="446" fill="#334155" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">"risks": ["Scope drift", "Weak positioning"],</text>
+  <text x="680" y="476" fill="#334155" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">"follow_ups": ["Benchmark onboarding UX"]</text>
+  <text x="656" y="506" fill="#0F172A" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">}</text>
 </svg>

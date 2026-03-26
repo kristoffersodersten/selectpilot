@@ -1,194 +1,153 @@
 # SelectPilot
 
-![SelectPilot hero](./assets/marketing/selectpilot-store-hero.png)
+Local AI in your browser.
+No data leaves your device on the core selected-text path.
 
-SelectPilot is a privacy-first local execution layer for selected text. Highlight something on the web, open the side panel, and turn that selection into structured output, summaries, rewrites, or prompted answers using Ollama running on your machine.
+Select text on any page → extract structured knowledge → export where it belongs.
 
-This is still an MVP, but the core loop is real and intentionally constrained: selected text is captured in the extension, routed through a local Python bridge, sent to a local Ollama model, and rendered back in a Chrome side panel without sending the selected-text path to hosted inference.
+Runs on local models via Ollama.
 
-The recommended first-run flow is profile-based:
+![Selection](assets/marketing/selectpilot-screenshot-extract.png)
+![Runtime](assets/marketing/selectpilot-screenshot-runtime.png)
+![Privacy](assets/marketing/selectpilot-screenshot-privacy.png)
 
-- `Fast`: smallest viable local model for extraction and short transforms
-- `Balanced`: better quality when the machine can handle it
-- `Advanced`: manual opt-in for heavier local models
+---
 
-The setup flow is `Detect -> Install -> Benchmark -> Assign profile`, with the smallest viable model chosen for the selected-text workload rather than the largest model the machine can tolerate.
+## Why SelectPilot
 
-For the privacy boundary and verification checklist, see [ZERO_LEAKAGE.md](./ZERO_LEAKAGE.md).
-For a fast application-ready walkthrough, see [DEMO_SCRIPT.md](./DEMO_SCRIPT.md).
+Most browser AI tools send your context to external APIs.
 
-## Product visuals
+SelectPilot is built to keep the core workflow local-first and inspectable.
 
-<p align="center">
-  <img src="./assets/marketing/selectpilot-screenshot-extract.png" alt="SelectPilot structured extraction" width="1080">
-</p>
-<p align="center">
-  <strong>Structured extraction</strong><br>
-  Turn selected text into reusable JSON instead of another blob of generated prose.
-</p>
+- No outbound cloud inference on the core selected-text workflow
+- No telemetry in runtime flow
+- No API keys required for core usage
+- Deterministic local boundary (`127.0.0.1` bridge + local Ollama)
 
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <img src="./assets/marketing/selectpilot-screenshot-runtime.png" alt="SelectPilot runtime setup" width="100%">
-      <br><br>
-      <strong>Runtime setup</strong><br>
-      Detect the local runtime, benchmark the workload, and choose the smallest viable model profile.
-    </td>
-    <td width="50%" valign="top">
-      <img src="./assets/marketing/selectpilot-screenshot-privacy.png" alt="SelectPilot privacy boundary" width="100%">
-      <br><br>
-      <strong>Privacy boundary</strong><br>
-      Make the local-only execution path visible through the environment truth strip and health output.
-    </td>
-  </tr>
-</table>
-
-## Why this exists
-
-Most browser AI tools are thin wrappers around remote APIs. SelectPilot is built around a narrower promise:
-
-- Privacy first: the core selected-text path stays local by design.
-- Zero leakage on the main workflow: selected text is not sent to cloud-hosted Ollama models.
-- Useful before broad: summarize, rewrite, and extract structured output from highlighted text quickly.
-
-## Privacy-first promise
-
-- `Extract JSON`, `Summarize`, `Ask`, and `Embed` run through a local bridge and local Ollama models.
-- Cloud Ollama models are explicitly ignored for the core selected-text path.
-- No telemetry or analytics are part of the runtime flow.
-- The privacy boundary is visible and testable through the `/health` endpoint and DevTools network inspection.
+---
 
 ## What it does
 
-- Extracts reusable JSON from selected text with preset schemas such as Action Brief, Generic JSON, Job Brief, and Decision Log.
-- Summarizes selected text or page content from the active tab via Ollama.
-- Rewrites or transforms selected text with prompted local model calls.
-- Extracts action items and next steps from highlighted content.
-- Runs an agent-style workflow from the side panel with a user-editable prompt.
-- Stores license data locally and gates features by tier.
-- Enforces a local-only boundary for summarize, agent, and embed by ignoring Ollama cloud models.
-- Includes a local Python service and launchd wiring for a direct local bridge at `http://127.0.0.1:8083`.
-- Keeps audio and vision flows as explicit experimental tools, not the main product promise.
+- Extracts structured knowledge from selected text
+- Generates canonical metadata (source, intent, timestamps)
+- Exports to adapter targets (e.g. Obsidian/Notion package formats)
+- Uses profile-based local runtime selection (Fast / Balanced / Advanced)
 
-## Project status
+---
 
-- Chrome extension shell: implemented
-- Side panel UI: implemented
-- Content capture: implemented
-- Local service layer: implemented
-- Ollama integration for summarize/agent/embed: implemented
-- Tiering and pricing model: implemented
-- Billing and license verification flows: prototype
-- Audio and vision tools: prototype
+## Quick Start
 
-## Repo layout
-
-- `manifest.json`: MV3 extension manifest
-- `background/`: service worker and tier gating
-- `content/`: extraction helpers for text, audio, and video
-- `panel/`: side panel UI
-- `popup/`: popup action entrypoint
-- `agent/`: agent prompt and reasoning pipeline
-- `api/`: local service client
-- `billing/`: Paddle checkout prototype
-- `licensing/`: local license storage and verification
-- `server/`: local Python service
-- `launchd/`: local macOS setup
-- `nginx/`: legacy proxy config kept for reference, not required for the main install path
-
-## Local setup
-
-### 1. Install dev dependencies
-
-Preferred:
+1. Install Ollama
+2. Bootstrap local runtime + extension build:
 
 ```bash
-pnpm install
-```
-
-Fallback:
-
-```bash
-npm install
-```
-
-### 2. Build JavaScript from TypeScript
-
-```bash
+pnpm setup:local
 pnpm build
 ```
 
-### 3. Bootstrap the local runtime
+3. Load unpacked extension in `chrome://extensions`
+4. Select text → open side panel → click **Extract JSON**
 
-Recommended:
-
-```bash
-pnpm bootstrap:local
-```
-
-Explicit profile examples:
-
-```bash
-pnpm bootstrap:local -- --profile fast
-pnpm bootstrap:local -- --profile balanced
-pnpm bootstrap:local -- --profile advanced
-```
-
-The bootstrapper will:
-
-- install Ollama with Homebrew if needed
-- pull the selected generation and embedding models
-- install the local LaunchAgent with the chosen profile
-- recommend a follow-up benchmark
-
-### 4. Load the unpacked extension
-
-Open `chrome://extensions`, enable Developer Mode, choose `Load unpacked`, and select this project root.
-
-### 5. Make sure Ollama is running
-
-Examples:
-
-```bash
-ollama serve
-ollama list
-ollama pull qwen2.5:0.5b
-ollama pull nomic-embed-text-v2-moe:latest
-```
-
-### 6. Benchmark the profile
-
-After the local bridge is installed, run the built-in benchmark:
-
-```bash
-pnpm benchmark:local
-```
-
-If the Fast profile is too slow on your machine, move up to Balanced. If the machine is powerful and you want better output, opt into Advanced manually.
-
-## Validation
-
-For a concise manual test checklist, see [VALIDATION_STEPS.md](./VALIDATION_STEPS.md).
-
-You can also run the local service directly:
-
-```bash
-pnpm validate:server
-```
-
-And verify it responds:
+Optional local checks:
 
 ```bash
 curl http://127.0.0.1:8083/health
+pnpm test:privacy
 ```
 
-## Notes
+---
 
-- The local Python service now forwards summarize, agent, and embed requests to Ollama and surfaces health information for the configured model.
-- The core privacy story is local-only for the selected-text path. Structured extraction requires an actual text selection, while summarize and ask can fall back to page text.
-- The main install path now talks directly to `127.0.0.1:8083`, which removes the old `nginx` and `/etc/hosts` steps from onboarding.
-- See [ZERO_LEAKAGE.md](./ZERO_LEAKAGE.md) for the exact claim and how to verify it.
-- Privacy-first is the product thesis, not a side feature.
-- Runtime JavaScript is generated from the `.ts` sources with `pnpm build` or `npm run build`.
-- The project is best presented as a focused selected-text MVP, not as a polished all-in-one browser assistant.
+## Architecture
+
+Browser Extension (UI)
+        ↓
+Local Bridge (`127.0.0.1:8083`)
+        ↓
+Python Backend (`server/`)
+        ↓
+Ollama (local models)
+
+- All core inference runs locally
+- No external inference endpoints on core path
+- Privacy boundary is observable and testable
+
+---
+
+## Privacy Model
+
+- Core selected-text processing happens locally
+- No outbound requests for core inference
+- No tracking or telemetry in runtime flow
+- Verified with privacy and E2E tests (`tests/`)
+
+See: `ZERO_LEAKAGE.md`
+
+---
+
+## Core Concepts
+
+### Canonical schema
+All extracted data is normalized before export.
+
+### Connectors (adapters)
+Exports are mapped to target formats without lock-in.
+
+### Local-first execution
+Your hardware and selected profile determine latency/quality.
+
+---
+
+## Tiers
+
+### Core (Essential)
+- Structured extraction
+- Canonical metadata
+- Manual export/copy
+
+### Connect (Plus)
+- One-click connector exports
+- Target-specific format adapters
+- No persistent memory layer
+
+### Knowledge (Pro / Deep)
+- Explicit opt-in local memory layer
+- Local embeddings/retrieval capabilities
+- Inspect / export / delete retained knowledge
+
+---
+
+## Project Structure
+
+- `panel/` — side panel UI and interaction flow
+- `background/` — extension runtime + feature gating
+- `server/` — local Python bridge and runtime endpoints
+- `api/` — extension-to-local-bridge client layer
+- `tests/` — E2E + privacy/no-leakage tests
+
+---
+
+## What SelectPilot is
+
+- Local inference interface for selected text
+- Structured extraction engine with canonical output
+- Adapter-based export pipeline
+
+## What SelectPilot is not
+
+- Cloud AI wrapper
+- Generic chatbot platform
+- Telemetry-driven data-harvesting tool
+
+---
+
+## Status
+
+Active development.
+Core local pipeline is functional and test-backed.
+Current focus: stability, deterministic structure, and trust consistency.
+
+---
+
+## Repository
+
+https://github.com/kristoffersodersten/selectpilot

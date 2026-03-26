@@ -32,6 +32,11 @@
         <strong id="truth-boundary">Local-only</strong>
       </div>
       <div class="truth-chip">
+        <span class="truth-label">Privacy</span>
+        <strong id="truth-privacy">Verifying</strong>
+        <span class="truth-meta" id="truth-privacy-meta">Awaiting proof</span>
+      </div>
+      <div class="truth-chip">
         <span class="truth-label">Profile</span>
         <strong id="truth-profile">Pending</strong>
       </div>
@@ -42,6 +47,32 @@
     </section>
 
     <section class="runtime-state" id="runtime-state"></section>
+
+    <section class="memory-shell" id="memory-shell" aria-label="Pro memory controls">
+      <div class="memory-header">
+        <div>
+          <div class="section-kicker">Pro memory</div>
+          <h2>Retention control</h2>
+        </div>
+        <button class="ghost-button" id="btn-memory-toggle" type="button">Enable memory</button>
+      </div>
+      <p class="memory-copy" id="memory-status">Memory OFF · Stateless core mode is active.</p>
+      <p class="memory-copy" id="memory-meta">Upgrade to Pro to enable explicit local retention controls.</p>
+      <section class="memory-export-config">
+        <label for="memory-target">Knowledge package target</label>
+        <select id="memory-target">
+          <option value="generic">Generic JSON</option>
+          <option value="notion">Notion-ready package</option>
+          <option value="craft">Craft-ready package</option>
+          <option value="obsidian">Obsidian-ready package</option>
+        </select>
+      </section>
+      <div class="memory-actions">
+        <button id="btn-memory-inspect" type="button">Inspect ledger</button>
+        <button id="btn-memory-export" type="button">Export ledger</button>
+        <button id="btn-memory-delete" type="button">Delete ledger</button>
+      </div>
+    </section>
 
     <section class="selection-shell" id="selection-shell">
       <div class="section-kicker">Selection</div>
@@ -113,6 +144,10 @@
     <section class="exports" id="exports"></section>
 
     <footer class="status-footer">
+      <section class="leakage-indicator" aria-live="polite">
+        <strong id="leakage-status">No leakage proof pending</strong>
+        <span id="leakage-details">Waiting for runtime verification.</span>
+      </section>
       <section class="status-bar" id="status-bar"></section>
       <section class="status" id="status">Ready</section>
     </footer>

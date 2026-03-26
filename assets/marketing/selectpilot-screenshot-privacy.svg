@@ -2,32 +2,39 @@
   <rect width="1280" height="800" fill="#F3F5F8"/>
   <rect x="52" y="44" width="1176" height="712" rx="34" fill="#FCFCFD" stroke="#DEE5EE" stroke-width="2"/>
 
-  <text x="96" y="110" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="15" font-weight="700" letter-spacing="1.2">ZERO LEAKAGE</text>
-  <text x="96" y="160" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="38" font-weight="600" letter-spacing="-1.2">Make the privacy boundary visible.</text>
-  <text x="96" y="198" fill="#64748B" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="21">No telemetry. No cloud inference on the selected-text path. No ambiguity about where execution happens.</text>
+  <text x="96" y="108" fill="#6B7280" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="1">ZERO LEAKAGE</text>
+  <text x="96" y="152" fill="#0F172A" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="34" font-weight="700">Make the privacy boundary visible.</text>
+  <text x="96" y="186" fill="#64748B" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="19">No telemetry. No cloud inference on the selected-text path. No ambiguity about where execution happens.</text>
 
-  <rect x="96" y="246" width="414" height="390" rx="26" fill="#FFFFFF" stroke="#D7DEE9" stroke-width="2"/>
-  <text x="124" y="286" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">BOUNDARY PANEL</text>
-  <text x="124" y="328" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="28" font-weight="600">Selected text stays local</text>
-  <text x="124" y="366" fill="#64748B" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="19">The core path is constrained to a local bridge and local Ollama models.</text>
+  <rect x="96" y="236" width="430" height="408" rx="24" fill="#FFFFFF" stroke="#D7DEE9" stroke-width="2"/>
+  <text x="124" y="274" fill="#6B7280" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="1">BOUNDARY PANEL</text>
+  <text x="124" y="314" fill="#0F172A" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="31" font-weight="700">Selected text stays local</text>
+  <text x="124" y="348" fill="#64748B" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18">The core path is constrained to a local bridge and local Ollama models.</text>
 
-  <rect x="124" y="418" width="264" height="40" rx="14" fill="#EEF2F7"/>
-  <text x="144" y="443" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="18" font-weight="600">Execution geography: Local</text>
-  <rect x="124" y="474" width="304" height="40" rx="14" fill="#EEF2F7"/>
-  <text x="144" y="499" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="18" font-weight="600">Remote Ollama models: Ignored</text>
-  <rect x="124" y="530" width="206" height="40" rx="14" fill="#EEF2F7"/>
-  <text x="144" y="555" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="18" font-weight="600">Telemetry: None</text>
+  <g font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#0F172A">
+    <rect x="124" y="392" width="282" height="44" rx="14" fill="#EEF2F7"/>
+    <text x="146" y="420">Execution geography: Local</text>
 
-  <rect x="560" y="246" width="624" height="390" rx="26" fill="#FFFFFF" stroke="#D7DEE9" stroke-width="2"/>
-  <text x="588" y="286" fill="#6B7280" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">LOCAL VERIFICATION</text>
-  <text x="588" y="328" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="28" font-weight="600">Health output and network inspection</text>
-  <rect x="588" y="362" width="568" height="232" rx="20" fill="#0F172A"/>
-  <text x="616" y="402" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="18">$ curl http://127.0.0.1:8083/health</text>
-  <text x="616" y="442" fill="#93C5FD" font-family="SF Mono, Menlo, monospace" font-size="17">{</text>
-  <text x="642" y="442" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="17">"ok": true,</text>
-  <text x="642" y="474" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="17">"active_model": "qwen2.5:0.5b",</text>
-  <text x="642" y="506" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="17">"privacy_mode": "local-only",</text>
-  <text x="642" y="538" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="17">"ignored_remote_models": ["llama3.2:cloud"],</text>
-  <text x="642" y="570" fill="#E2E8F0" font-family="SF Mono, Menlo, monospace" font-size="17">"notes": "selected-text path stays local"</text>
-  <text x="616" y="602" fill="#93C5FD" font-family="SF Mono, Menlo, monospace" font-size="17">}</text>
+    <rect x="124" y="450" width="328" height="44" rx="14" fill="#EEF2F7"/>
+    <text x="146" y="478">Remote Ollama models: Ignored</text>
+
+    <rect x="124" y="508" width="220" height="44" rx="14" fill="#EEF2F7"/>
+    <text x="146" y="536">Telemetry: None</text>
+
+    <rect x="124" y="566" width="236" height="44" rx="14" fill="#EEF2F7"/>
+    <text x="146" y="594">Privacy proof: Enabled</text>
+  </g>
+
+  <rect x="554" y="236" width="630" height="408" rx="24" fill="#FFFFFF" stroke="#D7DEE9" stroke-width="2"/>
+  <text x="582" y="274" fill="#6B7280" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="1">LOCAL VERIFICATION</text>
+  <text x="582" y="314" fill="#0F172A" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="31" font-weight="700">Privacy proof and network inspection</text>
+  <rect x="582" y="344" width="574" height="270" rx="18" fill="#0F172A"/>
+  <text x="610" y="382" fill="#E2E8F0" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="17">$ curl http://127.0.0.1:8083/privacy-proof</text>
+  <text x="610" y="416" fill="#93C5FD" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">{</text>
+  <text x="634" y="416" fill="#E2E8F0" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">"ok": true,</text>
+  <text x="634" y="446" fill="#E2E8F0" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">"privacy_mode": "local-only",</text>
+  <text x="634" y="476" fill="#E2E8F0" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">"active_model": "qwen2.5:0.5b",</text>
+  <text x="634" y="506" fill="#E2E8F0" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">"external_calls_registered": false,</text>
+  <text x="634" y="536" fill="#E2E8F0" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">"statement": "No external outbound calls registered"</text>
+  <text x="610" y="566" fill="#93C5FD" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">}</text>
 </svg>

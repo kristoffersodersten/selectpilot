@@ -1,318 +1,194 @@
-# SelectPilot Roadmap
+# SelectPilot — Prioriterad åtgärdslista
 
-SelectPilot is not trying to be a generic browser AI suite. The product thesis is narrower and stronger:
+> Harmoniserad med repo-läget per 2026-03-25 (granskning av `manifest.json`, `package.json`, `README.md`, teststruktur och `ZERO_LEAKAGE.md`).
+> Prioritering: **P0** = blockerar trust/release · **P1** = produktkvalitet · **P2** = strategisk moat
 
-- Privacy-first utility for selected text
-- Local-first by default
-- Zero leakage on the core path
-- Fast enough and useful enough to justify a paid upgrade
+---
 
-This roadmap is organized around one goal: turn the current MVP into a product that can be shipped, sold, and improved with real user feedback.
+## P0 — Kritiska fel och inkonsekvenser
 
-## Product Positioning
+### 1) Versionsdrift mellan `package.json` och `manifest.json`
 
-### Core promise
+- **Status:** ✅ Löst.
+- **Implementerat:** `pnpm build` kör nu `sync:manifest-version` som injekterar version från `package.json` till `manifest.json`.
 
-Highlight text on any page, open the side panel, and summarize, rewrite, or extract actions locally without sending the selected-text path to hosted inference.
+### 2) Dubbla lock-filer (`pnpm-lock.yaml` + `package-lock.json`)
 
-### Primary user
+- **Status:** ✅ Löst.
+- **Implementerat:**
+  - `package-lock.json` borttagen
+  - `.npmrc` tillagd med `engine-strict=true`
+  - `.gitignore` uppdaterad med `package-lock.json`
+  - CI kör pnpm-only
 
-- Privacy-conscious knowledge workers
-- Developers and technical users already running Ollama
-- Researchers, writers, operators, and founders who live in the browser
+### 3) Manifest-fält med tomma strängar i `matches`
 
-### Why it wins
+- **Status:** ✅ Löst (`<all_urls>` används i relevanta `matches`-fält).
+- **Implementerat:** CI innehåller nu `pnpm lint:manifest` för regressionsskydd av manifest-fält.
 
-- Faster than copy-paste into a separate app
-- More private than cloud-first browser AI tools
-- Narrower and easier to trust than all-purpose copilots
+---
 
-## Current State
+## P1 — Produktkvalitet och onboarding
 
-### Already working
+### 4) Onboarding-friktion är för hög
 
-- Chrome MV3 extension shell
-- Side panel workflow for selected text
-- Local Ollama-backed summarize, agent, and embed flows
-- Local-only boundary for the core selected-text path
-- Privacy verification through `ZERO_LEAKAGE.md` and `/health`
-- Prototype tiering and licensing structure
+- **Status:** 🟡 Delvis löst (bootstrap-script finns).
+- **Åtgärd kvar:** ge ett verkligt one-command bootstrap-flöde som fungerar utan manuell felsökning.
 
-### Not ready yet
+### 5) Nginx/hosts-topologi bör vara osynlig
 
-- Reliable onboarding for non-technical users
-- Strong output quality controls and prompt presets
-- Chrome Web Store packaging and review readiness
-- Production-grade monetization and billing
-- Clear retention loops like history, saved prompts, and exports
-- Demo assets, screenshots, and a launch site
+- **Status:** ✅ I huvudsak löst i huvudflödet (direkt mot `127.0.0.1:8083`; nginx markerat som legacy).
+- **Åtgärd kvar:** behåll detta som policy i dokumentation och scripts.
 
-## Phase 1: Product Hardening
+### 6) README saknar tydligt 5-minutersflöde högst upp
 
-Goal: make the current MVP consistently usable by early testers.
+- **Status:** 🟡 Delvis löst (sektionen "Local setup" är bra men inte tydligt märkt som snabbstart).
+- **Åtgärd kvar:** lägg en kort **Quick Start (5 min)** tidigt i README med exakta steg i ordning.
 
-### Must ship
+### 7) Inga end-to-end-tester för extension-flödet
 
-- First-run runtime bootstrap with `Detect -> Install -> Benchmark -> Assign profile`
-- Profile presets for `Fast`, `Balanced`, and `Advanced`
-- Smallest-viable-model selection for the selected-text workload
-- Improve selected-text capture reliability across more sites
-- Add loading, error, and empty-state handling for all core actions
-- Add visible Ollama status in the side panel
-- Add first-run checks for:
-  - Ollama reachable
-  - local model available
-  - local bridge reachable at `127.0.0.1:8083`
-- Normalize output formatting for summarize, rewrite, and action extraction
-- Add preset prompts for:
-  - summarize
-  - rewrite shorter
-  - rewrite clearer
-  - extract actions
-  - extract decisions
+- **Status:** 🟡 Delvis löst.
+- **Implementerat:** Playwright-konfiguration och E2E-suite för runtime/privacy + mockad selected-text response shape.
+- **Implementerat nu även:** harness-baserat sidepanel E2E-flöde som verifierar privacy-indikator + lokal fetch-trafik i panelens användarflöde.
+- **Åtgärd kvar:** utöka till full browser-extension user flow (markera text → sidepanel action → renderat svar) utan harness.
 
-### Privacy hardening
+---
 
-- Make privacy mode visible in UI
-- Add a settings page section called `Privacy Boundary`
-- Add a `local-only` indicator and a degraded-state warning if no local model is available
-- Refuse core execution when only cloud Ollama models are present
-- Keep profile selection and benchmark interpretation on-device
+## P1 — Privacy boundary integrity
 
-### Exit criteria
+### 8) Inga automatiska regressionstester för privacy boundary
 
-- A new tester can install and use the selected-text flow without repo spelunking
-- The product fails clearly, not silently
-- Privacy-first behavior is visible in both UI and docs
-- The default Fast profile is usable on modest hardware without manual tuning
+- **Status:** 🟡 Delvis löst.
+- **Implementerat:**
+  - servertest för privacy proof (`tests/server/test_privacy_proof.py`)
+  - Playwright-test som verifierar local-only privacy proof och local endpoints
+  - Playwright-test (`tests/e2e/panel-no-leakage.spec.mjs`) som assertar lokal fetch-trafik + subtil visuell privacy proof i panel-harness
+- **Åtgärd kvar:** utöka med strikt nätverks-assert på full extensionnivå (ingen extern trafik i hela sidepanel-flödet utan harness).
 
-## Phase 2: Paid Utility Foundations
+### 9) Privacy-påstående är inte synligt verifierbart för ny användare
 
-Goal: add the minimum feature set needed for a real free-to-paid product.
+- **Status:** ✅ Löst.
+- **Implementerat:** `/privacy-proof` endpoint i lokal server + synlig `Privacy`-indikator i sidepanelens truth strip.
 
-### Free tier
+---
 
-- Summarize selected text
-- Rewrite selected text
-- Extract action items
-- Basic local prompt editing
+## P2 — Strategisk produktmoat
 
-### Paid tier
+### 10) Generisk copilot-retorik underminerar edge
 
-- Saved prompts
-- Prompt presets library
-- Output history
-- Export options:
-  - Markdown
-  - Notion-friendly copy
-  - Obsidian-friendly copy
-- Workflow presets
-- Better rewrite modes:
-  - concise
-  - executive
-  - friendly
-  - technical
+- **Status:** 🟡 Delvis adresserat.
+- **Åtgärd kvar:** skärp positioning till structured extraction + local privacy i README/UI copy.
 
-### Billing and licensing
+### 11) Presets är inte tillräckligt synliga eller utbyggbara
 
-- Replace prototype billing assumptions with one real payment flow
-- Add entitlement sync and tier enforcement that survives restart and offline use gracefully
-- Add upgrade UI inside the extension
-- Add trial logic that is obvious and fair
+- **Status:** 🟡 Delvis (preset-funktionalitet finns, men tydligt användar-API saknas).
+- **Åtgärd kvar:** exponera presets i redigerbar JSON/YAML + dokumentera format.
 
-### Exit criteria
+### 12) Ingen tydlig upgrade-path till team/self-hosted mode
 
-- There is a clear free tier and a clear reason to upgrade
-- Paid features are product features, not arbitrary locks
-- A user can upgrade without contacting you manually
+- **Status:** 🟡 Planerad men ej konkretiserad.
+- **Implementerat nu:** README förtydligar tier-guardrails där Essential/Plus hålls stateless i core-flödet och Pro definieras som explicit opt-in stateful lager.
+- **Åtgärd kvar:** lägg kort sektion i README om Team/Self-hosted mode och avgränsa vad som är planerat.
 
-## Phase 3: UX and Retention
+### 13) Tier-packaging och pricing-integritet behöver löpande styrning
 
-Goal: make the product something users come back to, not just try once.
+- **Status:** 🟡 Delvis adresserat.
+- **Implementerat:** README innehåller nu explicit tier-prissättning, Paddle-mappning, positioneringsvarianter och realistisk ARR-prognos.
+- **Åtgärd kvar:**
+  - säkra att Pro kontinuerligt får tydlig premium-differentiering mot Plus
+  - håll fast vid arkitekturkontraktet: stateless core i Essential/Plus, stateful funktioner endast via explicit opt-in i Pro
+  - gör retention alltid synlig och användarstyrd (inspect/export/delete) när stateful läge används
+  - koppla release notes till tier-mervärde per version (Essential/Plus/Pro)
+  - lägga in uppföljning på konvertering mellan tiers som produkt-KPI
 
-### Features
+---
 
-- Output history with search
-- Favorite prompts
-- One-click rerun on the same selection
-- Better copy/export actions
-- Recent pages and recent transforms
-- Keyboard shortcuts
-- Optional mini floating action after text selection
+## Prioriterad genomförandeordning (från nu)
 
-### Quality improvements
+### Nästa sprint (måste först)
 
-- Better default prompts per task
-- Better markdown rendering in the panel
-- Cleaner output cards
-- Model-specific tuning for smaller local models
+1. **P1.7** Full extension E2E (markera text → sidepanel action → svar)
+2. **P1.8** Strikt nätverksregressionstest för hela extension-flödet
+3. **P1.6** Tydlig Quick Start (5 min) i README-toppen
 
-### Retention loops
+### Därefter (releasekvalitet)
 
-- Saved workflows
-- History
-- Repeatable transforms
-- Reliable outputs on daily browsing tasks
+4. **P1.4** Minska onboarding-friktion ytterligare i bootstrap
 
-### Exit criteria
+### Strategisk polish
 
-- Users have a reason to return weekly
-- Core transforms feel fast and predictable
-- The extension feels like a tool, not a demo
+9. **P2.10** Positioning-copy: structured outputs + local-first
+10. **P2.11** Utbyggbara presets (JSON/YAML + docs)
+11. **P2.12** Team/Self-hosted mode i README
+12. **P2.13** Tier-differentiering och pricing-integritet (särskilt Pro-value)
 
-## Phase 4: Chrome Web Store Launch
+---
 
-Goal: package SelectPilot as a credible public product.
+## Finish line (kvalitetskrav innan "klart")
 
-### Store readiness
+> Målnivå: **"Jonathan Ive-nivå" polish** + **installation enkel nog för en 89-åring**.
 
-- Final icons and screenshots
-- Short and long store descriptions
-- Privacy section aligned with `ZERO_LEAKAGE.md`
-- Onboarding page
-- FAQ
-- Support email and support page
-- Terms and privacy page
+### 1) One-command installation (absolut först)
 
-### Launch assets
+- **Mål:** användaren ska klara onboarding med en enda kommando-rad.
+- **Kvar att leverera:**
+  - gör `pnpm bootstrap:local` helt självbärande med robust felhantering
+  - automatisk kontroll av Ollama, modeller, launchd och `/health`
+  - tydlig slutrapport med exakt "klart/återstår" och nästa steg
 
-- 60-90 second product demo
-- Landing page with:
-  - headline
-  - zero-leakage explanation
-  - screenshots
-  - pricing
-  - FAQ
-- A short launch thread for:
-  - X
-  - Reddit
-  - Hacker News
-  - Discord communities
+### 2) "89-åring-läge" i README (ultrakort onboarding)
 
-### Exit criteria
+- **Mål:** inga tekniska beslut i första flödet.
+- **Kvar att leverera:**
+  - 3-stegs quick start högst upp i README (kopiera kommando → ladda extension → klart)
+  - separera nybörjarflöde från advanced/dev-sektioner
+  - lägg till "om något går fel" med copy/paste-kommandon
 
-- Extension is ready for store review
-- Public messaging is consistent across repo, store, and landing page
-- Privacy-first claim is clear and defensible
+### 3) UI/UX-polish till premium-kvalitet
 
-## Phase 5: Distribution and Growth
+- **Mål:** konsekvent, självförklarande och visuellt lugn panel/popup.
+- **Kvar att leverera:**
+  - enhetlig copy-ton och statusord i panel/popup
+  - finjustera spacing/typografi i truth strip och runtime-indikatorer
+  - säkra att knappar/labels är omedelbart begripliga vid första användning
 
-Goal: find the first repeatable acquisition channel.
+### 4) E2E-bevis för verkligt användarflöde
 
-### Likely channels
+- **Mål:** kunna verifiera funktion och privacy med reproducerbara tester.
+- **Kvar att leverera:**
+  - deterministisk start/stop av lokal server i testflödet
+  - full extension-path: markera text → sidepanel action → renderat svar
+  - strikt nätverksregression: ingen extern trafik i kärnflödet
 
-- Privacy and local-AI communities
-- Ollama and self-hosting communities
-- Productivity and note-taking communities
-- Founder/dev Twitter
-- Chrome extension directories
+### 5) Strategisk finish (efter kvalitet + onboarding)
 
-### Content strategy
+- **Kvar att leverera:**
+  - skärpt positioning-copy (structured extraction + local-first)
+  - presets som redigerbar JSON/YAML med dokumenterat schema
+  - tydlig Team/Self-hosted-sektion och migration path
 
-- `Why local-first matters for browser AI`
-- `How SelectPilot avoids cloud leakage on the selected-text path`
-- `Best local Ollama models for browser-side text transforms`
-- Build-in-public updates with metrics and lessons
+---
 
-### Growth experiments
+## Snabbreferens — Prioritetsmatris
 
-- Free prompt pack as lead magnet
-- Comparison pages vs cloud-first browser AI tools
-- Launch to niche communities before broad launch
-- Use-case pages for:
-  - founders
-  - researchers
-  - writers
-  - developers
+| #  | Område                     | Prioritet | Status  | Effort |
+|----|----------------------------|-----------|---------|--------|
+| 1  | Versionsdrift              | P0        | Löst    | Låg    |
+| 2  | Dubbla lock-filer          | P0        | Löst    | Låg    |
+| 3  | Ogiltiga manifest-fält     | P0        | Löst    | Låg    |
+| 4  | Onboarding-friktion        | P1        | Delvis  | Hög    |
+| 5  | Nginx/hosts osynlighet     | P1        | Löst*   | Hög    |
+| 6  | README Quick Start         | P1        | Delvis  | Låg    |
+| 7  | E2E-tester extension       | P1        | Delvis  | Medium |
+| 8  | Privacy regressionstester  | P1        | Delvis  | Medium |
+| 9  | Verifierbar privacy-yta    | P1        | Löst    | Medium |
+| 10 | Omformulera positioning    | P2        | Delvis  | Låg    |
+| 11 | Utbyggbara presets         | P2        | Delvis  | Medium |
+| 12 | Team/self-hosted-path      | P2        | Delvis  | Låg    |
+| 13 | Tier/pricing-integritet    | P2        | Delvis  | Medium |
 
-### Exit criteria
+\* Löst i huvudflödet, men behöver fortsatt skyddas från regression i docs/scripts.
 
-- One acquisition source reliably brings qualified users
-- You understand which user segment converts best
-- Messaging is validated by actual signups and activation
+---
 
-## Phase 6: Expansion Without Dilution
-
-Goal: expand carefully without breaking the privacy-first thesis.
-
-### Good expansions
-
-- Better export destinations
-- Better workflow presets
-- Team-safe prompt packs
-- Improved local model compatibility
-- Optional local document memory
-
-### Risky expansions
-
-- Generic page chat
-- Broad multimodal promises before core text utility is excellent
-- Cloud fallback by default
-- Enterprise complexity too early
-
-### Rule
-
-Do not expand beyond selected-text utility until the paid core is clearly working.
-
-## Metrics
-
-### Product
-
-- Install to first successful transform
-- Time to first successful summary
-- Percentage of users who complete local setup
-- Percentage of users who hit degraded privacy state
-
-### Retention
-
-- Weekly active users
-- Transforms per active user
-- Saved prompts per active user
-- History usage rate
-
-### Revenue
-
-- Free to paid conversion
-- Trial to paid conversion
-- Average revenue per paid user
-- Churn after first payment
-
-## Immediate Next 30 Days
-
-### Week 1
-
-- Tighten install and onboarding
-- Add settings page
-- Add privacy boundary indicator in UI
-- Record product demo
-
-### Week 2
-
-- Add saved prompts
-- Add history
-- Improve output quality and formatting
-- Prepare Chrome Web Store assets
-
-### Week 3
-
-- Implement real upgrade flow
-- Add pricing page or landing page
-- Start onboarding first private testers
-
-### Week 4
-
-- Fix onboarding friction from tester feedback
-- Publish store listing or waitlist
-- Post launch content in 3 to 5 relevant communities
-
-## What Not To Do
-
-- Do not turn this into a broad AI browser assistant too early
-- Do not lead with experimental audio or vision features
-- Do not weaken the privacy story with ambiguous cloud behavior
-- Do not ship pricing before the core workflow feels good
-- Do not optimize for scale before you have proof of demand
-
-## One-Sentence Strategy
-
-Build the best privacy-first selected-text copilot for people who already want browser AI utility but do not want their text leaving the machine.
+*Senast uppdaterad: 2026-03-25*

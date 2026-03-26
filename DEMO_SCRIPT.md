@@ -4,7 +4,20 @@
 
 Show that the product is a privacy-first local execution layer for selected text and that the privacy boundary is concrete, not marketing copy.
 
-## Demo flow
+## Minimal 60-second demo narrative (recommended)
+
+1. **Select text** on a real page.
+2. Click **Extract JSON** and show structured output.
+3. Click **Export** (target package, e.g. Obsidian/Notion format).
+4. Show **local-only proof** (`Privacy` chip + `/health` + local network calls).
+
+Use this exact sequence when time is short. It maps directly to product value:
+
+- Tier 1 feeling: “it works”
+- Tier 2 feeling: “it saves time”
+- Trust proof: “it stays local”
+
+## Full demo flow
 
 1. Open Ollama and confirm a local model is installed.
    - Show `ollama list`
@@ -40,9 +53,15 @@ Show that the product is a privacy-first local execution layer for selected text
    - Filter for `127.0.0.1`
    - Point out that the extension talks to the local bridge only
 
-## Suggested narration
+## Suggested narration (tight)
 
-“SelectPilot is a privacy-first local execution layer for selected text. I highlight something on the web, open the side panel, and turn that selection into structured output using Ollama on my own machine. The bridge explicitly ignores Ollama cloud models, which you can verify in the health output. The extension talks directly to `127.0.0.1:8083`, so the selected-text path stays on-device by design.”
+“SelectPilot is local AI for selected text. I highlight this passage, extract canonical structured output, and export it directly to the target format. The core execution path stays local through Ollama on-device. You can verify that in the privacy indicator, `/health`, and the network log that only shows `127.0.0.1`.”
+
+## Demo constraints (important)
+
+- Don’t add features mid-demo.
+- Don’t switch narratives between tiers.
+- Keep the sequence fixed: **select → extract → export → prove local**.
 
 ## What not to claim
 

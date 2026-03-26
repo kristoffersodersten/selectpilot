@@ -5,6 +5,13 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROFILE="auto"
 SKIP_OLLAMA_INSTALL="0"
 SKIP_MODEL_PULL="0"
+BRIDGE_HEALTH_URL="http://127.0.0.1:8083/health"
+
+STATUS_OLLAMA_INSTALL="pending"
+STATUS_OLLAMA_RUNNING="pending"
+STATUS_MODEL_PULL="pending"
+STATUS_LAUNCHAGENT="pending"
+STATUS_BRIDGE_HEALTH="pending"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -77,11 +84,17 @@ if [[ "$SKIP_OLLAMA_INSTALL" != "1" ]] && ! command -v ollama >/dev/null 2>&1; t
   if command -v brew >/dev/null 2>&1; then
     echo "Installing Ollama with Homebrew..."
     brew install --cask ollama
+    STATUS_OLLAMA_INSTALL="installed"
   else
     echo "Ollama is not installed and Homebrew is unavailable." >&2
     echo "Install Ollama manually, then rerun this script." >&2
+    STATUS_OLLAMA_INSTALL="failed"
     exit 1
   fi
+elif command -v ollama >/dev/null 2>&1; then
+  STATUS_OLLAMA_INSTALL="present"
+else
+  STATUS_OLLAMA_INSTALL="skipped"
 fi
 
 if ! pgrep -x "ollama" >/dev/null 2>&1; then
@@ -90,16 +103,34 @@ if ! pgrep -x "ollama" >/dev/null 2>&1; then
   sleep 3
 fi
 
+if pgrep -x "ollama" >/dev/null 2>&1; then
+  STATUS_OLLAMA_RUNNING="ok"
+else
+  STATUS_OLLAMA_RUNNING="failed"
+  echo "Ollama service did not start as expected." >&2
+  exit 1
+fi
+
 if [[ "$SKIP_MODEL_PULL" != "1" ]]; then
   echo "Pulling generation model: $GEN_MODEL"
   ollama pull "$GEN_MODEL"
   echo "Pulling embedding model: $EMBED_MODEL"
   ollama pull "$EMBED_MODEL"
+  STATUS_MODEL_PULL="ok"
+else
+  STATUS_MODEL_PULL="skipped"
 fi
 
 CHROMEAI_OLLAMA_MODEL="$GEN_MODEL" \
 CHROMEAI_OLLAMA_EMBED_MODEL="$EMBED_MODEL" \
 "$ROOT/scripts/install-macos-local.sh"
+STATUS_LAUNCHAGENT="ok"
+
+if curl -sSf "$BRIDGE_HEALTH_URL" >/dev/null; then
+  STATUS_BRIDGE_HEALTH="ok"
+else
+  STATUS_BRIDGE_HEALTH="failed"
+fi
 
 cat <<EOF
 
@@ -112,4 +143,16 @@ Embedding model: $EMBED_MODEL
 
 Next recommended command:
   pnpm benchmark:local
+
+Bootstrap report:
+  Ollama install:  $STATUS_OLLAMA_INSTALL
+  Ollama running:  $STATUS_OLLAMA_RUNNING
+  Model pull:      $STATUS_MODEL_PULL
+  LaunchAgent:     $STATUS_LAUNCHAGENT
+  Bridge health:   $STATUS_BRIDGE_HEALTH
+
+If Bridge health is "failed", run:
+  tail -n 80 ~/Library/Logs/SelectPilot/nano.err
+  tail -n 80 ~/Library/Logs/SelectPilot/nano.log
+  curl -v $BRIDGE_HEALTH_URL
 EOF

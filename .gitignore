@@ -1,6 +1,7 @@
 .DS_Store
 __pycache__/
 node_modules/
+package-lock.json
 npm-debug.log*
 /usr/local/var/log/chromeai/
 /usr/local/var/run/chromeai/

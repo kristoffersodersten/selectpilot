@@ -1,10 +1,20 @@
 import { $ } from '../utils/dom.js';
 import { getJSON, setJSON } from '../utils/storage.js';
+import { endpoints } from '../api/endpoints.js';
 import { EXTRACTION_PRESETS, getExtractionPreset } from './extraction-presets.js';
 import { getRuntimeProfile, RUNTIME_PROFILES } from './runtime-profiles.js';
+import { buildKnowledgePackage } from './knowledge-connectors.js';
 const workflow = $('#workflow');
 const exportsEl = $('#exports');
 const runtimeStateEl = $('#runtime-state');
+const memoryShellEl = $('#memory-shell');
+const memoryStatusEl = $('#memory-status');
+const memoryMetaEl = $('#memory-meta');
+const memoryTargetEl = $('#memory-target');
+const memoryToggleButtonEl = $('#btn-memory-toggle');
+const memoryInspectButtonEl = $('#btn-memory-inspect');
+const memoryExportButtonEl = $('#btn-memory-export');
+const memoryDeleteButtonEl = $('#btn-memory-delete');
 const selectionCardEl = $('#selection-card');
 const statusEl = $('#status');
 const tierEl = $('#tier');
@@ -20,6 +30,10 @@ const tabStructuredEl = $('#tab-structured');
 const truthExecutionEl = $('#truth-execution');
 const truthModelEl = $('#truth-model');
 const truthBoundaryEl = $('#truth-boundary');
+const truthPrivacyEl = $('#truth-privacy');
+const truthPrivacyMetaEl = $('#truth-privacy-meta');
+const leakageStatusEl = $('#leakage-status');
+const leakageDetailsEl = $('#leakage-details');
 const truthProfileEl = $('#truth-profile');
 const truthLatencyEl = $('#truth-latency');
 const actionButtons = Array.from(document.querySelectorAll('.primary-action, .secondary-grid button, .advanced-grid button'));
@@ -48,11 +62,23 @@ let runtimeProfilesPayload = {
     reason: 'The smallest viable profile is the safest starting point.',
 };
 let benchmarkSnapshot = null;
+let privacyProofSnapshot = null;
+let memorySnapshot = {
+    tier: 'essential',
+    supported: false,
+    enabled: false,
+    entries: 0,
+    lastUpdatedAt: null,
+};
 const BENCHMARK_CACHE_KEY = 'selectpilot_runtime_benchmark_v1';
 const FAST_INSTALL_COMMANDS = [
     'ollama pull qwen2.5:0.5b',
     'ollama pull nomic-embed-text-v2-moe:latest',
     'CHROMEAI_OLLAMA_MODEL=qwen2.5:0.5b ./scripts/install-macos-local.sh',
+].join('\n');
+const QUICK_SETUP_COMMANDS = [
+    'pnpm setup:local',
+    'curl http://127.0.0.1:8083/health',
 ].join('\n');
 function setStatus(text) {
     if (statusEl)
@@ -61,6 +87,12 @@ function setStatus(text) {
 function setStatusBar(text) {
     if (statusBar)
         statusBar.textContent = text;
+}
+function setLeakageFeedback(status, details) {
+    if (leakageStatusEl)
+        leakageStatusEl.textContent = status;
+    if (leakageDetailsEl)
+        leakageDetailsEl.textContent = details;
 }
 function clearNode(node) {
     if (node)
@@ -84,6 +116,29 @@ function shorten(text, max = 220) {
     if (trimmed.length <= max)
         return trimmed;
     return `${trimmed.slice(0, max - 1).trimEnd()}…`;
+}
+function getEfficiencyScore(snapshot) {
+    if (!snapshot)
+        return null;
+    const avgLatency = (snapshot.extract_latency_ms + snapshot.summarize_latency_ms) / 2;
+    const score = Math.round(100 - avgLatency / 40);
+    return Math.max(0, Math.min(100, score));
+}
+function formatPrivacyVerifiedAt(iso) {
+    if (!iso)
+        return 'Awaiting proof';
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime()))
+        return 'Awaiting proof';
+    return `Verified ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+}
+function formatMemoryUpdatedAt(timestamp) {
+    if (!timestamp)
+        return 'No retained events yet.';
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime()))
+        return 'No retained events yet.';
+    return `Last updated ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 }
 function getEffectiveRecommendedProfileKey() {
     return benchmarkSnapshot?.recommended_profile || runtimeProfilesPayload.recommended_profile;
@@ -230,19 +285,19 @@ async function request(type, payload = {}) {
     return res;
 }
 async function fetchHealth() {
-    const res = await fetch('http://127.0.0.1:8083/health', { cache: 'no-store' });
+    const res = await fetch(endpoints.health, { cache: 'no-store' });
     if (!res.ok)
         throw new Error(`Health check failed: ${res.status}`);
     return res.json();
 }
 async function fetchRuntimeProfiles() {
-    const res = await fetch('http://127.0.0.1:8083/profiles', { cache: 'no-store' });
+    const res = await fetch(endpoints.profiles, { cache: 'no-store' });
     if (!res.ok)
         throw new Error(`Profiles check failed: ${res.status}`);
     return (await res.json());
 }
 async function runRuntimeBenchmark() {
-    const res = await fetch('http://127.0.0.1:8083/benchmark', {
+    const res = await fetch(endpoints.benchmark, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
@@ -250,6 +305,55 @@ async function runRuntimeBenchmark() {
     });
     if (!res.ok)
         throw new Error(`Benchmark failed: ${res.status}`);
+    return (await res.json());
+}
+function renderMemoryState() {
+    if (!memoryShellEl || !memoryStatusEl || !memoryMetaEl)
+        return;
+    const { tier, supported, enabled, entries } = memorySnapshot;
+    const plural = entries === 1 ? '' : 's';
+    if (!supported) {
+        if (tier === 'plus') {
+            memoryStatusEl.textContent = 'Memory OFF · Flow tier has connector exports without retention.';
+            memoryMetaEl.textContent = 'Upgrade to Deep to enable explicit local retention controls (inspect/export/delete ledger).';
+        }
+        else {
+            memoryStatusEl.textContent = 'Memory OFF · Core tier is extraction-only and stateless.';
+            memoryMetaEl.textContent = 'Upgrade to Flow for connector exports, or Deep for persistent local knowledge.';
+        }
+    }
+    else if (!enabled) {
+        memoryStatusEl.textContent = 'Memory OFF · Deep retention is available but disabled.';
+        memoryMetaEl.textContent = 'Enable memory to retain local events. You can inspect, export, and delete at any time.';
+    }
+    else {
+        memoryStatusEl.textContent = `Memory ON · Deep retention active with ${entries} retained event${plural}.`;
+        memoryMetaEl.textContent = `${formatMemoryUpdatedAt(memorySnapshot.lastUpdatedAt)} Inspect/export/delete stays fully local and user-controlled.`;
+    }
+    if (memoryToggleButtonEl) {
+        memoryToggleButtonEl.textContent = enabled ? 'Disable memory' : 'Enable memory';
+    }
+}
+async function refreshMemoryStatus() {
+    try {
+        memorySnapshot = await request('panel:memory_status');
+    }
+    catch {
+        memorySnapshot = {
+            tier: 'essential',
+            supported: false,
+            enabled: false,
+            entries: 0,
+            lastUpdatedAt: null,
+        };
+    }
+    renderMemoryState();
+    syncControlAvailability();
+}
+async function fetchPrivacyProof() {
+    const res = await fetch(endpoints.privacyProof, { cache: 'no-store' });
+    if (!res.ok)
+        throw new Error(`Privacy proof failed: ${res.status}`);
     return (await res.json());
 }
 function syncControlAvailability() {
@@ -265,6 +369,20 @@ function syncControlAvailability() {
         extractPresetEl.disabled = isBusy || !runtimeReady || !selectionReady;
     if (refreshButtonEl)
         refreshButtonEl.disabled = isBusy;
+    if (memoryToggleButtonEl)
+        memoryToggleButtonEl.disabled = isBusy || !memorySnapshot.supported;
+    const memoryActionsLocked = isBusy || !memorySnapshot.supported || !memorySnapshot.enabled;
+    const flowExportSupported = memorySnapshot.tier !== 'essential';
+    const hasTransientExportData = Boolean(lastResult?.readable || (lastResult?.structured && Object.keys(lastResult.structured).length > 0));
+    const canExport = memorySnapshot.supported
+        ? (memorySnapshot.entries > 0 || hasTransientExportData)
+        : hasTransientExportData;
+    if (memoryInspectButtonEl)
+        memoryInspectButtonEl.disabled = memoryActionsLocked;
+    if (memoryExportButtonEl)
+        memoryExportButtonEl.disabled = isBusy || !flowExportSupported || !canExport;
+    if (memoryDeleteButtonEl)
+        memoryDeleteButtonEl.disabled = memoryActionsLocked || memorySnapshot.entries === 0;
 }
 function populatePresetOptions() {
     if (!extractPresetEl)
@@ -371,11 +489,12 @@ function renderRuntimeState() {
         benchmarkBlock.append(benchmarkCopy);
         const benchmarkMetrics = document.createElement('div');
         benchmarkMetrics.className = 'runtime-grid';
+        const efficiencyScore = getEfficiencyScore(benchmarkSnapshot);
         if (benchmarkSnapshot) {
-            benchmarkMetrics.append(buildMetric('Extract JSON', `${benchmarkSnapshot.extract_latency_ms} ms`), buildMetric('Summarize', `${benchmarkSnapshot.summarize_latency_ms} ms`), buildMetric('Recommended', getEffectiveRecommendedProfile().label));
+            benchmarkMetrics.append(buildMetric('Extract JSON', `${benchmarkSnapshot.extract_latency_ms} ms`), buildMetric('Summarize', `${benchmarkSnapshot.summarize_latency_ms} ms`), buildMetric('Efficiency', `${efficiencyScore}/100`), buildMetric('Recommended', getEffectiveRecommendedProfile().label));
         }
         else {
-            benchmarkMetrics.append(buildMetric('Extract JSON', 'Pending'), buildMetric('Summarize', 'Pending'), buildMetric('Recommended', getEffectiveRecommendedProfile().label));
+            benchmarkMetrics.append(buildMetric('Extract JSON', 'Pending'), buildMetric('Summarize', 'Pending'), buildMetric('Efficiency', 'Pending'), buildMetric('Recommended', getEffectiveRecommendedProfile().label));
         }
         benchmarkBlock.append(benchmarkMetrics);
         const benchmarkActions = document.createElement('div');
@@ -395,19 +514,19 @@ function renderRuntimeState() {
     const copy = document.createElement('p');
     copy.className = 'runtime-copy';
     copy.textContent =
-        'SelectPilot needs a local Ollama runtime before the execution layer can run. Start with the smallest viable profile, then re-check the boundary.';
-    const list = document.createElement('ol');
-    list.className = 'setup-list';
-    [
-        'Install Ollama if it is missing.',
-        'Pull the Fast profile models for extraction and embeddings.',
-        'Run the local bootstrap script from this repo.',
-        'Return here and press Refresh.',
-    ].forEach((item) => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        list.append(li);
-    });
+        'SelectPilot runs only through local Ollama. Follow these three tiny steps and press re-check when done.';
+    const tutorialSteps = document.createElement('div');
+    tutorialSteps.className = 'tutorial-steps';
+    const stepInstall = document.createElement('div');
+    stepInstall.className = 'tutorial-step';
+    stepInstall.innerHTML = '<strong>Step 1</strong><span>Copy and run the one-command setup in Terminal.</span>';
+    const stepLoad = document.createElement('div');
+    stepLoad.className = 'tutorial-step';
+    stepLoad.innerHTML = '<strong>Step 2</strong><span>Open chrome://extensions, enable Developer Mode, then Load unpacked.</span>';
+    const stepVerify = document.createElement('div');
+    stepVerify.className = 'tutorial-step';
+    stepVerify.innerHTML = '<strong>Step 3</strong><span>Highlight any text, click Extract JSON, and confirm output appears.</span>';
+    tutorialSteps.append(stepInstall, stepLoad, stepVerify);
     const wrapper = document.createElement('div');
     wrapper.className = 'runtime-grid';
     const recommended = getEffectiveRecommendedProfile();
@@ -416,12 +535,20 @@ function renderRuntimeState() {
     actions.className = 'runtime-actions';
     const copySetup = document.createElement('button');
     copySetup.type = 'button';
-    copySetup.textContent = 'Copy recommended command';
+    copySetup.textContent = 'Copy one-command setup';
     copySetup.addEventListener('click', async () => {
-        await navigator.clipboard.writeText(recommended.command || FAST_INSTALL_COMMANDS);
-        setStatus('Setup commands copied');
+        await navigator.clipboard.writeText(QUICK_SETUP_COMMANDS);
+        setStatus('One-command setup copied');
     });
     actions.append(copySetup);
+    const copyAdvancedSetup = document.createElement('button');
+    copyAdvancedSetup.type = 'button';
+    copyAdvancedSetup.textContent = 'Copy manual fallback';
+    copyAdvancedSetup.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(recommended.command || FAST_INSTALL_COMMANDS);
+        setStatus('Fallback setup copied');
+    });
+    actions.append(copyAdvancedSetup);
     const refresh = document.createElement('button');
     refresh.type = 'button';
     refresh.textContent = 'Re-check runtime';
@@ -436,13 +563,13 @@ function renderRuntimeState() {
         const reason = document.createElement('p');
         reason.className = 'runtime-copy';
         reason.textContent = getEffectiveRecommendationReason();
-        runtimeStateEl.append(header, copy, wrapper, list, actions, reason, profilesGrid, note);
+        runtimeStateEl.append(header, copy, wrapper, tutorialSteps, actions, reason, profilesGrid, note);
         return;
     }
     const reason = document.createElement('p');
     reason.className = 'runtime-copy';
     reason.textContent = getEffectiveRecommendationReason();
-    runtimeStateEl.append(header, copy, wrapper, list, actions, reason, profilesGrid);
+    runtimeStateEl.append(header, copy, wrapper, tutorialSteps, actions, reason, profilesGrid);
 }
 function renderSelectionState() {
     clearNode(selectionCardEl);
@@ -502,6 +629,7 @@ async function refreshRuntime() {
             };
         }
         const health = await fetchHealth();
+        privacyProofSnapshot = await fetchPrivacyProof();
         runtimeSnapshot = {
             ok: Boolean(health?.ok),
             reachable: Boolean(health?.ollama?.reachable),
@@ -519,12 +647,21 @@ async function refreshRuntime() {
             truthModelEl.textContent = runtimeSnapshot.activeModel;
         if (truthBoundaryEl)
             truthBoundaryEl.textContent = runtimeSnapshot.privacyMode === 'local-only' ? 'Selected text stays local' : runtimeSnapshot.privacyMode;
+        if (truthPrivacyEl) {
+            const localOnly = Boolean(privacyProofSnapshot?.ok) && !Boolean(privacyProofSnapshot?.outbound_observation?.external_calls_registered);
+            truthPrivacyEl.textContent = localOnly ? 'Verified local-only' : 'Boundary degraded';
+            setLeakageFeedback(localOnly ? 'No leakage detected' : 'Potential leakage detected', localOnly
+                ? 'Core selected-text execution is verified local through Ollama on-device.'
+                : (privacyProofSnapshot?.outbound_observation?.statement || 'External target observed. Inspect privacy-proof details.'));
+        }
+        if (truthPrivacyMetaEl)
+            truthPrivacyMetaEl.textContent = formatPrivacyVerifiedAt(privacyProofSnapshot?.generated_at);
         if (truthProfileEl)
             truthProfileEl.textContent = getEffectiveRecommendedProfile().label;
         if (truthLatencyEl)
             truthLatencyEl.textContent = runtimeSnapshot.latencyMs ? `${runtimeSnapshot.latencyMs} ms` : 'Measured';
         setStatusBar(runtimeSnapshot.ok
-            ? `${runtimeSnapshot.activeModel} ready locally · ${runtimeSnapshot.ignoredRemoteCount} remote models ignored`
+            ? `${runtimeSnapshot.activeModel} ready in local Ollama · ${runtimeSnapshot.ignoredRemoteCount} remote models ignored`
             : `Runtime degraded · ${runtimeSnapshot.hint || 'local model required'}`);
         await reconcileBenchmarkSnapshot();
         renderRuntimeState();
@@ -553,6 +690,11 @@ async function refreshRuntime() {
             truthModelEl.textContent = 'Unavailable';
         if (truthBoundaryEl)
             truthBoundaryEl.textContent = 'Local-only pending';
+        if (truthPrivacyEl)
+            truthPrivacyEl.textContent = 'Unavailable';
+        if (truthPrivacyMetaEl)
+            truthPrivacyMetaEl.textContent = 'Awaiting proof';
+        setLeakageFeedback('No leakage proof unavailable', 'Runtime is offline, so leakage verification has not been completed yet.');
         if (truthProfileEl)
             truthProfileEl.textContent = getEffectiveRecommendedProfile().label;
         if (truthLatencyEl)
@@ -637,6 +779,71 @@ async function doBenchmark() {
     renderRuntimeState();
     setStatus('Benchmark complete');
 }
+async function doMemoryToggle() {
+    memorySnapshot = await request('panel:memory_toggle');
+    renderMemoryState();
+    syncControlAvailability();
+    setStatus(memorySnapshot.enabled ? 'Deep memory enabled' : 'Deep memory disabled');
+}
+async function doMemoryInspect() {
+    const res = await request('panel:memory_inspect');
+    const entries = Array.isArray(res?.entries) ? res.entries : [];
+    renderOutput({
+        title: 'Memory ledger',
+        eyebrow: 'Deep retention',
+        markdown: entries.length ? `Retained local events: ${entries.length}` : 'No retained local events yet.',
+        json: { entries },
+        meta: 'Local-only retained event ledger (inspectable/exportable/deletable).',
+        exportBase: 'selectpilot-memory-ledger',
+    });
+    renderExports({ json: { entries }, basename: 'selectpilot-memory-ledger' });
+    setStatus('Memory ledger loaded');
+}
+async function doMemoryExport() {
+    if (memorySnapshot.tier === 'essential') {
+        throw new Error('Flow tier required for connector exports');
+    }
+    const target = memoryTargetEl?.value || 'generic';
+    let entries = [];
+    if (memorySnapshot.supported && memorySnapshot.enabled) {
+        const res = await request('panel:memory_inspect');
+        entries = (Array.isArray(res?.entries) ? res.entries : []);
+    }
+    else if (lastResult) {
+        const inferredAction = lastResult.title.toLowerCase().includes('summary')
+            ? 'summarize'
+            : lastResult.title.toLowerCase().includes('extract') || lastResult.title.toLowerCase().includes('action')
+                ? 'extract'
+                : 'agent';
+        entries = [{
+                action: inferredAction,
+                content: selectionPreview.selection || selectionPreview.pageText || '',
+                summary: lastResult.readable || '',
+                url: selectionPreview.url || undefined,
+                title: selectionPreview.title || lastResult.title,
+                sourceType: selectionPreview.url ? (selectionPreview.url.toLowerCase().includes('.pdf') ? 'pdf' : 'web') : 'text',
+                sourceOrigin: selectionPreview.url || 'local-context',
+                sourceTimestamp: new Date().toISOString(),
+                intent: inferredAction === 'extract' ? 'task' : inferredAction === 'agent' ? 'insight' : 'reference',
+                tags: ['flow-export', 'local-only'],
+                charCount: (selectionPreview.selection || selectionPreview.pageText || '').length,
+                createdAt: Date.now(),
+            }];
+    }
+    if (!entries.length) {
+        throw new Error('No exportable knowledge available yet. Run an extraction, summary, or ask first.');
+    }
+    const payload = buildKnowledgePackage(target, entries);
+    const filename = `selectpilot-knowledge-${target}-${Date.now()}.json`;
+    triggerDownload(JSON.stringify(payload, null, 2), filename, 'application/json');
+    setStatus(`Knowledge package exported (${target})`);
+}
+async function doMemoryDelete() {
+    memorySnapshot = await request('panel:memory_delete');
+    renderMemoryState();
+    syncControlAvailability();
+    setStatus('Memory ledger deleted');
+}
 function bindActions() {
     const wrap = (fn) => async () => {
         isBusy = true;
@@ -650,17 +857,21 @@ function bindActions() {
         finally {
             isBusy = false;
             syncControlAvailability();
-            void refreshSelectionPreview();
+            void Promise.all([refreshSelectionPreview(), refreshMemoryStatus()]);
         }
     };
     refreshButtonEl?.addEventListener('click', () => {
-        void Promise.all([refreshRuntime(), refreshSelectionPreview()]);
+        void Promise.all([refreshRuntime(), refreshSelectionPreview(), refreshMemoryStatus()]);
     });
     $('#btn-extract')?.addEventListener('click', wrap(() => doExtract()));
     $('#btn-summarize')?.addEventListener('click', wrap(() => doSummarize()));
     $('#btn-rewrite')?.addEventListener('click', wrap(() => doRewrite()));
     $('#btn-actions')?.addEventListener('click', wrap(() => doActions()));
     $('#btn-ask')?.addEventListener('click', wrap(() => doAsk()));
+    memoryToggleButtonEl?.addEventListener('click', wrap(() => doMemoryToggle()));
+    memoryInspectButtonEl?.addEventListener('click', wrap(() => doMemoryInspect()));
+    memoryExportButtonEl?.addEventListener('click', wrap(() => doMemoryExport()));
+    memoryDeleteButtonEl?.addEventListener('click', wrap(() => doMemoryDelete()));
     $('#btn-transcribe')?.addEventListener('click', () => wrap(async () => {
         const res = await request('panel:transcribe');
         renderOutput({
@@ -707,19 +918,20 @@ function bindActions() {
         renderResultBody();
     });
     window.addEventListener('focus', () => {
-        void Promise.all([refreshRuntime(), refreshSelectionPreview()]);
+        void Promise.all([refreshRuntime(), refreshSelectionPreview(), refreshMemoryStatus()]);
     });
 }
 populatePresetOptions();
 bindActions();
 async function initialize() {
     await loadBenchmarkSnapshot();
+    renderMemoryState();
     refreshTier();
     renderRuntimeState();
     renderSelectionState();
     updateResultChrome();
     renderResultBody();
     renderExports({});
-    await Promise.all([refreshRuntime(), refreshSelectionPreview()]);
+    await Promise.all([refreshRuntime(), refreshSelectionPreview(), refreshMemoryStatus()]);
 }
 void initialize();

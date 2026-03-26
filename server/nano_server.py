@@ -7,11 +7,27 @@ import socket
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 from ollama_client import OllamaClient, OllamaError
 from runtime_profiles import build_bootstrap_commands, list_runtime_profiles, recommend_runtime_profile
 
 DEFAULT_PORT = 8083
+LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
+
+ALLOWED_BRIDGE_ENDPOINT_PATHS = [
+    "/health",
+    "/privacy-proof",
+    "/profiles",
+    "/benchmark",
+    "/summarize",
+    "/extract",
+    "/agent",
+    "/embed",
+    "/transcribe",
+    "/vision",
+    "/license/verify",
+]
 
 
 def verify_binary(path: Path, expected_hash: str | None = None) -> bool:
@@ -37,6 +53,47 @@ def write_port_info(port_file: Path, port: int):
 
 OLLAMA = OllamaClient()
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _is_local_url(url: str) -> bool:
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        return False
+    return parsed.hostname in LOCAL_HOSTS
+
+
+def build_privacy_proof(health: dict | None = None, port: int = DEFAULT_PORT) -> dict:
+    snapshot = health or OLLAMA.health()
+    bridge_base = f"http://127.0.0.1:{port}"
+    ollama_base = str(snapshot.get("base_url", ""))
+    external_targets: list[str] = []
+    if ollama_base and not _is_local_url(ollama_base):
+        external_targets.append(ollama_base)
+
+    has_external_calls = len(external_targets) > 0
+    return {
+        "ok": bool(snapshot.get("reachable")) and bool(snapshot.get("model_available")) and not has_external_calls,
+        "privacy_mode": "local-only",
+        "active_model": snapshot.get("active_model", "unknown"),
+        "active_embed_model": snapshot.get("active_embed_model", "unknown"),
+        "runtime_profile": os.environ.get("CHROMEAI_RUNTIME_PROFILE", "fast"),
+        "allowed_bridge_origins": [
+            "http://127.0.0.1",
+            "http://localhost",
+            "chrome-extension://*",
+        ],
+        "allowed_endpoints": [f"{bridge_base}{path}" for path in ALLOWED_BRIDGE_ENDPOINT_PATHS],
+        "outbound_observation": {
+            "external_calls_registered": has_external_calls,
+            "external_targets": external_targets,
+            "statement": (
+                "No external outbound calls registered in local runtime path."
+                if not has_external_calls
+                else "External outbound target detected. Privacy boundary degraded."
+            ),
+        },
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 def transcribe(payload: dict) -> dict:
@@ -130,6 +187,9 @@ class Handler(BaseHTTPRequestHandler):
                 "service": self.server_version,
                 "ollama": health,
             })
+            return
+        if self.path.rstrip('/') == '/privacy-proof':
+            self._write_json(200, build_privacy_proof())
             return
         if self.path.rstrip('/') == '/profiles':
             self._write_json(200, runtime_profiles())

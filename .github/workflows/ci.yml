@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate-pnpm:
+  validate:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -46,6 +46,12 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Lint manifest
+        run: pnpm lint:manifest
+
+      - name: Sync manifest version
+        run: pnpm sync:manifest-version
+
       - name: Typecheck
         run: pnpm typecheck
 
@@ -54,31 +60,3 @@ jobs:
 
       - name: Test
         run: pnpm test
-
-  validate-npm:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Use Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Use Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Smoke-check npm compatibility
-        run: |
-          npm run lint
-          npm run typecheck
-          npm test

@@ -4,18 +4,28 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=10"
+  },
   "description": "Privacy-first local execution layer for selected text, powered by Ollama.",
   "scripts": {
+    "setup:local": "pnpm install && pnpm build && bash ./scripts/bootstrap-macos-local.sh --profile fast",
     "bootstrap:local": "bash ./scripts/bootstrap-macos-local.sh",
     "benchmark:local": "bash ./scripts/benchmark-local-runtime.sh",
-    "build": "tsc -p tsconfig.json",
+    "sync:manifest-version": "node ./scripts/sync-manifest-version.mjs",
+    "build": "pnpm sync:manifest-version && tsc -p tsconfig.json",
     "lint": "eslint --max-warnings=0 .",
+    "lint:manifest": "node ./scripts/lint-manifest.mjs",
+    "test:e2e": "playwright test --config tests/e2e/playwright.config.mjs",
     "test": "tsc -p tsconfig.json && node --test tests/panel/*.test.mjs && python3 -m unittest discover -s tests/server -p 'test_*.py'",
+    "test:privacy": "node --test tests/panel/network-boundary.test.mjs && python3 -m unittest tests/server/test_privacy_proof.py",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "validate:server": "python3 server/nano_server.py --run-dir /tmp/chromeai-run --log-dir /tmp/chromeai-log"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.55.0",
     "@types/chrome": "^0.1.29",
     "eslint": "^10.1.0",
     "globals": "^17.4.0",

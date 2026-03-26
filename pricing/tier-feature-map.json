@@ -1,27 +1,30 @@
 {
   "essential": [
-    "text_summarization",
     "selection_clipping",
     "markdown_export",
     "clipboard_export",
     "side_panel_ui",
-    "basic_local_agent",
+    "structured_extraction",
+    "canonical_metadata",
     "local_processing"
   ],
   "plus": [
-    "audio_transcription",
-    "video_frame_ocr",
-    "image_ocr",
-    "multimodal_clipper",
+    "text_summarization",
+    "basic_local_agent",
     "export_obsidian",
     "export_notion",
     "export_mem_ai",
     "export_apple_notes",
-    "auto_tagging",
+    "format_adapters",
+    "one_click_export",
     "batch_clipping",
     "structured_summaries"
   ],
   "pro": [
+    "audio_transcription",
+    "video_frame_ocr",
+    "image_ocr",
+    "multimodal_clipper",
     "local_embeddings",
     "advanced_agent_reasoning",
     "project_memory",
