@@ -1,0 +1,16 @@
+{
+  "recommendation": "keep_ts_runtime",
+  "reason": "current_costs_within_thresholds",
+  "thresholds": {
+    "orchestration_overhead_ratio_max": 0.18,
+    "validation_overhead_ratio_max": 0.18,
+    "event_dispatch_cost_max": 12,
+    "memory_management_cost_max": 15
+  },
+  "input": {
+    "orchestration_overhead_ratio": 0.056,
+    "validation_overhead_ratio": 0.0435,
+    "event_dispatch_cost": 8.1257,
+    "memory_management_cost": 8.8977
+  }
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "baseline_model": "qwen2:1.5b",
+    "candidate_model": "qwen2:0.5b",
+    "decision": "promote",
+    "reason": "higher_correctness_same_or_lower_cost",
+    "latency_regression_ratio": 0.7612,
+    "schema_validity_rate": 0.9717,
+    "failure_rate": 0.0493,
+    "weighted_score": 0.8854
+  },
+  {
+    "baseline_model": "qwen2:1.5b",
+    "candidate_model": "qwen2:1.5b",
+    "decision": "reject",
+    "reason": "higher_failure_rate",
+    "latency_regression_ratio": 1,
+    "schema_validity_rate": 0.9709,
+    "failure_rate": 0.0493,
+    "weighted_score": 0.857
+  },
+  {
+    "baseline_model": "qwen2:1.5b",
+    "candidate_model": "qwen2:7b",
+    "decision": "reject",
+    "reason": "increases_latency_without_gain",
+    "latency_regression_ratio": 1.9176,
+    "schema_validity_rate": 0.9678,
+    "failure_rate": 0.0493,
+    "weighted_score": 0.7605
+  },
+  {
+    "baseline_model": "qwen2:1.5b",
+    "candidate_model": "qwen2:14b",
+    "decision": "reject",
+    "reason": "increases_latency_without_gain",
+    "latency_regression_ratio": 2.8,
+    "schema_validity_rate": 0.9648,
+    "failure_rate": 0.0793,
+    "weighted_score": 0.6719
+  }
+]

@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-03-26T18:08:26.167Z",
+  "scenario_matrix": {
+    "dimensions": [
+      "task_fixture",
+      "hardware_profile",
+      "candidate_model",
+      "output_mode",
+      "cold_or_warm_start"
+    ],
+    "output_modes": [
+      "freeform",
+      "semi_structured",
+      "strict_json"
+    ],
+    "start_modes": [
+      "cold",
+      "warm"
+    ]
+  },
+  "raw_metrics": [],
+  "aggregate_metrics": {
+    "note": "Run simulation harness to populate metrics.",
+    "configured_min_runs_per_scenario": 5,
+    "configured_recommended_runs_per_scenario": 10
+  }
+}

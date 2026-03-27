@@ -1,0 +1,30 @@
+[
+  {
+    "model": "qwen2:0.5b",
+    "weighted_score": 0.8854,
+    "schema_validity_rate": 0.9717,
+    "failure_rate": 0.0493,
+    "p95_latency_ms": 628
+  },
+  {
+    "model": "qwen2:1.5b",
+    "weighted_score": 0.857,
+    "schema_validity_rate": 0.9709,
+    "failure_rate": 0.0493,
+    "p95_latency_ms": 825
+  },
+  {
+    "model": "qwen2:7b",
+    "weighted_score": 0.7605,
+    "schema_validity_rate": 0.9678,
+    "failure_rate": 0.0493,
+    "p95_latency_ms": 1582
+  },
+  {
+    "model": "qwen2:14b",
+    "weighted_score": 0.6719,
+    "schema_validity_rate": 0.9648,
+    "failure_rate": 0.0793,
+    "p95_latency_ms": 2310
+  }
+]

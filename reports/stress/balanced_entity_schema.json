@@ -1,0 +1,206 @@
+{
+  "stress_diagnostic_suite": {
+    "id": "artificial_diagnostic_load_suite_v1",
+    "version": "1.0.0",
+    "purpose": "Expose the balanced entity to artificial but reality-grounded stress conditions analogous to full-body CT + MRI under load, in order to detect leaks, cracks, bottlenecks, instability, and weakly coupled control paths.",
+    "diagnostic_analogy": {
+      "ct_equivalent": {
+        "meaning": "Static structural scan of architecture, interfaces, dependencies, and constraint surfaces.",
+        "targets": [
+          "schema_integrity",
+          "interface_consistency",
+          "dependency_boundaries",
+          "permission_surfaces",
+          "configuration_coherence"
+        ]
+      },
+      "mri_equivalent": {
+        "meaning": "Dynamic scan of internal state flow, ambiguity routing, control coupling, and temporal execution behavior.",
+        "targets": [
+          "state_transitions",
+          "intent_resolution_paths",
+          "contract_propagation",
+          "runtime_binding",
+          "memory_write_patterns",
+          "fallback_sequences"
+        ]
+      },
+      "contrast_load_equivalent": {
+        "meaning": "Inject realistic noisy and heavy workloads to reveal otherwise hidden weak points.",
+        "targets": [
+          "privacy_boundary_pressure",
+          "latency_spikes",
+          "retrieval_contamination",
+          "contract_slippage",
+          "hallucination_pressure_points",
+          "resource_exhaustion"
+        ]
+      }
+    },
+    "test_phases": [
+      {
+        "phase": "baseline_scan",
+        "purpose": "Measure normal behavior under clean and low-noise conditions."
+      },
+      {
+        "phase": "structural_ct",
+        "purpose": "Compare declared architecture against actual executable behavior and interfaces."
+      },
+      {
+        "phase": "dynamic_mri",
+        "purpose": "Trace internal state changes and causal propagation across layers."
+      },
+      {
+        "phase": "contrast_load",
+        "purpose": "Stress the entity with realistic, high-pressure, noisy, and conflicting data."
+      },
+      {
+        "phase": "trauma_simulation",
+        "purpose": "Force localized failures to reveal fracture behavior and containment quality."
+      },
+      {
+        "phase": "recovery_assessment",
+        "purpose": "Measure bounded degradation, fallback quality, and capacity to return to coherence."
+      }
+    ],
+    "stress_dimensions": {
+      "input_stress": [
+        "ambiguity_density",
+        "semantic_contradiction",
+        "context_length",
+        "format_noise",
+        "language_mixing",
+        "ocr_artifacts"
+      ],
+      "runtime_stress": [
+        "cpu_pressure",
+        "ram_pressure",
+        "gpu_unavailability",
+        "disk_io_throttling",
+        "cold_start_model_ensure"
+      ],
+      "control_stress": [
+        "contract_rigidity",
+        "latency_budget_tightness",
+        "precision_requirement",
+        "output_schema_strictness"
+      ],
+      "memory_stress": [
+        "vector_store_growth",
+        "retrieval_overlap",
+        "index_fragmentation",
+        "feedback_log_volume"
+      ],
+      "integrity_stress": [
+        "privacy_boundary_pressure",
+        "stale_entitlement_state",
+        "connector_mismatch",
+        "false_locality_claim_detection"
+      ]
+    },
+    "real_data_policy": {
+      "use_real_data": true,
+      "requirements": {
+        "anonymized": true,
+        "semantically_minimized": true,
+        "source_traceable": true,
+        "replayable": true,
+        "no_reverse_pii": true
+      },
+      "approved_input_classes": [
+        "web_text",
+        "technical_docs",
+        "user_notes",
+        "ocr_output",
+        "contradictory_fragments",
+        "mixed_language_input",
+        "underspecified_requests",
+        "connector_bound_payloads"
+      ]
+    },
+    "observation_points": [
+      "compiled_intent",
+      "ambiguity_score",
+      "clarification_gate_state",
+      "task_analysis",
+      "operation_contract",
+      "runtime_selection",
+      "active_model",
+      "memory_reads",
+      "memory_writes",
+      "fallback_events",
+      "violation_events",
+      "latency_profile",
+      "resource_profile"
+    ],
+    "instrumentation_requirements": {
+      "required_logs": [
+        "intent_trace",
+        "ambiguity_score",
+        "task_analysis",
+        "compiled_contract",
+        "runtime_selection",
+        "active_model",
+        "memory_reads",
+        "memory_writes",
+        "fallback_events",
+        "violation_events"
+      ],
+      "report_format": "json",
+      "storage_mode": "file_backed",
+      "reproducibility_required": true
+    },
+    "per_test_report_schema": {
+      "fields": [
+        "suite_id",
+        "test_id",
+        "phase",
+        "input_profile",
+        "runtime_profile",
+        "compiled_intent",
+        "task_analysis",
+        "operation_contract",
+        "observed_behavior",
+        "violations",
+        "leaks",
+        "cracks",
+        "scores",
+        "pass"
+      ]
+    },
+    "master_report_schema": {
+      "fields": [
+        "suite_id",
+        "entity_id",
+        "overall_score",
+        "band",
+        "critical_failures",
+        "high_failures",
+        "dominant_weak_points",
+        "dominant_strengths",
+        "recommended_hardening_order",
+        "pass"
+      ]
+    },
+    "pass_logic": {
+      "critical_failures_allowed": 0,
+      "high_failures_allowed": 2,
+      "required_phase_passes": [
+        "baseline_scan",
+        "structural_ct",
+        "dynamic_mri",
+        "contrast_load",
+        "recovery_assessment"
+      ]
+    },
+    "binding_points": [
+      "intentCompiler",
+      "ambiguityScorer",
+      "taskAnalyzer",
+      "contractCompiler",
+      "runtimeSelector",
+      "feedbackWriter",
+      "stressReportGenerator"
+    ]
+  }
+}

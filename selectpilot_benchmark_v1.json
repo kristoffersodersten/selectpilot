@@ -1,0 +1,331 @@
+{
+  "benchmark_version": "2026-01-selectpilot-benchmark-v1",
+  "type": "local_realistic_simulation_framework",
+  "core_principles": [
+    "local_only_execution",
+    "deterministic_scenarios",
+    "repeatable_runs",
+    "hardware_aware",
+    "model_comparative",
+    "no_synthetic_shortcuts",
+    "measure_runtime_not_just_output",
+    "strict_validation_enforced"
+  ],
+  "execution_modes": {
+    "batch": {
+      "description": "Run full matrix across all scenarios",
+      "parallelism": "bounded_by_hardware"
+    },
+    "incremental": {
+      "description": "Run only changed models or affected scenarios"
+    },
+    "continuous": {
+      "description": "Background benchmarking under idle conditions"
+    }
+  },
+  "scenario_engine": {
+    "generation": {
+      "sources": [
+        "static_fixtures",
+        "parametric_variations",
+        "mutation_engine"
+      ],
+      "rules": [
+        "each scenario must map to real user intent",
+        "no purely synthetic nonsense data",
+        "must include edge cases"
+      ]
+    },
+    "scenario_classes": [
+      {
+        "id": "rewrite_minimal",
+        "input_length": "short",
+        "constraints": [
+          "tone",
+          "clarity"
+        ]
+      },
+      {
+        "id": "rewrite_constrained",
+        "input_length": "medium",
+        "constraints": [
+          "tone",
+          "length",
+          "style"
+        ]
+      },
+      {
+        "id": "classification_binary",
+        "output": "label",
+        "strictness": "high"
+      },
+      {
+        "id": "classification_multiclass",
+        "output": "enum",
+        "strictness": "high"
+      },
+      {
+        "id": "extract_entities",
+        "output": "semi_structured"
+      },
+      {
+        "id": "extract_strict_json",
+        "output": "strict_json",
+        "schema_complexity": "medium"
+      },
+      {
+        "id": "extract_nested_json",
+        "output": "strict_json",
+        "schema_complexity": "high"
+      },
+      {
+        "id": "summarize_contextual",
+        "constraint": "preserve_meaning"
+      },
+      {
+        "id": "analyze_reasoning",
+        "complexity": "medium"
+      },
+      {
+        "id": "compare_structured",
+        "output": "structured_diff"
+      },
+      {
+        "id": "ambiguous_intent",
+        "expected_behavior": "block_execution"
+      },
+      {
+        "id": "contradictory_intent",
+        "expected_behavior": "request_clarification"
+      },
+      {
+        "id": "long_context",
+        "input_length": "long"
+      },
+      {
+        "id": "noise_input",
+        "input_quality": "low"
+      }
+    ],
+    "mutation_engine": {
+      "enabled": true,
+      "mutations": [
+        "add_noise",
+        "truncate",
+        "shuffle_sections",
+        "inject_ambiguity",
+        "inject_conflicting_constraints"
+      ],
+      "purpose": "stress test robustness"
+    }
+  },
+  "hardware_simulation": {
+    "profiles": [
+      {
+        "id": "low",
+        "ram_gb": 8,
+        "cpu": "limited",
+        "gpu": false
+      },
+      {
+        "id": "medium",
+        "ram_gb": 16,
+        "cpu": "moderate",
+        "gpu": false
+      },
+      {
+        "id": "medium_gpu",
+        "ram_gb": 24,
+        "cpu": "moderate",
+        "gpu": true
+      },
+      {
+        "id": "high",
+        "ram_gb": 32,
+        "cpu": "high",
+        "gpu": true
+      }
+    ],
+    "dynamic_conditions": [
+      "thermal_throttling",
+      "battery_mode",
+      "memory_pressure"
+    ]
+  },
+  "model_matrix": {
+    "candidates": [
+      "qwen2:0.5b",
+      "qwen2:1.5b",
+      "qwen2:7b",
+      "qwen2:14b"
+    ],
+    "states": [
+      "cold",
+      "warm"
+    ],
+    "selection_modes": [
+      "forced_model",
+      "system_selected"
+    ]
+  },
+  "execution_matrix": {
+    "dimensions": [
+      "scenario",
+      "hardware_profile",
+      "model",
+      "selection_mode",
+      "cold_or_warm"
+    ],
+    "expansion_rule": "full_cartesian_product"
+  },
+  "metrics": {
+    "correctness": [
+      "task_success_rate",
+      "schema_validity_rate",
+      "parse_success_rate",
+      "retry_rate",
+      "fallback_rate"
+    ],
+    "performance": [
+      "p50_latency_ms",
+      "p95_latency_ms",
+      "p99_latency_ms",
+      "time_to_first_token_ms",
+      "total_runtime_ms",
+      "cold_start_penalty_ms"
+    ],
+    "resource_usage": [
+      "peak_ram_mb",
+      "avg_ram_mb",
+      "cpu_utilization_percent",
+      "gpu_utilization_percent"
+    ],
+    "stability": [
+      "failure_rate",
+      "validation_failure_rate",
+      "oscillation_rate",
+      "quarantine_trigger_rate"
+    ],
+    "selection_quality": [
+      "smallest_sufficient_hit_rate",
+      "overprovision_rate",
+      "underprovision_rate"
+    ],
+    "ux_metrics": [
+      "overlay_activation_accuracy",
+      "latency_hint_accuracy",
+      "unexplained_wait_rate"
+    ],
+    "meta_metrics": [
+      "determinism_score",
+      "variance_across_runs",
+      "confidence_interval"
+    ]
+  },
+  "evaluation_engine": {
+    "rules": [
+      "each scenario must run multiple times",
+      "cold and warm runs separated",
+      "strict_json must pass schema validation",
+      "ambiguous cases must block execution"
+    ],
+    "repetition": {
+      "min_runs": 5,
+      "target_runs": 10
+    },
+    "scoring": {
+      "weighted_score": {
+        "correctness": 0.4,
+        "performance": 0.25,
+        "stability": 0.2,
+        "resource_usage": 0.15
+      }
+    }
+  },
+  "frontier_analysis": {
+    "objective": "identify optimal model per task/hardware",
+    "comparison": {
+      "baseline": "current_selected_model",
+      "candidate": "evaluated_model"
+    },
+    "promotion_rules": [
+      "higher_correctness_same_or_lower_cost",
+      "same_correctness_lower_cost",
+      "significant_correctness_gain_with_acceptable_cost"
+    ],
+    "rejection_rules": [
+      "fails_schema_threshold",
+      "increases_latency_without_gain",
+      "higher_failure_rate"
+    ],
+    "thresholds": {
+      "schema_validity_min": 0.9,
+      "failure_rate_max": 0.1,
+      "latency_regression_limit": 1.15
+    }
+  },
+  "determinism_audit": {
+    "objective": "verify system stability across identical runs",
+    "checks": [
+      "same_input_same_output_shape",
+      "same_model_selection",
+      "bounded_output_variance",
+      "no_random_fallbacks"
+    ],
+    "score": {
+      "target": 0.95
+    }
+  },
+  "reporting": {
+    "outputs": [
+      "raw_metrics.json",
+      "aggregated_metrics.json",
+      "scenario_results.json",
+      "model_comparison.json",
+      "frontier_decisions.json",
+      "determinism_report.json",
+      "bottleneck_analysis.json"
+    ],
+    "bottleneck_analysis": {
+      "detect": [
+        "model_latency_dominance",
+        "validation_overhead",
+        "orchestration_overhead",
+        "memory_pressure_events"
+      ]
+    }
+  },
+  "engine_decision_integration": {
+    "feeds_into": "engine_evaluation",
+    "decision_inputs": [
+      "orchestration_overhead_ratio",
+      "validation_overhead_ratio",
+      "event_dispatch_cost",
+      "memory_management_cost"
+    ]
+  },
+  "failure_injection": {
+    "enabled": true,
+    "cases": [
+      "model_timeout",
+      "invalid_json_output",
+      "partial_output",
+      "memory_exceeded",
+      "model_not_available"
+    ],
+    "purpose": "test system resilience"
+  },
+  "continuous_learning_loop": {
+    "type": "non_model_learning",
+    "updates": [
+      "model_scores",
+      "selection_weights",
+      "failure_profiles"
+    ],
+    "rules": [
+      "no model retraining",
+      "only system parameter tuning",
+      "must remain deterministic"
+    ]
+  }
+}

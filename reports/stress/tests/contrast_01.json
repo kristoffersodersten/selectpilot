@@ -1,0 +1,201 @@
+{
+  "suite_id": "artificial_diagnostic_load_suite_v1",
+  "test_id": "contrast_01",
+  "phase": "contrast_load",
+  "input_profile": "high_noise_input_burst",
+  "expected_runtime_mismatch_allowed": false,
+  "runtime_profile": "medium",
+  "compiled_intent": {
+    "intent_raw": "Extract entities from OCR-ish text with typos, mixed casing, and symbols ##@@.",
+    "intent_normalized": "Extract entities from OCR-ish text with typos, mixed casing, and symbols ##@@.",
+    "operation_family": "extract",
+    "action": "extract_entities",
+    "target": null,
+    "constraints": {
+      "output_format": "structured",
+      "strictness": "medium",
+      "tone": null,
+      "length": "medium",
+      "schema_requested": false,
+      "explanation_allowed": true
+    },
+    "ambiguity_score": 0,
+    "needs_clarification": false
+  },
+  "task_analysis": {
+    "task_family": "extract",
+    "output_mode": "strict_json",
+    "hardware_profile": "medium",
+    "complexity": "low",
+    "latency_sensitivity": "medium",
+    "precision_requirement": "medium"
+  },
+  "operation_contract": {
+    "operation_name": "extract",
+    "endpoint": "/extract",
+    "template": "extract.v1",
+    "output_enforcement": {
+      "mode": "strict_json_retry_once",
+      "max_attempts": 2,
+      "visible_retries": true
+    },
+    "latency_budget_ms": 2000,
+    "memory_guard": {
+      "threshold_ratio": 0.8,
+      "strategy": "lru_eviction",
+      "max_payload_chars": 120000
+    },
+    "deterministic": {
+      "no_runtime_template_mutation": true,
+      "prompt_version": "deterministic.prompts.v3"
+    }
+  },
+  "observed_behavior": {
+    "runtime_selection": {
+      "selected_model_id": "qwen2.5:0.5b",
+      "selection_path": "runtime_policy_preferred",
+      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "policy_version": "runtime-policy-d7833f631d57",
+      "promotion_applied": true
+    },
+    "pipeline_trace_a": "sp_mn8hre66_zw2xrunj",
+    "pipeline_trace_b": "sp_mn8hre66_6xvmbwb7",
+    "deterministic_repeat_stable": true
+  },
+  "causal_binding_checks": [
+    {
+      "id": "ambiguity_score_to_clarification_gate",
+      "pass": true,
+      "detail": "If ambiguity threshold is exceeded, clarification gate must engage."
+    },
+    {
+      "id": "compiled_intent_to_task_analyzer",
+      "pass": true,
+      "detail": "Task family must be derived from compiled intent path."
+    },
+    {
+      "id": "task_analysis_to_operation_contract",
+      "pass": true,
+      "detail": "Contract must carry output/latency/memory constraints."
+    },
+    {
+      "id": "operation_contract_to_runtime_selector",
+      "pass": true,
+      "detail": "Runtime selection tuple must align with task-derived output mode."
+    },
+    {
+      "id": "runtime_selection_to_active_model",
+      "pass": true,
+      "detail": "Active runtime must match selected runtime unless explicitly degraded."
+    },
+    {
+      "id": "operation_contract_to_output_enforcer",
+      "pass": true,
+      "detail": "Output enforcer must be bound to compiled operation contract."
+    }
+  ],
+  "instrumentation": {
+    "trace": {
+      "intent_trace": "Extract entities from OCR-ish text with typos, mixed casing, and symbols ##@@.",
+      "ambiguity_score": 0,
+      "task_analysis": {
+        "task_family": "extract",
+        "output_mode": "strict_json",
+        "hardware_profile": "medium",
+        "complexity": "low",
+        "latency_sensitivity": "medium",
+        "precision_requirement": "medium"
+      },
+      "compiled_contract": {
+        "operation_name": "extract",
+        "endpoint": "/extract",
+        "template": "extract.v1",
+        "output_enforcement": {
+          "mode": "strict_json_retry_once",
+          "max_attempts": 2,
+          "visible_retries": true
+        },
+        "latency_budget_ms": 2000,
+        "memory_guard": {
+          "threshold_ratio": 0.8,
+          "strategy": "lru_eviction",
+          "max_payload_chars": 120000
+        },
+        "deterministic": {
+          "no_runtime_template_mutation": true,
+          "prompt_version": "deterministic.prompts.v3"
+        }
+      },
+      "runtime_selection": "runtime_policy_preferred",
+      "active_model": "qwen2.5:0.5b",
+      "memory_reads": [
+        "runtime/model_policy.json",
+        "runtime/model_registry.runtime.json"
+      ],
+      "memory_writes": [
+        "runtime/live_feedback.jsonl"
+      ],
+      "fallback_events": [],
+      "violation_events": []
+    },
+    "coverage": [
+      {
+        "log_key": "intent_trace",
+        "present": true
+      },
+      {
+        "log_key": "ambiguity_score",
+        "present": true
+      },
+      {
+        "log_key": "task_analysis",
+        "present": true
+      },
+      {
+        "log_key": "compiled_contract",
+        "present": true
+      },
+      {
+        "log_key": "runtime_selection",
+        "present": true
+      },
+      {
+        "log_key": "active_model",
+        "present": true
+      },
+      {
+        "log_key": "memory_reads",
+        "present": true
+      },
+      {
+        "log_key": "memory_writes",
+        "present": true
+      },
+      {
+        "log_key": "fallback_events",
+        "present": true
+      },
+      {
+        "log_key": "violation_events",
+        "present": true
+      }
+    ]
+  },
+  "violations": [],
+  "leaks": [],
+  "cracks": [],
+  "scores": {
+    "semantic_precision": 0.8,
+    "latency_stability": 0.9,
+    "memory_integrity": 0.92,
+    "contract_obedience": 0.98,
+    "ambiguity_handling": 0.9,
+    "resource_efficiency": 0.9,
+    "privacy_boundary_integrity": 1,
+    "runtime_adaptivity": 0.84,
+    "recovery_capacity": 0.82,
+    "output_consistency": 0.95,
+    "overall_score": 0.908
+  },
+  "pass": true
+}

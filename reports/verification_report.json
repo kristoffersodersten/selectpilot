@@ -1,0 +1,122 @@
+{
+  "generated_at": "2026-03-26T18:08:26.167Z",
+  "static_checks": [
+    {
+      "name": "typecheck",
+      "status": "pending"
+    },
+    {
+      "name": "lint",
+      "status": "pending"
+    },
+    {
+      "name": "dead_code_scan",
+      "status": "pending"
+    },
+    {
+      "name": "traceability_scan",
+      "status": "completed"
+    },
+    {
+      "name": "spec_ref_coverage_scan",
+      "status": "failed"
+    }
+  ],
+  "behavioral_checks": [
+    {
+      "name": "state_machine_transition_validity",
+      "status": "pending"
+    },
+    {
+      "name": "no_execution_without_intent",
+      "status": "pending"
+    },
+    {
+      "name": "manual_override_priority",
+      "status": "pending"
+    },
+    {
+      "name": "no_untyped_fallbacks",
+      "status": "pending"
+    },
+    {
+      "name": "model_lock_per_operation",
+      "status": "pending"
+    },
+    {
+      "name": "strict_validation_enforcement",
+      "status": "pending"
+    }
+  ],
+  "privacy_checks": [
+    {
+      "name": "no_outbound_network_on_core_path",
+      "status": "pending"
+    },
+    {
+      "name": "no_raw_selection_in_normal_mode_logs",
+      "status": "pending"
+    },
+    {
+      "name": "no_prompt_body_in_normal_mode_events",
+      "status": "pending"
+    },
+    {
+      "name": "no_secret_leakage",
+      "status": "pending"
+    }
+  ],
+  "runtime_checks": [
+    {
+      "name": "overlay_visibility_matches_runtime_state",
+      "status": "pending"
+    },
+    {
+      "name": "event_stream_has_exactly_one_terminal_event_per_operation",
+      "status": "pending"
+    },
+    {
+      "name": "provisioning_progress_visible_when_active",
+      "status": "pending"
+    },
+    {
+      "name": "latency_hints_emitted_when_threshold_exceeded",
+      "status": "pending"
+    }
+  ],
+  "pass_fail_summary": {
+    "ok": false,
+    "missing_spec_refs": [
+      "dynamic_model_evaluation_layer",
+      "execution_layer",
+      "failure_isolation",
+      "frontend_state_contract",
+      "hardware_detection_layer",
+      "intent_ambiguity_handling",
+      "intent_compilation_layer",
+      "intent_model",
+      "intent_popup",
+      "latency_budget",
+      "memory_guard",
+      "model_registry",
+      "model_selection_layer",
+      "model_switch_hysteresis",
+      "observability_layer",
+      "operation_mapping_layer",
+      "output_enforcement",
+      "privacy_and_debug_policy",
+      "probabilistic_suggestion_engine",
+      "prompt_determinism",
+      "provisioning_layer",
+      "reporting",
+      "runtime_event_contract",
+      "simulation_and_benchmarking",
+      "simulation_and_benchmarking.fixtures",
+      "simulation_and_benchmarking.metrics",
+      "task_analysis_layer",
+      "testing_strategy.integration_tests",
+      "testing_strategy.unit_tests",
+      "validation_layer"
+    ]
+  }
+}

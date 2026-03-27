@@ -1,0 +1,163 @@
+{
+  "suite_id": "artificial_diagnostic_load_suite_v1",
+  "entity_id": "balanced_entity_v1",
+  "overall_score": 0.9078,
+  "band": "robust",
+  "critical_failures": 0,
+  "high_failures": 0,
+  "dominant_weak_points": [
+    "runtime_adaptivity",
+    "recovery_capacity",
+    "semantic_precision"
+  ],
+  "dominant_strengths": [
+    "privacy_boundary_integrity",
+    "contract_obedience",
+    "output_consistency"
+  ],
+  "recommended_hardening_order": [
+    "privacy_boundary_integrity",
+    "contract_obedience",
+    "ambiguity_handling",
+    "runtime_match_integrity",
+    "memory_integrity",
+    "recovery_capacity",
+    "latency_stability"
+  ],
+  "pass": true,
+  "phase_results": {
+    "baseline_scan": {
+      "total": 1,
+      "passed": 1
+    },
+    "dynamic_mri": {
+      "total": 2,
+      "passed": 2
+    },
+    "contrast_load": {
+      "total": 5,
+      "passed": 5
+    },
+    "trauma_simulation": {
+      "total": 1,
+      "passed": 1
+    },
+    "recovery_assessment": {
+      "total": 1,
+      "passed": 1
+    }
+  },
+  "axis_averages": {
+    "semantic_precision": 0.7775,
+    "latency_stability": 0.9,
+    "memory_integrity": 0.92,
+    "contract_obedience": 0.98,
+    "ambiguity_handling": 0.92,
+    "resource_efficiency": 0.9,
+    "privacy_boundary_integrity": 1,
+    "runtime_adaptivity": 0.846,
+    "recovery_capacity": 0.83,
+    "output_consistency": 0.95
+  },
+  "targets": {
+    "semantic_precision": 0.85,
+    "latency_stability": 0.8,
+    "memory_integrity": 0.9,
+    "contract_obedience": 0.95,
+    "ambiguity_handling": 0.9,
+    "resource_efficiency": 0.75,
+    "privacy_boundary_integrity": 1,
+    "runtime_adaptivity": 0.85,
+    "recovery_capacity": 0.8,
+    "output_consistency": 0.9
+  },
+  "fail_conditions": {
+    "no_privacy_leak": true,
+    "no_policy_leak": true,
+    "no_state_leak": true,
+    "runtime_consistency": true,
+    "runtime_mismatch_rate_max": true,
+    "min_pass_rate": true,
+    "required_phase_passes": true,
+    "validation_rules_hold": true
+  },
+  "pass_rate": 1,
+  "success_criteria": {
+    "min_pass_rate": 0.9,
+    "critical_failures_allowed": 0,
+    "high_failures_allowed": 2
+  },
+  "required_properties_status": {
+    "deterministic_intent_compile": true,
+    "causal_contract_binding": true,
+    "hardware_aware_runtime_selection": true,
+    "safe_clarification_gate": true,
+    "bounded_fallback": true,
+    "file_backed_reproducibility": true
+  },
+  "generated_at_unix_ms": 1703418057844,
+  "required_phases": [
+    "baseline_scan",
+    "structural_ct",
+    "dynamic_mri",
+    "contrast_load",
+    "recovery_assessment"
+  ],
+  "enforced_required_phases": [
+    "baseline_scan",
+    "dynamic_mri",
+    "contrast_load",
+    "recovery_assessment"
+  ],
+  "missing_required_phases": [
+    "structural_ct"
+  ],
+  "schema_ref": "reports/stress/balanced_entity_schema.json",
+  "stress_cases_ref": "reports/stress/stress_test_cases.json",
+  "monolith_ref": "reports/stress/selectpilot_monolith.json",
+  "constitution_ref": "CONSTITUTION.json",
+  "runner_contract_ref": "reports/stress/selectpilot_monolith.json#runner_contract",
+  "execution_model_ref": "reports/stress/selectpilot_monolith.json#execution_model",
+  "constitutional_gate": {
+    "principle_id": "holistic_completion",
+    "hard_block": true,
+    "definition_of_done_checks": {
+      "end_to_end_execution": true,
+      "contract_enforcement": true,
+      "deterministic_behavior": true,
+      "no_implicit_fallback": true,
+      "state_integrity": true,
+      "tests_pass": true
+    },
+    "unmet_definition_of_done": [],
+    "pass": true
+  },
+  "product_standard_gate": {
+    "pass": true,
+    "checks": {
+      "installation_zero_friction": true,
+      "learning_curve_none": true,
+      "natural_language_only": true,
+      "determinism": true,
+      "hallucination_forbidden": true,
+      "latency_perceived_instant": true,
+      "output_contract_strict": true,
+      "error_handling_explicit_only": true,
+      "state_stateless_execution": true,
+      "consistency_absolute": true
+    },
+    "unmet": []
+  },
+  "per_test_reports": [
+    "reports/stress/tests/T001_clean_extraction.json",
+    "reports/stress/tests/T002_ambiguity_gate.json",
+    "reports/stress/tests/T003_contract_enforcement.json",
+    "reports/stress/tests/T004_conflicting_input.json",
+    "reports/stress/tests/T005_large_context.json",
+    "reports/stress/tests/T006_runtime_mismatch.json",
+    "reports/stress/tests/T007_retrieval_pollution.json",
+    "reports/stress/tests/T008_privacy_boundary.json",
+    "reports/stress/tests/T009_parallel_execution.json",
+    "reports/stress/tests/T010_recovery_path.json"
+  ]
+}

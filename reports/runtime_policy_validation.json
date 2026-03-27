@@ -1,0 +1,22 @@
+{
+  "ok": true,
+  "errors": [],
+  "invariants_checked": [
+    "every_preferred_model_exists_in_runtime_registry",
+    "no_quarantined_model_is_marked_preferred",
+    "every_task_hardware_output_tuple_has_at_most_one_preferred_model",
+    "fallback_graph_is_acyclic",
+    "promotion_history_is_append_only"
+  ],
+  "hard_fail_rules": [
+    "invalid_policy_schema",
+    "unknown_model_reference",
+    "duplicate_preferred_mapping",
+    "fallback_cycle_detected",
+    "quarantined_model_promoted"
+  ],
+  "policy_version": "runtime-policy-d7833f631d57",
+  "checked_at_unix_ms": 1700704147799,
+  "policy_path": "runtime/model_policy.json",
+  "runtime_registry_path": "runtime/model_registry.runtime.json"
+}

@@ -1,0 +1,29 @@
+{
+  "suite_id": "suite_01",
+  "suite_name": "intent_compilation_determinism",
+  "generated_at_unix_ms": 1774552884070,
+  "policy_version": "runtime-policy-d7833f631d57",
+  "checks": [
+    {
+      "check_id": "normalized_intent_consistency",
+      "passed": true,
+      "details": "deterministic_stress_evaluation_passed"
+    },
+    {
+      "check_id": "operation_family_stability",
+      "passed": true,
+      "details": "deterministic_stress_evaluation_passed"
+    }
+  ],
+  "totals": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2
+  },
+  "metrics": {
+    "latency_p95_ms": 1425,
+    "failure_rate": 0.0176,
+    "retry_rate": 0.0493
+  },
+  "ok": true
+}

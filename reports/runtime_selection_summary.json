@@ -1,0 +1,28 @@
+{
+  "generated_at_unix_ms": 1700704147799,
+  "policy_version": "runtime-policy-d7833f631d57",
+  "defaults_count": 12,
+  "preferred_models": [
+    "qwen2.5:0.5b"
+  ],
+  "quarantined_models": [],
+  "rejected_models": [],
+  "selector_invariants": {
+    "manual_override_has_highest_authority": true,
+    "hardware_guard_wins_on_conflict": true,
+    "live_selection_never_reads_uncompiled_reports": true
+  },
+  "selection_order": [
+    "manual_override_model_if_explicitly_set_and_allowed",
+    "runtime_policy_preferred_model_if_available_and_not_quarantined",
+    "runtime_policy_fallback_models_in_order",
+    "baseline_smallest_sufficient_selection_from_registry",
+    "hard_error_if_no_sufficient_model"
+  ],
+  "source_reports": [
+    "reports/aggregated_metrics.json",
+    "reports/frontier_decisions.json",
+    "reports/determinism_report.json",
+    "reports/architecture_decision_report.json"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-03-26T18:08:26.167Z",
+  "current_frontier": [],
+  "candidate_comparisons": [],
+  "promotion_decisions": [],
+  "rollback_flags": [],
+  "thresholds": {
+    "strict_json_min_schema_validity_rate": 0.9,
+    "max_failure_rate": 0.1,
+    "max_retry_rate_for_sufficient_model": 0.1
+  }
+}

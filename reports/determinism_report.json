@@ -1,0 +1,9 @@
+{
+  "target": 0.95,
+  "group_count": 448,
+  "bounded_output_variance": 0.9803,
+  "same_model_selection": true,
+  "no_random_fallbacks": true,
+  "score": 0.9803,
+  "status": "pass"
+}

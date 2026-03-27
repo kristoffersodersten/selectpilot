@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-03-26T18:08:26.167Z",
+  "engine_recommendation": "Do not start with full C++ engine. Start with high-level orchestration and instrument everything. Add native hot paths only if measurements justify it.",
+  "bottleneck_summary": [
+    "strict_json_validation",
+    "high-volume schema parsing",
+    "metrics aggregation",
+    "event ring buffer",
+    "memory pressure monitoring"
+  ],
+  "priority_optimizations": [
+    "With small local models, inference usually dominates total runtime more than orchestration.",
+    "Premature native complexity will slow iteration and debugging.",
+    "Hybrid architecture gives most of the gain with less structural debt."
+  ]
+}

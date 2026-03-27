@@ -1,0 +1,29 @@
+{
+  "suite_id": "suite_10",
+  "suite_name": "ui_truth_and_reporting",
+  "generated_at_unix_ms": 1774552884071,
+  "policy_version": "runtime-policy-d7833f631d57",
+  "checks": [
+    {
+      "check_id": "runtime_ui_gate_integrity",
+      "passed": true,
+      "details": "deterministic_stress_evaluation_passed"
+    },
+    {
+      "check_id": "file_backed_reports_presence",
+      "passed": true,
+      "details": "deterministic_stress_evaluation_passed"
+    }
+  ],
+  "totals": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2
+  },
+  "metrics": {
+    "latency_p95_ms": 801,
+    "failure_rate": 0.0154,
+    "retry_rate": 0.058
+  },
+  "ok": true
+}

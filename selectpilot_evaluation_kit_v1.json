@@ -1,0 +1,77 @@
+{
+  "spec_version": "2026-01-selectpilot-runtime-integration-layer-v1",
+  "type": "deterministic_runtime_selection_integration",
+  "purpose": {
+    "primary": "Integrate benchmark/evaluation outputs into live model selection without breaking determinism.",
+    "secondary": [
+      "allow evidence-backed promotion of models into runtime",
+      "keep live selection stable under changing benchmark data",
+      "prevent unverified models from entering production path",
+      "preserve explicit manual override hierarchy"
+    ],
+    "non_goals": [
+      "no autonomous experimentation in live user path",
+      "no self-modifying prompts",
+      "no unbounded runtime adaptation",
+      "no benchmark-driven behavior changes without explicit promotion logic"
+    ]
+  },
+  "runtime_policy_compiler": {
+    "objective": "Generate live policy from reports in one deterministic pass.",
+    "entrypoint": "npm run runtime:compile-policy",
+    "algorithm": [
+      "load_required_reports",
+      "validate_report_schema",
+      "load_current_runtime_registry",
+      "load_current_policy_if_exists",
+      "filter_frontier_decisions_to_promote_only",
+      "apply_promotion_gating",
+      "resolve_conflicts_by_task_family_hardware_profile_output_mode",
+      "preserve_existing_promoted_model_if_new_candidate_is_not_stronger",
+      "emit_new_runtime_policy",
+      "emit_promotion_audit"
+    ],
+    "meaningful_advantage_thresholds": {
+      "correctness_gain": 0.02,
+      "latency_gain_ratio": 0.1,
+      "memory_gain_ratio": 0.1
+    }
+  },
+  "policy_hysteresis": {
+    "objective": "Prevent runtime default model churn.",
+    "parameters": {
+      "cooldown_ms": 86400000,
+      "min_benchmark_runs": 5,
+      "min_confidence": 0.8
+    }
+  },
+  "runtime_cli_contract": {
+    "commands": [
+      {
+        "id": "runtime_compile_policy",
+        "command": "npm run runtime:compile-policy"
+      },
+      {
+        "id": "runtime_validate_policy",
+        "command": "npm run runtime:validate-policy"
+      },
+      {
+        "id": "runtime_apply_rollback",
+        "command": "npm run runtime:rollback"
+      },
+      {
+        "id": "runtime_show_policy",
+        "command": "npm run runtime:show-policy"
+      }
+    ]
+  },
+  "validation_and_invariants": {
+    "hard_fail_rules": [
+      "invalid_policy_schema",
+      "unknown_model_reference",
+      "duplicate_preferred_mapping",
+      "fallback_cycle_detected",
+      "quarantined_model_promoted"
+    ]
+  }
+}

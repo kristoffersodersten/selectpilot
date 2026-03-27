@@ -1,0 +1,29 @@
+{
+  "suite_id": "suite_05",
+  "suite_name": "manual_override_behavior",
+  "generated_at_unix_ms": 1774552884071,
+  "policy_version": "runtime-policy-d7833f631d57",
+  "checks": [
+    {
+      "check_id": "manual_override_priority",
+      "passed": true,
+      "details": "deterministic_stress_evaluation_passed"
+    },
+    {
+      "check_id": "quarantined_override_guard",
+      "passed": true,
+      "details": "deterministic_stress_evaluation_passed"
+    }
+  ],
+  "totals": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2
+  },
+  "metrics": {
+    "latency_p95_ms": 1152,
+    "failure_rate": 0.0255,
+    "retry_rate": 0.0513
+  },
+  "ok": true
+}

@@ -1,0 +1,29 @@
+{
+  "suite_id": "suite_07",
+  "suite_name": "execution_validation_contract",
+  "generated_at_unix_ms": 1774552884071,
+  "policy_version": "runtime-policy-d7833f631d57",
+  "checks": [
+    {
+      "check_id": "strict_json_validation_retry",
+      "passed": true,
+      "details": "deterministic_stress_evaluation_passed"
+    },
+    {
+      "check_id": "response_invariant_enforcement",
+      "passed": true,
+      "details": "deterministic_stress_evaluation_passed"
+    }
+  ],
+  "totals": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2
+  },
+  "metrics": {
+    "latency_p95_ms": 973,
+    "failure_rate": 0.019,
+    "retry_rate": 0.0584
+  },
+  "ok": true
+}

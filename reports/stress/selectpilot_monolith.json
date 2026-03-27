@@ -1,0 +1,649 @@
+{
+  "monolith_id": "selectpilot_diagnostic_monolith_v1",
+  "version": "1.0.0",
+  "suite_id": "artificial_diagnostic_load_suite_v1",
+  "entity_id": "balanced_entity_v1",
+  "stress_diagnostic_suite": {
+    "id": "artificial_diagnostic_load_suite_v1",
+    "version": "1.0.0",
+    "purpose": "Expose the balanced entity to artificial but reality-grounded stress conditions analogous to full-body CT + MRI under load, in order to detect leaks, cracks, bottlenecks, instability, and weakly coupled control paths.",
+    "diagnostic_analogy": {
+      "ct_equivalent": {
+        "meaning": "Static structural scan of architecture, interfaces, dependencies, and constraint surfaces.",
+        "targets": [
+          "schema_integrity",
+          "interface_consistency",
+          "dependency_boundaries",
+          "permission_surfaces",
+          "configuration_coherence"
+        ]
+      },
+      "mri_equivalent": {
+        "meaning": "Dynamic scan of internal state flow, ambiguity routing, control coupling, and temporal execution behavior.",
+        "targets": [
+          "state_transitions",
+          "intent_resolution_paths",
+          "contract_propagation",
+          "runtime_binding",
+          "memory_write_patterns",
+          "fallback_sequences"
+        ]
+      },
+      "contrast_load_equivalent": {
+        "meaning": "Inject realistic noisy and heavy workloads to reveal otherwise hidden weak points.",
+        "targets": [
+          "privacy_boundary_pressure",
+          "latency_spikes",
+          "retrieval_contamination",
+          "contract_slippage",
+          "hallucination_pressure_points",
+          "resource_exhaustion"
+        ]
+      }
+    },
+    "test_phases": [
+      {
+        "phase": "baseline_scan",
+        "purpose": "Measure normal behavior under clean and low-noise conditions."
+      },
+      {
+        "phase": "structural_ct",
+        "purpose": "Compare declared architecture against actual executable behavior and interfaces."
+      },
+      {
+        "phase": "dynamic_mri",
+        "purpose": "Trace internal state changes and causal propagation across layers."
+      },
+      {
+        "phase": "contrast_load",
+        "purpose": "Stress the entity with realistic, high-pressure, noisy, and conflicting data."
+      },
+      {
+        "phase": "trauma_simulation",
+        "purpose": "Force localized failures to reveal fracture behavior and containment quality."
+      },
+      {
+        "phase": "recovery_assessment",
+        "purpose": "Measure bounded degradation, fallback quality, and capacity to return to coherence."
+      }
+    ],
+    "stress_dimensions": {
+      "input_stress": [
+        "ambiguity_density",
+        "semantic_contradiction",
+        "context_length",
+        "format_noise",
+        "language_mixing",
+        "ocr_artifacts"
+      ],
+      "runtime_stress": [
+        "cpu_pressure",
+        "ram_pressure",
+        "gpu_unavailability",
+        "disk_io_throttling",
+        "cold_start_model_ensure"
+      ],
+      "control_stress": [
+        "contract_rigidity",
+        "latency_budget_tightness",
+        "precision_requirement",
+        "output_schema_strictness"
+      ],
+      "memory_stress": [
+        "vector_store_growth",
+        "retrieval_overlap",
+        "index_fragmentation",
+        "feedback_log_volume"
+      ],
+      "integrity_stress": [
+        "privacy_boundary_pressure",
+        "stale_entitlement_state",
+        "connector_mismatch",
+        "false_locality_claim_detection"
+      ]
+    },
+    "real_data_policy": {
+      "use_real_data": true,
+      "requirements": {
+        "anonymized": true,
+        "semantically_minimized": true,
+        "source_traceable": true,
+        "replayable": true,
+        "no_reverse_pii": true
+      },
+      "approved_input_classes": [
+        "web_text",
+        "technical_docs",
+        "user_notes",
+        "ocr_output",
+        "contradictory_fragments",
+        "mixed_language_input",
+        "underspecified_requests",
+        "connector_bound_payloads"
+      ]
+    },
+    "observation_points": [
+      "compiled_intent",
+      "ambiguity_score",
+      "clarification_gate_state",
+      "task_analysis",
+      "operation_contract",
+      "runtime_selection",
+      "active_model",
+      "memory_reads",
+      "memory_writes",
+      "fallback_events",
+      "violation_events",
+      "latency_profile",
+      "resource_profile"
+    ],
+    "instrumentation_requirements": {
+      "required_logs": [
+        "intent_trace",
+        "ambiguity_score",
+        "task_analysis",
+        "compiled_contract",
+        "runtime_selection",
+        "active_model",
+        "memory_reads",
+        "memory_writes",
+        "fallback_events",
+        "violation_events"
+      ],
+      "report_format": "json",
+      "storage_mode": "file_backed",
+      "reproducibility_required": true
+    },
+    "per_test_report_schema": {
+      "fields": [
+        "suite_id",
+        "test_id",
+        "phase",
+        "input_profile",
+        "runtime_profile",
+        "compiled_intent",
+        "task_analysis",
+        "operation_contract",
+        "observed_behavior",
+        "violations",
+        "leaks",
+        "cracks",
+        "scores",
+        "pass"
+      ]
+    },
+    "master_report_schema": {
+      "fields": [
+        "suite_id",
+        "entity_id",
+        "overall_score",
+        "band",
+        "critical_failures",
+        "high_failures",
+        "dominant_weak_points",
+        "dominant_strengths",
+        "recommended_hardening_order",
+        "pass"
+      ]
+    },
+    "pass_logic": {
+      "critical_failures_allowed": 0,
+      "high_failures_allowed": 2,
+      "required_phase_passes": [
+        "baseline_scan",
+        "structural_ct",
+        "dynamic_mri",
+        "contrast_load",
+        "recovery_assessment"
+      ]
+    },
+    "binding_points": [
+      "intentCompiler",
+      "ambiguityScorer",
+      "taskAnalyzer",
+      "contractCompiler",
+      "runtimeSelector",
+      "feedbackWriter",
+      "stressReportGenerator"
+    ]
+  },
+  "stress_test_cases": {
+    "id": "selectpilot_stress_cases_v1",
+    "version": "1.0.0",
+    "description": "Concrete test cases mapped to deterministic pipeline stages: intent → task → contract → runtime → execution → feedback.",
+    "cases": [
+      {
+        "test_id": "T001_clean_extraction",
+        "phase": "baseline_scan",
+        "input": {
+          "type": "web_text",
+          "content": "The mitochondria is the powerhouse of the cell.",
+          "context": "user_selected_text"
+        },
+        "expected": {
+          "intent": "extract_knowledge",
+          "ambiguity_score_max": 0.2,
+          "clarification_required": false,
+          "task_family": "extraction",
+          "contract": {
+            "output_format": "structured_metadata",
+            "fields": [
+              "summary",
+              "source",
+              "key_terms"
+            ]
+          },
+          "runtime_profile": "fast_or_balanced"
+        },
+        "fail_conditions": [
+          "ambiguity_triggered",
+          "contract_violation",
+          "missing_fields"
+        ]
+      },
+      {
+        "test_id": "T002_ambiguity_gate",
+        "phase": "dynamic_mri",
+        "input": {
+          "type": "underspecified",
+          "content": "Summarize this properly",
+          "context": "no_target_defined"
+        },
+        "expected": {
+          "ambiguity_score_min": 0.6,
+          "clarification_required": true,
+          "execution_allowed": false
+        },
+        "fail_conditions": [
+          "execution_without_clarification",
+          "low_ambiguity_score"
+        ]
+      },
+      {
+        "test_id": "T003_contract_enforcement",
+        "phase": "dynamic_mri",
+        "input": {
+          "type": "structured_request",
+          "content": "Extract key facts as JSON with fields: title, date"
+        },
+        "expected": {
+          "contract": {
+            "output_format": "json",
+            "required_fields": [
+              "title",
+              "date"
+            ]
+          },
+          "output_must_match_schema": true
+        },
+        "fail_conditions": [
+          "non_json_output",
+          "missing_required_fields"
+        ]
+      },
+      {
+        "test_id": "T004_conflicting_input",
+        "phase": "contrast_load",
+        "input": {
+          "type": "contradictory_fragments",
+          "content": "The earth is flat. The earth is spherical."
+        },
+        "expected": {
+          "task_family": "analysis",
+          "ambiguity_score_min": 0.4,
+          "output_mode": "compare_or_flag_conflict"
+        },
+        "fail_conditions": [
+          "single-sided_answer",
+          "no_conflict_detection"
+        ]
+      },
+      {
+        "test_id": "T005_large_context",
+        "phase": "contrast_load",
+        "input": {
+          "type": "longform_notes",
+          "content_size": "20000_tokens",
+          "content": "Summarize large context with bounded latency."
+        },
+        "expected": {
+          "memory_strategy": "chunked_or_summarized",
+          "no_crash": true,
+          "latency_within_budget": true
+        },
+        "fail_conditions": [
+          "runtime_failure",
+          "unbounded_latency",
+          "memory_overflow"
+        ]
+      },
+      {
+        "test_id": "T006_runtime_mismatch",
+        "phase": "trauma_simulation",
+        "input": {
+          "type": "normal_request",
+          "forced_condition": "model_missing",
+          "content": "Extract JSON under constrained model availability."
+        },
+        "expected": {
+          "fallback_triggered": true,
+          "runtime_profile": "downgraded",
+          "no_silent_failure": true
+        },
+        "fail_conditions": [
+          "crash",
+          "no_fallback",
+          "silent_model_switch"
+        ]
+      },
+      {
+        "test_id": "T007_retrieval_pollution",
+        "phase": "contrast_load",
+        "input": {
+          "type": "retrieval_heavy",
+          "content": "Query with overlapping irrelevant embeddings"
+        },
+        "expected": {
+          "retrieval_precision_min": 0.7,
+          "irrelevant_data_filtered": true
+        },
+        "fail_conditions": [
+          "irrelevant_injection",
+          "semantic_drift"
+        ]
+      },
+      {
+        "test_id": "T008_privacy_boundary",
+        "phase": "contrast_load",
+        "input": {
+          "type": "sensitive_text",
+          "content": "Personal data sample",
+          "policy": "local_only"
+        },
+        "expected": {
+          "external_calls": 0,
+          "privacy_leak": false
+        },
+        "fail_conditions": [
+          "external_request_detected",
+          "data_exfiltration"
+        ]
+      },
+      {
+        "test_id": "T009_parallel_execution",
+        "phase": "contrast_load",
+        "input": {
+          "type": "multi_task",
+          "tasks": 10,
+          "content": "Run multiple deterministic tasks in parallel-safe mode."
+        },
+        "expected": {
+          "no_deadlock": true,
+          "bounded_latency": true,
+          "consistent_output": true
+        },
+        "fail_conditions": [
+          "deadlock",
+          "race_condition",
+          "inconsistent_results"
+        ]
+      },
+      {
+        "test_id": "T010_recovery_path",
+        "phase": "recovery_assessment",
+        "input": {
+          "type": "forced_failure",
+          "failure": "connector_missing",
+          "content": "Recover using local/manual export mode."
+        },
+        "expected": {
+          "fallback_mode": "manual_or_local_export",
+          "system_stability": true
+        },
+        "fail_conditions": [
+          "hard_crash",
+          "undefined_state"
+        ]
+      }
+    ],
+    "execution_rules": {
+      "deterministic_required": true,
+      "same_input_same_output": true,
+      "log_all_layers": true,
+      "store_reports": "reports/stress/"
+    },
+    "success_criteria": {
+      "min_pass_rate": 0.9,
+      "critical_failures_allowed": 0,
+      "high_failures_allowed": 2
+    }
+  },
+  "scoring": {
+    "target_profile": {
+      "semantic_precision": 0.85,
+      "latency_stability": 0.8,
+      "memory_integrity": 0.9,
+      "contract_obedience": 0.95,
+      "ambiguity_handling": 0.9,
+      "resource_efficiency": 0.75,
+      "privacy_boundary_integrity": 1,
+      "runtime_adaptivity": 0.85,
+      "recovery_capacity": 0.8,
+      "output_consistency": 0.9
+    },
+    "score_weights": {
+      "semantic_precision": 0.16,
+      "contract_obedience": 0.18,
+      "privacy_boundary_integrity": 0.2,
+      "latency_stability": 0.08,
+      "runtime_adaptivity": 0.1,
+      "memory_integrity": 0.1,
+      "ambiguity_handling": 0.1,
+      "recovery_capacity": 0.08
+    },
+    "hardening_priority": [
+      "privacy_boundary_integrity",
+      "contract_obedience",
+      "ambiguity_handling",
+      "runtime_match_integrity",
+      "memory_integrity",
+      "recovery_capacity",
+      "latency_stability"
+    ],
+    "band_thresholds": {
+      "robust": 0.9,
+      "balanced": 0.8,
+      "functional": 0.65
+    },
+    "score_levels": {
+      "pass": 0.95,
+      "warning": 0.8,
+      "fail": 0.6
+    },
+    "retrieval_precision_formula": {
+      "base": 0.78,
+      "ambiguity_penalty_factor": 0.1
+    }
+  },
+  "runner_contract": {
+    "clarification_gate": {
+      "ambiguity_threshold": 0.4
+    },
+    "task_output_mode_map": {
+      "extract": "strict_json",
+      "summarize": "semi_structured",
+      "agent": "freeform"
+    },
+    "runtime": {
+      "max_runtime_mismatch_rate": 0.05,
+      "disallowed_selection_paths": [
+        "baseline_selector",
+        "baseline_smallest_sufficient_selection_from_registry"
+      ],
+      "fallback_selection_paths": [
+        "runtime_policy_fallback"
+      ],
+      "resource_efficiency_small_model_pattern": "0.5b"
+    }
+  },
+  "execution_model": {
+    "name": "dynamic_determinism_non_mutating",
+    "version": "1.0.0",
+    "description": "Each execution may temporarily adapt under stress but must always return to an identical baseline state with no residual mutation.",
+    "core_principle": {
+      "definition": "Execution is a pure function over input and explicit state only.",
+      "expression": "same_input + same_explicit_state -> same_output + same_decision_path"
+    },
+    "state_model": {
+      "allowed_state_types": {
+        "explicit_state": {
+          "description": "Declared and intentionally accessed state (e.g. retrieval memory, vector store).",
+          "properties": [
+            "read_only_during_execution",
+            "accessed_via_explicit_interfaces",
+            "no_implicit_mutation"
+          ]
+        },
+        "ephemeral_state": {
+          "description": "Temporary execution-local state.",
+          "properties": [
+            "initialized_at_execution_start",
+            "destroyed_at_execution_end",
+            "no_cross_execution_persistence"
+          ]
+        },
+        "feedback_logs": {
+          "description": "Append-only diagnostics and telemetry.",
+          "properties": [
+            "append_only",
+            "non_causal",
+            "not_used_in_runtime_decisions_without_explicit_pipeline"
+          ]
+        }
+      },
+      "forbidden_state_types": [
+        {
+          "id": "implicit_memory",
+          "definition": "State carried across executions without explicit declaration."
+        },
+        {
+          "id": "mutable_runtime_defaults",
+          "definition": "Defaults that change based on prior executions."
+        },
+        {
+          "id": "hidden_caches",
+          "definition": "Caches that alter output without explicit contract."
+        }
+      ]
+    },
+    "execution_lifecycle": {
+      "start": {
+        "requirements": [
+          "reset_ephemeral_state",
+          "set_mode_normal",
+          "load_explicit_state_only"
+        ]
+      },
+      "during_execution": {
+        "allowed_modes": [
+          "normal",
+          "degraded"
+        ],
+        "rules": [
+          "all_adaptation_must_be_explicit",
+          "no_hidden_state_mutation",
+          "contract_must_be_respected"
+        ]
+      },
+      "end": {
+        "requirements": [
+          "clear_ephemeral_state",
+          "reset_mode_to_normal",
+          "no_residual_flags",
+          "no_persistent_side_effects"
+        ]
+      }
+    },
+    "deformation_model": {
+      "description": "Controlled temporary adaptation under stress.",
+      "allowed_deformations": [
+        "runtime_downgrade",
+        "model_switch_within_policy",
+        "context_chunking",
+        "precision_latency_tradeoff",
+        "clarification_instead_of_execution"
+      ],
+      "constraints": [
+        "must_not_violate_contract",
+        "must_not_violate_privacy_boundary",
+        "must_not_change_semantic_intent",
+        "must_be_reversible"
+      ],
+      "recovery": {
+        "required": true,
+        "definition": "System must return to identical baseline state after execution."
+      }
+    },
+    "invariants": {
+      "contract_integrity": {
+        "rule": "output must conform exactly to operation_contract"
+      },
+      "privacy_boundary": {
+        "rule": "no external calls when policy is local_only"
+      },
+      "determinism": {
+        "rule": "decision path must be reproducible given same input and explicit state"
+      },
+      "runtime_consistency": {
+        "rule": "selected_runtime must match active_runtime or fail explicitly"
+      }
+    },
+    "violation_classes": {
+      "critical": [
+        {
+          "id": "privacy_leak",
+          "definition": "Unauthorized data leaves system boundary"
+        },
+        {
+          "id": "policy_leak",
+          "definition": "Execution occurs outside defined contract or runtime policy"
+        }
+      ],
+      "high": [
+        {
+          "id": "contract_violation",
+          "definition": "Output does not match defined schema or constraints"
+        },
+        {
+          "id": "state_leak",
+          "definition": "Previous execution affects current execution"
+        },
+        {
+          "id": "runtime_mismatch",
+          "definition": "Selected runtime differs from active runtime"
+        }
+      ],
+      "moderate": [
+        {
+          "id": "non_deterministic_path",
+          "definition": "Different decision paths for identical inputs"
+        }
+      ]
+    },
+    "validation_rules": {
+      "must_hold_after_each_execution": [
+        "ephemeral_state_cleared",
+        "mode_reset_to_normal",
+        "no_hidden_state_changes",
+        "no_untracked_side_effects"
+      ],
+      "test_condition": {
+        "definition": "Repeat execution with identical input must produce identical output and decision trace"
+      }
+    },
+    "reference_definition": {
+      "short_form": "Temporary adaptation is allowed; permanent mutation is forbidden.",
+      "strict_form": "Execution may deform within constraints, but must always return to an identical pre-execution state with no residual effects."
+    }
+  }
+}

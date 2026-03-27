@@ -1,0 +1,699 @@
+{
+  "harness_version": "2026-01-selectpilot-codex-execution-harness",
+  "harness_type": "spec_compiler_and_validation_runtime",
+  "purpose": "Compile SelectPilot from strict JSON spec, prevent implementation drift, run realistic local simulations across models and scenarios, benchmark all relevant metrics, and produce evidence-backed architectural decisions.",
+  "global_rules": {
+    "compiler_mode": true,
+    "no_free_generation": true,
+    "no_behavior_outside_spec": true,
+    "no_implicit_defaults": true,
+    "no_unapproved_shortcuts": true,
+    "if_spec_incomplete_then_error": true,
+    "every_artifact_must_map_to_spec_path": true,
+    "every_state_transition_must_be_explicit": true,
+    "every_fallback_must_be_declared": true,
+    "every_metric_must_have_collection_definition": true
+  },
+  "execution_contract": {
+    "input_documents": [
+      "selectpilot_monolith_v3.json"
+    ],
+    "output_classes": [
+      "repo_plan",
+      "typed_contracts",
+      "module_scaffolds",
+      "implementation_units",
+      "verification_reports",
+      "simulation_reports",
+      "benchmark_reports",
+      "frontier_decisions"
+    ],
+    "stop_conditions": [
+      "spec_violation_detected",
+      "undefined_behavior_requested",
+      "state_machine_inconsistency_detected",
+      "benchmark_harness_invalid",
+      "privacy_constraint_broken"
+    ]
+  },
+  "codex_system_prompt": {
+    "text": "You are not generating code freely. You are compiling a system from a strict JSON specification. Every implementation must map to a spec node. No behavior may exist outside the spec. No assumptions. No simplifications. If the spec is incomplete, return an explicit error and stop. Output only implementation artifacts that are traceable to the specification."
+  },
+  "repo_mapping": {
+    "frontend": {
+      "intent_popup_component": {
+        "path": "panel/components/IntentPopup.tsx",
+        "spec_ref": "intent_popup"
+      },
+      "runtime_overlay_component": {
+        "path": "panel/components/RuntimeOverlay.tsx",
+        "spec_ref": "observability_layer"
+      },
+      "runtime_step_list_component": {
+        "path": "panel/components/RuntimeStepList.tsx",
+        "spec_ref": "observability_layer"
+      },
+      "runtime_store": {
+        "path": "panel/state/runtimeStore.ts",
+        "spec_ref": "frontend_state_contract"
+      },
+      "suggestion_list_component": {
+        "path": "panel/components/SuggestionList.tsx",
+        "spec_ref": "probabilistic_suggestion_engine"
+      },
+      "overlay_event_hook": {
+        "path": "panel/hooks/useRuntimeEvents.ts",
+        "spec_ref": "runtime_event_contract"
+      }
+    },
+    "backend": {
+      "intent_compiler": {
+        "path": "server/intent/compiler.ts",
+        "spec_ref": "intent_compilation_layer"
+      },
+      "intent_normalizer": {
+        "path": "server/intent/normalizer.ts",
+        "spec_ref": "intent_model"
+      },
+      "ambiguity_detector": {
+        "path": "server/intent/ambiguity.ts",
+        "spec_ref": "intent_ambiguity_handling"
+      },
+      "operation_mapper": {
+        "path": "server/operations/mapper.ts",
+        "spec_ref": "operation_mapping_layer"
+      },
+      "template_registry": {
+        "path": "server/operations/templates.ts",
+        "spec_ref": "execution_layer"
+      },
+      "task_analyzer": {
+        "path": "server/task/analyzer.ts",
+        "spec_ref": "task_analysis_layer"
+      },
+      "hardware_detector": {
+        "path": "server/hardware/detector.ts",
+        "spec_ref": "hardware_detection_layer"
+      },
+      "model_registry": {
+        "path": "server/model/registry.ts",
+        "spec_ref": "model_registry"
+      },
+      "model_selector": {
+        "path": "server/model/selector.ts",
+        "spec_ref": "model_selection_layer"
+      },
+      "model_provisioner": {
+        "path": "server/model/provisioner.ts",
+        "spec_ref": "provisioning_layer"
+      },
+      "frontier_evaluator": {
+        "path": "server/model/frontier.ts",
+        "spec_ref": "dynamic_model_evaluation_layer"
+      },
+      "model_hysteresis": {
+        "path": "server/model/hysteresis.ts",
+        "spec_ref": "model_switch_hysteresis"
+      },
+      "failure_isolation": {
+        "path": "server/model/quarantine.ts",
+        "spec_ref": "failure_isolation"
+      },
+      "memory_guard": {
+        "path": "server/runtime/memoryGuard.ts",
+        "spec_ref": "memory_guard"
+      },
+      "latency_budget_engine": {
+        "path": "server/runtime/latencyBudget.ts",
+        "spec_ref": "latency_budget"
+      },
+      "prompt_registry": {
+        "path": "server/prompts/registry.ts",
+        "spec_ref": "prompt_determinism"
+      },
+      "pipeline_executor": {
+        "path": "server/execution/pipeline.ts",
+        "spec_ref": "execution_layer"
+      },
+      "validator_engine": {
+        "path": "server/validation/engine.ts",
+        "spec_ref": "validation_layer"
+      },
+      "output_enforcer": {
+        "path": "server/validation/enforcement.ts",
+        "spec_ref": "output_enforcement"
+      },
+      "event_emitter": {
+        "path": "server/runtime/events.ts",
+        "spec_ref": "runtime_event_contract"
+      },
+      "metrics_collector": {
+        "path": "server/runtime/metrics.ts",
+        "spec_ref": "simulation_and_benchmarking.metrics"
+      }
+    },
+    "tests": {
+      "unit": {
+        "path": "tests/unit",
+        "spec_ref": "testing_strategy.unit_tests"
+      },
+      "integration": {
+        "path": "tests/integration",
+        "spec_ref": "testing_strategy.integration_tests"
+      },
+      "simulation": {
+        "path": "tests/simulation",
+        "spec_ref": "simulation_and_benchmarking"
+      },
+      "benchmarks": {
+        "path": "tests/benchmarks",
+        "spec_ref": "simulation_and_benchmarking"
+      },
+      "privacy": {
+        "path": "tests/privacy",
+        "spec_ref": "privacy_and_debug_policy"
+      }
+    },
+    "artifacts": {
+      "reports": {
+        "path": "reports",
+        "spec_ref": "reporting"
+      },
+      "fixtures": {
+        "path": "fixtures",
+        "spec_ref": "simulation_and_benchmarking.fixtures"
+      }
+    }
+  },
+  "traceability_contract": {
+    "required": true,
+    "format": {
+      "file_header": {
+        "fields": [
+          "module_name",
+          "spec_ref",
+          "invariants",
+          "forbidden_behaviors"
+        ]
+      },
+      "function_annotation": {
+        "required_fields": [
+          "spec_ref",
+          "preconditions",
+          "postconditions",
+          "failure_modes"
+        ]
+      }
+    },
+    "rules": [
+      "Every file must declare primary spec_ref.",
+      "Every exported function must declare exact spec_ref.",
+      "Every conditional branch implementing fallback logic must cite spec path.",
+      "Unmapped code is forbidden."
+    ]
+  },
+  "build_pipeline": {
+    "phases": [
+      {
+        "id": "phase_0_spec_load",
+        "objective": "Load source JSON spec and verify required top-level nodes exist.",
+        "outputs": [
+          "spec_index",
+          "missing_node_report"
+        ],
+        "hard_fail_if": [
+          "required_top_level_node_missing"
+        ]
+      },
+      {
+        "id": "phase_1_repo_plan",
+        "objective": "Generate concrete file plan from spec nodes.",
+        "outputs": [
+          "repo_plan.json",
+          "module_manifest.json"
+        ],
+        "hard_fail_if": [
+          "multiple_modules_own_same_behavior_without_explicit_scope"
+        ]
+      },
+      {
+        "id": "phase_2_type_contracts",
+        "objective": "Generate shared typed interfaces from spec.",
+        "outputs": [
+          "shared/types/runtime.ts",
+          "shared/types/model.ts",
+          "shared/types/intent.ts",
+          "shared/types/events.ts"
+        ],
+        "hard_fail_if": [
+          "state_shape_ambiguous",
+          "event_payload_incomplete"
+        ]
+      },
+      {
+        "id": "phase_3_module_scaffolds",
+        "objective": "Create module shells with explicit TODOs bound to spec paths.",
+        "outputs": [
+          "scaffold_report.json"
+        ]
+      },
+      {
+        "id": "phase_4_core_implementation",
+        "objective": "Implement backend deterministic core before UI polish.",
+        "order": [
+          "intent_compiler",
+          "ambiguity_detector",
+          "operation_mapper",
+          "task_analyzer",
+          "hardware_detector",
+          "model_registry",
+          "model_selector",
+          "memory_guard",
+          "latency_budget_engine",
+          "model_provisioner",
+          "pipeline_executor",
+          "validator_engine",
+          "output_enforcer",
+          "event_emitter"
+        ]
+      },
+      {
+        "id": "phase_5_ui_implementation",
+        "objective": "Implement frontend surfaces after runtime contracts are stable.",
+        "order": [
+          "runtime_store",
+          "overlay_event_hook",
+          "intent_popup_component",
+          "suggestion_list_component",
+          "runtime_overlay_component",
+          "runtime_step_list_component"
+        ]
+      },
+      {
+        "id": "phase_6_verification",
+        "objective": "Run static, behavioral, privacy, and state-machine validation."
+      },
+      {
+        "id": "phase_7_simulation",
+        "objective": "Run realistic local simulations against multiple models, hardware profiles, and task scenarios."
+      },
+      {
+        "id": "phase_8_benchmark_analysis",
+        "objective": "Compute metrics, frontier comparisons, regressions, and promotion eligibility."
+      },
+      {
+        "id": "phase_9_decision_reports",
+        "objective": "Emit actionable reports on model policy, performance, and architecture choices."
+      }
+    ]
+  },
+  "verification": {
+    "static_checks": [
+      "typecheck",
+      "lint",
+      "dead_code_scan",
+      "traceability_scan",
+      "spec_ref_coverage_scan"
+    ],
+    "behavioral_checks": [
+      "state_machine_transition_validity",
+      "no_execution_without_intent",
+      "manual_override_priority",
+      "no_untyped_fallbacks",
+      "model_lock_per_operation",
+      "strict_validation_enforcement"
+    ],
+    "privacy_checks": [
+      "no_outbound_network_on_core_path",
+      "no_raw_selection_in_normal_mode_logs",
+      "no_prompt_body_in_normal_mode_events",
+      "no_secret_leakage"
+    ],
+    "runtime_checks": [
+      "overlay_visibility_matches_runtime_state",
+      "event_stream_has_exactly_one_terminal_event_per_operation",
+      "provisioning_progress_visible_when_active",
+      "latency_hints_emitted_when_threshold_exceeded"
+    ],
+    "hard_fail_rules": [
+      "Any unmapped behavior causes failure.",
+      "Any implicit fallback causes failure.",
+      "Any state transition outside declared enum causes failure.",
+      "Any structured output bypassing validation causes failure."
+    ]
+  },
+  "simulation_and_benchmarking": {
+    "objective": "Measure real-world local performance under realistic scenarios, not synthetic vanity cases only.",
+    "simulation_principles": [
+      "local_only",
+      "repeatable",
+      "task-diverse",
+      "hardware-aware",
+      "model-comparative",
+      "privacy-preserving",
+      "measure_runtime_not_just_output"
+    ],
+    "fixtures": {
+      "storage": "fixtures/",
+      "classes": [
+        {
+          "id": "rewrite_short",
+          "description": "Short selected text requiring minor rewriting."
+        },
+        {
+          "id": "rewrite_medium",
+          "description": "Medium paragraph rewrite with tone/length constraint."
+        },
+        {
+          "id": "classification_short",
+          "description": "Short text classified into constrained categories."
+        },
+        {
+          "id": "extract_semi_structured",
+          "description": "Entity extraction where output is sectioned but not strict JSON."
+        },
+        {
+          "id": "extract_strict_json",
+          "description": "Schema-constrained extraction with exact JSON validation."
+        },
+        {
+          "id": "summarize_contextual",
+          "description": "Summarization preserving local context and intent specificity."
+        },
+        {
+          "id": "analyze_medium",
+          "description": "Interpretive analysis requiring local reasoning but bounded scope."
+        },
+        {
+          "id": "compare_medium",
+          "description": "Compare two sections and produce structured differences."
+        },
+        {
+          "id": "ambiguous_intent_case",
+          "description": "Input where system must ask clarification instead of guessing."
+        },
+        {
+          "id": "cold_start_case",
+          "description": "No suitable model installed at runtime start."
+        }
+      ]
+    },
+    "hardware_profiles_for_simulation": [
+      {
+        "id": "sim_low",
+        "maps_to": "low",
+        "constraints": {
+          "ram_gb": 8,
+          "gpu": false
+        }
+      },
+      {
+        "id": "sim_medium",
+        "maps_to": "medium",
+        "constraints": {
+          "ram_gb": 16,
+          "gpu": false
+        }
+      },
+      {
+        "id": "sim_medium_gpu",
+        "maps_to": "medium",
+        "constraints": {
+          "ram_gb": 24,
+          "gpu": true
+        }
+      },
+      {
+        "id": "sim_high",
+        "maps_to": "high",
+        "constraints": {
+          "ram_gb": 32,
+          "gpu": true
+        }
+      }
+    ],
+    "candidate_models": [
+      "qwen2:0.5b",
+      "qwen2:1.5b",
+      "qwen2:7b",
+      "qwen2:14b"
+    ],
+    "scenario_matrix": {
+      "dimensions": [
+        "task_fixture",
+        "hardware_profile",
+        "candidate_model",
+        "output_mode",
+        "cold_or_warm_start"
+      ],
+      "output_modes": [
+        "freeform",
+        "semi_structured",
+        "strict_json"
+      ],
+      "start_modes": [
+        "cold",
+        "warm"
+      ]
+    },
+    "metrics": {
+      "correctness": [
+        "task_success_rate",
+        "schema_validity_rate",
+        "parse_success_rate",
+        "retry_rate",
+        "fallback_rate",
+        "ambiguity_block_rate",
+        "clarification_request_rate"
+      ],
+      "performance": [
+        "p50_latency_ms",
+        "p95_latency_ms",
+        "time_to_first_token_ms_if_streamed",
+        "total_runtime_ms",
+        "cold_start_overhead_ms",
+        "model_provisioning_duration_ms"
+      ],
+      "resource_usage": [
+        "peak_ram_mb",
+        "avg_ram_mb",
+        "peak_vram_mb",
+        "cpu_utilization_percent",
+        "gpu_utilization_percent_if_available",
+        "energy_estimate_if_available"
+      ],
+      "stability": [
+        "failure_rate",
+        "parse_failure_rate",
+        "validation_failure_rate",
+        "quarantine_trigger_rate",
+        "oscillation_rate_between_models"
+      ],
+      "ux_runtime_signals": [
+        "overlay_activation_rate",
+        "overlay_accuracy_rate",
+        "latency_hint_emission_rate",
+        "user_visible_unexplained_wait_rate"
+      ],
+      "selection_quality": [
+        "selected_model_meets_threshold_rate",
+        "selected_model_is_smallest_sufficient_rate",
+        "overprovision_rate",
+        "underprovision_rate",
+        "frontier_promotion_precision"
+      ]
+    },
+    "simulation_rules": [
+      "Each scenario must run multiple times to smooth variance.",
+      "Cold and warm runs must be separated.",
+      "Strict JSON scenarios must validate against real schema.",
+      "Ambiguous intent scenarios must be scored on whether execution was correctly blocked.",
+      "Simulation must capture both selected model and ideal model for comparison."
+    ],
+    "repetition_policy": {
+      "min_runs_per_scenario": 5,
+      "recommended_runs_per_scenario": 10
+    }
+  },
+  "frontier_analysis": {
+    "objective": "Determine whether model replacement or promotion is actually beneficial.",
+    "decision_units": [
+      "per_task_family",
+      "per_hardware_profile",
+      "per_output_mode"
+    ],
+    "metrics_used": [
+      "task_success_rate",
+      "schema_validity_rate",
+      "p95_latency_ms",
+      "peak_ram_mb",
+      "retry_rate",
+      "failure_rate"
+    ],
+    "promotion_rules": [
+      "Promote if candidate meets or exceeds required success and validity thresholds and lowers load.",
+      "Promote if candidate maintains load while improving correctness by meaningful delta.",
+      "Reject if candidate improves one metric but violates hard thresholds in another critical metric."
+    ],
+    "hard_thresholds": {
+      "strict_json_min_schema_validity_rate": 0.9,
+      "max_failure_rate": 0.1,
+      "max_retry_rate_for_sufficient_model": 0.1
+    },
+    "meaningful_delta": {
+      "correctness_gain": 0.02,
+      "latency_gain_ratio": 0.1,
+      "memory_gain_ratio": 0.1
+    },
+    "outputs": [
+      "frontier_report.json",
+      "promotion_candidates.json",
+      "rejected_candidates.json",
+      "rollback_recommendations.json"
+    ]
+  },
+  "reporting": {
+    "required_reports": [
+      {
+        "id": "spec_coverage_report",
+        "path": "reports/spec_coverage_report.json",
+        "contains": [
+          "implemented_spec_nodes",
+          "missing_spec_nodes",
+          "unmapped_files",
+          "unmapped_functions"
+        ]
+      },
+      {
+        "id": "verification_report",
+        "path": "reports/verification_report.json",
+        "contains": [
+          "static_checks",
+          "behavioral_checks",
+          "privacy_checks",
+          "runtime_checks",
+          "pass_fail_summary"
+        ]
+      },
+      {
+        "id": "simulation_report",
+        "path": "reports/simulation_report.json",
+        "contains": [
+          "scenario_matrix",
+          "raw_metrics",
+          "aggregate_metrics",
+          "variance"
+        ]
+      },
+      {
+        "id": "frontier_report",
+        "path": "reports/frontier_report.json",
+        "contains": [
+          "current_frontier",
+          "candidate_comparisons",
+          "promotion_decisions",
+          "rollback_flags"
+        ]
+      },
+      {
+        "id": "architecture_decision_report",
+        "path": "reports/architecture_decision_report.json",
+        "contains": [
+          "engine_recommendation",
+          "bottleneck_summary",
+          "priority_optimizations",
+          "deferred_complexity"
+        ]
+      }
+    ]
+  },
+  "engine_evaluation": {
+    "objective": "Determine whether a native engine layer is worth the complexity.",
+    "question": "Should SelectPilot keep orchestration in TS/Python or move hot paths into C++?",
+    "candidate_engine_modes": [
+      {
+        "id": "script_only",
+        "description": "All orchestration remains in TypeScript and Python."
+      },
+      {
+        "id": "hybrid_native_hotpaths",
+        "description": "Keep orchestration high-level, but move hot paths like validation, schema parsing, runtime metrics, and event dispatch into native code."
+      },
+      {
+        "id": "full_native_runtime",
+        "description": "Move most runtime orchestration into C++."
+      }
+    ],
+    "evaluation_criteria": [
+      "measured orchestration overhead_ms",
+      "measured validation overhead_ms",
+      "measured event dispatch overhead_ms",
+      "complexity_cost",
+      "debuggability_cost",
+      "cross_platform_cost",
+      "actual user-visible gain"
+    ],
+    "decision_rules": [
+      "Do not adopt C++ preemptively.",
+      "If small-model inference dominates runtime, orchestration in TS/Python is acceptable.",
+      "If strict JSON parsing, validation, or event/memory handling becomes measurable bottleneck, prefer hybrid_native_hotpaths over full native runtime.",
+      "Only adopt full native runtime if measured gains are large and repeatable across scenarios."
+    ],
+    "recommendation_logic": {
+      "keep_high_level_if": [
+        "orchestration_overhead_ratio < 0.1_of_total_runtime",
+        "validation_overhead_ratio < 0.1_of_total_runtime",
+        "event_dispatch_overhead_not_user_visible"
+      ],
+      "consider_hybrid_cpp_if": [
+        "validation_and_parsing_overhead_ratio >= 0.1_of_total_runtime",
+        "high-frequency event dispatch causes measurable UI lag",
+        "memory_guard_and_registry_hotpaths dominate selection latency",
+        "simulation shows scripting overhead meaningfully affects p95 latency"
+      ],
+      "consider_full_cpp_only_if": [
+        "hotpaths_are_many",
+        "hybrid_split_becomes_more_complex_than_full_native_core",
+        "measured_user_visible_gain_is_significant"
+      ]
+    }
+  },
+  "initial_engine_recommendation": {
+    "status": "provisional",
+    "recommendation": "Do not start with full C++ engine. Start with high-level orchestration and instrument everything. Add native hot paths only if measurements justify it.",
+    "likely_hotpaths_for_native_if_needed": [
+      "strict_json_validation",
+      "high-volume schema parsing",
+      "metrics aggregation",
+      "event ring buffer",
+      "memory pressure monitoring"
+    ],
+    "rationale": [
+      "With small local models, inference usually dominates total runtime more than orchestration.",
+      "Premature native complexity will slow iteration and debugging.",
+      "Hybrid architecture gives most of the gain with less structural debt."
+    ]
+  },
+  "codex_operating_rules": {
+    "implementation_order": [
+      "repo_plan",
+      "types",
+      "backend_core",
+      "frontend_overlay_and_popup",
+      "verification",
+      "simulation_harness",
+      "benchmark_runner",
+      "frontier_analysis"
+    ],
+    "forbidden_behaviors": [
+      "do_not_skip_traceability",
+      "do_not_invent_spec_nodes",
+      "do_not_merge_simulation_and_runtime_logic",
+      "do_not_hardcode_model_promotion_without_metrics",
+      "do_not_add_cpp_layer_without_engine_evaluation_output"
+    ],
+    "required_outputs_per_phase": [
+      "phase_report.json"
+    ]
+  }
+}

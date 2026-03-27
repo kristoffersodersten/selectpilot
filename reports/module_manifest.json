@@ -1,0 +1,206 @@
+[
+  {
+    "scope": "artifacts",
+    "module_name": "fixtures",
+    "path": "fixtures",
+    "spec_ref": "simulation_and_benchmarking.fixtures"
+  },
+  {
+    "scope": "frontend",
+    "module_name": "intent_popup_component",
+    "path": "panel/components/IntentPopup.tsx",
+    "spec_ref": "intent_popup"
+  },
+  {
+    "scope": "frontend",
+    "module_name": "runtime_overlay_component",
+    "path": "panel/components/RuntimeOverlay.tsx",
+    "spec_ref": "observability_layer"
+  },
+  {
+    "scope": "frontend",
+    "module_name": "runtime_step_list_component",
+    "path": "panel/components/RuntimeStepList.tsx",
+    "spec_ref": "observability_layer"
+  },
+  {
+    "scope": "frontend",
+    "module_name": "suggestion_list_component",
+    "path": "panel/components/SuggestionList.tsx",
+    "spec_ref": "probabilistic_suggestion_engine"
+  },
+  {
+    "scope": "frontend",
+    "module_name": "overlay_event_hook",
+    "path": "panel/hooks/useRuntimeEvents.ts",
+    "spec_ref": "runtime_event_contract"
+  },
+  {
+    "scope": "frontend",
+    "module_name": "runtime_store",
+    "path": "panel/state/runtimeStore.ts",
+    "spec_ref": "frontend_state_contract"
+  },
+  {
+    "scope": "artifacts",
+    "module_name": "reports",
+    "path": "reports",
+    "spec_ref": "reporting"
+  },
+  {
+    "scope": "backend",
+    "module_name": "pipeline_executor",
+    "path": "server/execution/pipeline.ts",
+    "spec_ref": "execution_layer"
+  },
+  {
+    "scope": "backend",
+    "module_name": "hardware_detector",
+    "path": "server/hardware/detector.ts",
+    "spec_ref": "hardware_detection_layer"
+  },
+  {
+    "scope": "backend",
+    "module_name": "ambiguity_detector",
+    "path": "server/intent/ambiguity.ts",
+    "spec_ref": "intent_ambiguity_handling"
+  },
+  {
+    "scope": "backend",
+    "module_name": "intent_compiler",
+    "path": "server/intent/compiler.ts",
+    "spec_ref": "intent_compilation_layer"
+  },
+  {
+    "scope": "backend",
+    "module_name": "intent_normalizer",
+    "path": "server/intent/normalizer.ts",
+    "spec_ref": "intent_model"
+  },
+  {
+    "scope": "backend",
+    "module_name": "frontier_evaluator",
+    "path": "server/model/frontier.ts",
+    "spec_ref": "dynamic_model_evaluation_layer"
+  },
+  {
+    "scope": "backend",
+    "module_name": "model_hysteresis",
+    "path": "server/model/hysteresis.ts",
+    "spec_ref": "model_switch_hysteresis"
+  },
+  {
+    "scope": "backend",
+    "module_name": "model_provisioner",
+    "path": "server/model/provisioner.ts",
+    "spec_ref": "provisioning_layer"
+  },
+  {
+    "scope": "backend",
+    "module_name": "failure_isolation",
+    "path": "server/model/quarantine.ts",
+    "spec_ref": "failure_isolation"
+  },
+  {
+    "scope": "backend",
+    "module_name": "model_registry",
+    "path": "server/model/registry.ts",
+    "spec_ref": "model_registry"
+  },
+  {
+    "scope": "backend",
+    "module_name": "model_selector",
+    "path": "server/model/selector.ts",
+    "spec_ref": "model_selection_layer"
+  },
+  {
+    "scope": "backend",
+    "module_name": "operation_mapper",
+    "path": "server/operations/mapper.ts",
+    "spec_ref": "operation_mapping_layer"
+  },
+  {
+    "scope": "backend",
+    "module_name": "template_registry",
+    "path": "server/operations/templates.ts",
+    "spec_ref": "execution_layer"
+  },
+  {
+    "scope": "backend",
+    "module_name": "prompt_registry",
+    "path": "server/prompts/registry.ts",
+    "spec_ref": "prompt_determinism"
+  },
+  {
+    "scope": "backend",
+    "module_name": "event_emitter",
+    "path": "server/runtime/events.ts",
+    "spec_ref": "runtime_event_contract"
+  },
+  {
+    "scope": "backend",
+    "module_name": "latency_budget_engine",
+    "path": "server/runtime/latencyBudget.ts",
+    "spec_ref": "latency_budget"
+  },
+  {
+    "scope": "backend",
+    "module_name": "memory_guard",
+    "path": "server/runtime/memoryGuard.ts",
+    "spec_ref": "memory_guard"
+  },
+  {
+    "scope": "backend",
+    "module_name": "metrics_collector",
+    "path": "server/runtime/metrics.ts",
+    "spec_ref": "simulation_and_benchmarking.metrics"
+  },
+  {
+    "scope": "backend",
+    "module_name": "task_analyzer",
+    "path": "server/task/analyzer.ts",
+    "spec_ref": "task_analysis_layer"
+  },
+  {
+    "scope": "backend",
+    "module_name": "output_enforcer",
+    "path": "server/validation/enforcement.ts",
+    "spec_ref": "output_enforcement"
+  },
+  {
+    "scope": "backend",
+    "module_name": "validator_engine",
+    "path": "server/validation/engine.ts",
+    "spec_ref": "validation_layer"
+  },
+  {
+    "scope": "tests",
+    "module_name": "benchmarks",
+    "path": "tests/benchmarks",
+    "spec_ref": "simulation_and_benchmarking"
+  },
+  {
+    "scope": "tests",
+    "module_name": "integration",
+    "path": "tests/integration",
+    "spec_ref": "testing_strategy.integration_tests"
+  },
+  {
+    "scope": "tests",
+    "module_name": "privacy",
+    "path": "tests/privacy",
+    "spec_ref": "privacy_and_debug_policy"
+  },
+  {
+    "scope": "tests",
+    "module_name": "simulation",
+    "path": "tests/simulation",
+    "spec_ref": "simulation_and_benchmarking"
+  },
+  {
+    "scope": "tests",
+    "module_name": "unit",
+    "path": "tests/unit",
+    "spec_ref": "testing_strategy.unit_tests"
+  }
+]

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Frontier Summary</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f4f4f4; }
+  </style>
+</head>
+<body>
+  <h1>Frontier Decisions</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Candidate</th><th>Decision</th><th>Reason</th><th>Weighted score</th><th>Latency regression</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>qwen2:0.5b</td><td>promote</td><td>higher_correctness_same_or_lower_cost</td><td>0.8854</td><td>0.7612</td></tr>
+<tr><td>qwen2:1.5b</td><td>reject</td><td>higher_failure_rate</td><td>0.857</td><td>1</td></tr>
+<tr><td>qwen2:7b</td><td>reject</td><td>increases_latency_without_gain</td><td>0.7605</td><td>1.9176</td></tr>
+<tr><td>qwen2:14b</td><td>reject</td><td>increases_latency_without_gain</td><td>0.6719</td><td>2.8</td></tr>
+    </tbody>
+  </table>
+</body>
+</html>

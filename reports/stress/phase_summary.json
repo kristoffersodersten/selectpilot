@@ -1,0 +1,22 @@
+{
+  "baseline_scan": {
+    "total": 1,
+    "passed": 1
+  },
+  "dynamic_mri": {
+    "total": 2,
+    "passed": 2
+  },
+  "contrast_load": {
+    "total": 5,
+    "passed": 5
+  },
+  "trauma_simulation": {
+    "total": 1,
+    "passed": 1
+  },
+  "recovery_assessment": {
+    "total": 1,
+    "passed": 1
+  }
+}

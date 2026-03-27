@@ -1,0 +1,60 @@
+{
+  "generated_at": "2026-03-26T18:50:53.927Z",
+  "validator": "ui_contract_validator",
+  "type": "strict_file_contract_and_mue_ui_governance",
+  "hard_rule": "if_feature_fails_any_required_fat_dimension_it_must_not_enter_runtime_ui",
+  "dimensions": [
+    {
+      "name": "token_contract",
+      "passed": true,
+      "errors": [],
+      "evidence": {
+        "schema_version": "mue-ui-tokens.v1"
+      }
+    },
+    {
+      "name": "layout_contract",
+      "passed": true,
+      "errors": [],
+      "evidence": {
+        "validated_constants": [
+          "BASE_GRID",
+          "SUB_GRID",
+          "MAX_VISIBLE_PANELS",
+          "MAX_VISIBLE_STATES",
+          "BREAKPOINT_SINGLE_COLUMN",
+          "PANEL_GAP",
+          "PANEL_PADDING",
+          "PANEL_RADIUS"
+        ]
+      }
+    },
+    {
+      "name": "topology_contract",
+      "passed": true,
+      "errors": [],
+      "evidence": {
+        "mapped_components": 10
+      }
+    }
+  ],
+  "runtime_ui_gate": {
+    "passed": true,
+    "errors": [],
+    "required_fat_dimensions": [
+      "layout_contract",
+      "topology_contract",
+      "token_contract"
+    ]
+  },
+  "pixel_perfection_validation_report": {
+    "passed": true,
+    "errors": [],
+    "tokens_checked": [
+      "motion.duration_ms.quick",
+      "motion.duration_ms.standard",
+      "motion.easing.standard"
+    ]
+  },
+  "ok": true
+}

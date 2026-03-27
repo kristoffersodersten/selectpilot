@@ -1,0 +1,259 @@
+{
+  "suite_id": "artificial_diagnostic_load_suite_v1",
+  "test_id": "T009_parallel_execution",
+  "phase": "contrast_load",
+  "input_profile": "multi_task",
+  "expected": {
+    "no_deadlock": true,
+    "bounded_latency": true,
+    "consistent_output": true
+  },
+  "declared_fail_conditions": [
+    "deadlock",
+    "race_condition",
+    "inconsistent_results"
+  ],
+  "expected_runtime_mismatch_allowed": false,
+  "runtime_profile": "medium",
+  "compiled_intent": {
+    "intent_raw": "Run multiple deterministic tasks in parallel-safe mode.",
+    "intent_normalized": "Run multiple deterministic tasks in parallel-safe mode.",
+    "operation_family": "unknown",
+    "action": "clarify_intent",
+    "target": null,
+    "constraints": {
+      "output_format": "unknown",
+      "strictness": "medium",
+      "tone": null,
+      "length": "medium",
+      "schema_requested": false,
+      "explanation_allowed": true
+    },
+    "ambiguity_score": 0,
+    "needs_clarification": true
+  },
+  "clarification": {
+    "question": "Your intent is ambiguous. What should SelectPilot do?",
+    "options": [
+      "Extract structured data",
+      "Summarize and analyze",
+      "Transform or rewrite text",
+      "Generate a new response"
+    ]
+  },
+  "ambiguity_score": 0,
+  "task_analysis": {
+    "task_family": "agent",
+    "output_mode": "freeform",
+    "hardware_profile": "medium",
+    "complexity": "low",
+    "latency_sensitivity": "medium",
+    "precision_requirement": "medium"
+  },
+  "operation_contract": {
+    "operation_name": "agent",
+    "endpoint": "/agent",
+    "template": "agent.v1",
+    "output_enforcement": {
+      "mode": "deterministic_validate",
+      "max_attempts": 1,
+      "visible_retries": false
+    },
+    "latency_budget_ms": 3000,
+    "memory_guard": {
+      "threshold_ratio": 0.8,
+      "strategy": "lru_eviction",
+      "max_payload_chars": 120000
+    },
+    "deterministic": {
+      "no_runtime_template_mutation": true,
+      "prompt_version": "deterministic.prompts.v3"
+    }
+  },
+  "runtime_selection": {
+    "selected_model_id": "qwen2.5:0.5b",
+    "selection_path": "runtime_policy_preferred",
+    "selection_reason": "higher_correctness_same_or_lower_cost",
+    "policy_version": "runtime-policy-d7833f631d57",
+    "promotion_applied": true
+  },
+  "active_model": "qwen2.5:0.5b",
+  "external_calls": 0,
+  "observed_behavior": {
+    "runtime_selection": {
+      "selected_model_id": "qwen2.5:0.5b",
+      "selection_path": "runtime_policy_preferred",
+      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "policy_version": "runtime-policy-d7833f631d57",
+      "promotion_applied": true
+    },
+    "pipeline_trace_a": "sp_296a4c74be1a3da8",
+    "pipeline_trace_b": "sp_296a4c74be1a3da8",
+    "deterministic_repeat_stable": true,
+    "state_reset_checks": {
+      "ephemeral_state_cleared": true,
+      "mode_reset_to_normal": true,
+      "no_hidden_state_changes": true,
+      "no_untracked_side_effects": true
+    },
+    "validation_failures": [],
+    "retrieval_precision": 0.78,
+    "external_calls_observed": 0
+  },
+  "causal_binding_checks": [
+    {
+      "id": "ambiguity_score_to_clarification_gate",
+      "pass": true,
+      "detail": "If ambiguity threshold is exceeded, clarification gate must engage."
+    },
+    {
+      "id": "compiled_intent_to_task_analyzer",
+      "pass": true,
+      "detail": "Task family must be derived from compiled intent path."
+    },
+    {
+      "id": "task_analysis_to_operation_contract",
+      "pass": true,
+      "detail": "Contract must carry output/latency/memory constraints."
+    },
+    {
+      "id": "operation_contract_to_runtime_selector",
+      "pass": true,
+      "detail": "Runtime selection tuple must align with task-derived output mode."
+    },
+    {
+      "id": "runtime_selection_to_active_model",
+      "pass": true,
+      "detail": "Active runtime must match selected runtime unless explicitly degraded."
+    },
+    {
+      "id": "operation_contract_to_output_enforcer",
+      "pass": true,
+      "detail": "Output enforcer must be bound to compiled operation contract."
+    }
+  ],
+  "instrumentation": {
+    "trace": {
+      "intent_trace": "Run multiple deterministic tasks in parallel-safe mode.",
+      "ambiguity_score": 0,
+      "task_analysis": {
+        "task_family": "agent",
+        "output_mode": "freeform",
+        "hardware_profile": "medium",
+        "complexity": "low",
+        "latency_sensitivity": "medium",
+        "precision_requirement": "medium"
+      },
+      "compiled_contract": {
+        "operation_name": "agent",
+        "endpoint": "/agent",
+        "template": "agent.v1",
+        "output_enforcement": {
+          "mode": "deterministic_validate",
+          "max_attempts": 1,
+          "visible_retries": false
+        },
+        "latency_budget_ms": 3000,
+        "memory_guard": {
+          "threshold_ratio": 0.8,
+          "strategy": "lru_eviction",
+          "max_payload_chars": 120000
+        },
+        "deterministic": {
+          "no_runtime_template_mutation": true,
+          "prompt_version": "deterministic.prompts.v3"
+        }
+      },
+      "runtime_selection": "runtime_policy_preferred",
+      "active_model": "qwen2.5:0.5b",
+      "memory_reads": [
+        "runtime/model_policy.json",
+        "runtime/model_registry.runtime.json"
+      ],
+      "memory_writes": [
+        "runtime/live_feedback.jsonl"
+      ],
+      "fallback_events": [],
+      "violation_events": [],
+      "latency_profile": {
+        "budget_ms": 3000
+      },
+      "resource_profile": {
+        "memory_guard_threshold_ratio": 0.8,
+        "memory_guard_max_payload_chars": 120000
+      }
+    },
+    "coverage": [
+      {
+        "log_key": "intent_trace",
+        "present": true
+      },
+      {
+        "log_key": "ambiguity_score",
+        "present": true
+      },
+      {
+        "log_key": "task_analysis",
+        "present": true
+      },
+      {
+        "log_key": "compiled_contract",
+        "present": true
+      },
+      {
+        "log_key": "runtime_selection",
+        "present": true
+      },
+      {
+        "log_key": "active_model",
+        "present": true
+      },
+      {
+        "log_key": "memory_reads",
+        "present": true
+      },
+      {
+        "log_key": "memory_writes",
+        "present": true
+      },
+      {
+        "log_key": "fallback_events",
+        "present": true
+      },
+      {
+        "log_key": "violation_events",
+        "present": true
+      }
+    ]
+  },
+  "violations": [],
+  "leaks": [],
+  "cracks": [],
+  "quality_levels": {
+    "semantic_precision": "warning",
+    "latency_stability": "warning",
+    "memory_integrity": "warning",
+    "contract_obedience": "pass",
+    "ambiguity_handling": "warning",
+    "resource_efficiency": "warning",
+    "privacy_boundary_integrity": "pass",
+    "runtime_adaptivity": "warning",
+    "recovery_capacity": "warning",
+    "output_consistency": "pass"
+  },
+  "scores": {
+    "semantic_precision": 0.8,
+    "latency_stability": 0.9,
+    "memory_integrity": 0.92,
+    "contract_obedience": 0.98,
+    "ambiguity_handling": 0.9,
+    "resource_efficiency": 0.9,
+    "privacy_boundary_integrity": 1,
+    "runtime_adaptivity": 0.84,
+    "recovery_capacity": 0.82,
+    "output_consistency": 0.95,
+    "retrieval_precision": 0.78,
+    "overall_score": 0.908
+  },
+  "pass": true
+}

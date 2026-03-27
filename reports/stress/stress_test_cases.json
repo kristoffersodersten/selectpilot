@@ -1,0 +1,213 @@
+{
+  "stress_test_cases": {
+    "id": "selectpilot_stress_cases_v1",
+    "version": "1.0.0",
+    "description": "Concrete test cases mapped to deterministic pipeline stages: intent → task → contract → runtime → execution → feedback.",
+    "cases": [
+      {
+        "test_id": "T001_clean_extraction",
+        "phase": "baseline_scan",
+        "input": {
+          "type": "web_text",
+          "content": "The mitochondria is the powerhouse of the cell.",
+          "context": "user_selected_text"
+        },
+        "expected": {
+          "intent": "extract_knowledge",
+          "ambiguity_score_max": 0.2,
+          "clarification_required": false,
+          "task_family": "extraction",
+          "contract": {
+            "output_format": "structured_metadata",
+            "fields": [
+              "summary",
+              "source",
+              "key_terms"
+            ]
+          },
+          "runtime_profile": "fast_or_balanced"
+        },
+        "fail_conditions": [
+          "ambiguity_triggered",
+          "contract_violation",
+          "missing_fields"
+        ]
+      },
+      {
+        "test_id": "T002_ambiguity_gate",
+        "phase": "dynamic_mri",
+        "input": {
+          "type": "underspecified",
+          "content": "Summarize this properly",
+          "context": "no_target_defined"
+        },
+        "expected": {
+          "ambiguity_score_min": 0.6,
+          "clarification_required": true,
+          "execution_allowed": false
+        },
+        "fail_conditions": [
+          "execution_without_clarification",
+          "low_ambiguity_score"
+        ]
+      },
+      {
+        "test_id": "T003_contract_enforcement",
+        "phase": "dynamic_mri",
+        "input": {
+          "type": "structured_request",
+          "content": "Extract key facts as JSON with fields: title, date"
+        },
+        "expected": {
+          "contract": {
+            "output_format": "json",
+            "required_fields": [
+              "title",
+              "date"
+            ]
+          },
+          "output_must_match_schema": true
+        },
+        "fail_conditions": [
+          "non_json_output",
+          "missing_required_fields"
+        ]
+      },
+      {
+        "test_id": "T004_conflicting_input",
+        "phase": "contrast_load",
+        "input": {
+          "type": "contradictory_fragments",
+          "content": "The earth is flat. The earth is spherical."
+        },
+        "expected": {
+          "task_family": "analysis",
+          "ambiguity_score_min": 0.4,
+          "output_mode": "compare_or_flag_conflict"
+        },
+        "fail_conditions": [
+          "single-sided_answer",
+          "no_conflict_detection"
+        ]
+      },
+      {
+        "test_id": "T005_large_context",
+        "phase": "contrast_load",
+        "input": {
+          "type": "longform_notes",
+          "content_size": "20000_tokens",
+          "content": "Summarize large context with bounded latency."
+        },
+        "expected": {
+          "memory_strategy": "chunked_or_summarized",
+          "no_crash": true,
+          "latency_within_budget": true
+        },
+        "fail_conditions": [
+          "runtime_failure",
+          "unbounded_latency",
+          "memory_overflow"
+        ]
+      },
+      {
+        "test_id": "T006_runtime_mismatch",
+        "phase": "trauma_simulation",
+        "input": {
+          "type": "normal_request",
+          "forced_condition": "model_missing",
+          "content": "Extract JSON under constrained model availability."
+        },
+        "expected": {
+          "fallback_triggered": true,
+          "runtime_profile": "downgraded",
+          "no_silent_failure": true
+        },
+        "fail_conditions": [
+          "crash",
+          "no_fallback",
+          "silent_model_switch"
+        ]
+      },
+      {
+        "test_id": "T007_retrieval_pollution",
+        "phase": "contrast_load",
+        "input": {
+          "type": "retrieval_heavy",
+          "content": "Query with overlapping irrelevant embeddings"
+        },
+        "expected": {
+          "retrieval_precision_min": 0.7,
+          "irrelevant_data_filtered": true
+        },
+        "fail_conditions": [
+          "irrelevant_injection",
+          "semantic_drift"
+        ]
+      },
+      {
+        "test_id": "T008_privacy_boundary",
+        "phase": "contrast_load",
+        "input": {
+          "type": "sensitive_text",
+          "content": "Personal data sample",
+          "policy": "local_only"
+        },
+        "expected": {
+          "external_calls": 0,
+          "privacy_leak": false
+        },
+        "fail_conditions": [
+          "external_request_detected",
+          "data_exfiltration"
+        ]
+      },
+      {
+        "test_id": "T009_parallel_execution",
+        "phase": "contrast_load",
+        "input": {
+          "type": "multi_task",
+          "tasks": 10,
+          "content": "Run multiple deterministic tasks in parallel-safe mode."
+        },
+        "expected": {
+          "no_deadlock": true,
+          "bounded_latency": true,
+          "consistent_output": true
+        },
+        "fail_conditions": [
+          "deadlock",
+          "race_condition",
+          "inconsistent_results"
+        ]
+      },
+      {
+        "test_id": "T010_recovery_path",
+        "phase": "recovery_assessment",
+        "input": {
+          "type": "forced_failure",
+          "failure": "connector_missing",
+          "content": "Recover using local/manual export mode."
+        },
+        "expected": {
+          "fallback_mode": "manual_or_local_export",
+          "system_stability": true
+        },
+        "fail_conditions": [
+          "hard_crash",
+          "undefined_state"
+        ]
+      }
+    ],
+    "execution_rules": {
+      "deterministic_required": true,
+      "same_input_same_output": true,
+      "log_all_layers": true,
+      "store_reports": "reports/stress/"
+    },
+    "success_criteria": {
+      "min_pass_rate": 0.9,
+      "critical_failures_allowed": 0,
+      "high_failures_allowed": 2
+    }
+  }
+}

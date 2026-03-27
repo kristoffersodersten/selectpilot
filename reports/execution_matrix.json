@@ -1,0 +1,3138 @@
+[
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_minimal",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "rewrite_constrained",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_binary",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "classification_multiclass",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_entities",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_strict_json",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "extract_nested_json",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "summarize_contextual",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "analyze_reasoning",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "compare_structured",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "ambiguous_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "contradictory_intent",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "long_context",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "low",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "low",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "low",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "low",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "medium_gpu",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "high",
+    "model": "qwen2:0.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "high",
+    "model": "qwen2:1.5b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "high",
+    "model": "qwen2:7b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "cold"
+  },
+  {
+    "scenario": "noise_input",
+    "hardware_profile": "high",
+    "model": "qwen2:14b",
+    "selection_mode": "system_selected",
+    "cold_or_warm": "warm"
+  }
+]

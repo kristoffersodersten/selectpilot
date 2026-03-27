@@ -1,0 +1,191 @@
+{
+  "generated_at": "2026-03-26T18:08:26.167Z",
+  "implemented_spec_nodes": [],
+  "missing_spec_nodes": [
+    "dynamic_model_evaluation_layer",
+    "execution_layer",
+    "failure_isolation",
+    "frontend_state_contract",
+    "hardware_detection_layer",
+    "intent_ambiguity_handling",
+    "intent_compilation_layer",
+    "intent_model",
+    "intent_popup",
+    "latency_budget",
+    "memory_guard",
+    "model_registry",
+    "model_selection_layer",
+    "model_switch_hysteresis",
+    "observability_layer",
+    "operation_mapping_layer",
+    "output_enforcement",
+    "privacy_and_debug_policy",
+    "probabilistic_suggestion_engine",
+    "prompt_determinism",
+    "provisioning_layer",
+    "reporting",
+    "runtime_event_contract",
+    "simulation_and_benchmarking",
+    "simulation_and_benchmarking.fixtures",
+    "simulation_and_benchmarking.metrics",
+    "task_analysis_layer",
+    "testing_strategy.integration_tests",
+    "testing_strategy.unit_tests",
+    "validation_layer"
+  ],
+  "unmapped_files": [
+    "agent/agent-client.js",
+    "agent/agent-client.ts",
+    "agent/agent-pipeline.js",
+    "agent/agent-pipeline.ts",
+    "agent/agent-types.js",
+    "agent/agent-types.ts",
+    "api/endpoints.js",
+    "api/endpoints.ts",
+    "api/nano-client.js",
+    "api/nano-client.ts",
+    "api/request.js",
+    "api/request.ts",
+    "background/background.js",
+    "background/background.ts",
+    "background/entitlement-service.js",
+    "background/entitlement-service.ts",
+    "background/tier-service.js",
+    "background/tier-service.ts",
+    "billing/billing-ui.js",
+    "billing/billing-ui.ts",
+    "billing/paddle-checkout.js",
+    "billing/paddle-checkout.ts",
+    "content/content-script.js",
+    "content/content-script.ts",
+    "content/extract-audio.js",
+    "content/extract-audio.ts",
+    "content/extract-text.js",
+    "content/extract-text.ts",
+    "content/extract-video.js",
+    "content/extract-video.ts",
+    "eslint.config.js",
+    "licensing/license-storage.js",
+    "licensing/license-storage.ts",
+    "licensing/license-verifier.js",
+    "licensing/license-verifier.ts",
+    "panel/extraction-presets.js",
+    "panel/extraction-presets.ts",
+    "panel/knowledge-connectors.js",
+    "panel/knowledge-connectors.ts",
+    "panel/panel.js",
+    "panel/panel.ts",
+    "panel/runtime-profiles.js",
+    "panel/runtime-profiles.ts",
+    "popup/popup.js",
+    "popup/popup.ts",
+    "scripts/lint-manifest.mjs",
+    "scripts/spec-compiler.mjs",
+    "scripts/sync-manifest-version.mjs",
+    "server/extraction_presets.py",
+    "server/monero_payment_server.py",
+    "server/nano_server.py",
+    "server/ollama_client.py",
+    "server/runtime_profiles.py",
+    "shared/types/events.js",
+    "shared/types/events.ts",
+    "shared/types/intent.js",
+    "shared/types/intent.ts",
+    "shared/types/model.js",
+    "shared/types/model.ts",
+    "shared/types/runtime.js",
+    "shared/types/runtime.ts",
+    "tests/e2e/panel-no-leakage.spec.mjs",
+    "tests/e2e/panel-user-flow.spec.mjs",
+    "tests/e2e/playwright.config.mjs",
+    "tests/e2e/privacy-and-runtime.spec.mjs",
+    "tests/panel/extraction-presets.test.mjs",
+    "tests/panel/network-boundary.test.mjs",
+    "tests/server/test_extraction_presets.py",
+    "tests/server/test_privacy_proof.py",
+    "tests/server/test_runtime_profiles.py",
+    "tests/server/test_validation_pipeline.py",
+    "utils/dom.js",
+    "utils/dom.ts",
+    "utils/logger.js",
+    "utils/logger.ts",
+    "utils/storage.js",
+    "utils/storage.ts",
+    "utils/time.js",
+    "utils/time.ts"
+  ],
+  "unmapped_functions": [
+    {
+      "file": "api/nano-client.js",
+      "missing_function_annotations": 1
+    },
+    {
+      "file": "api/nano-client.ts",
+      "missing_function_annotations": 1
+    },
+    {
+      "file": "content/extract-audio.js",
+      "missing_function_annotations": 1
+    },
+    {
+      "file": "content/extract-audio.ts",
+      "missing_function_annotations": 1
+    },
+    {
+      "file": "content/extract-text.js",
+      "missing_function_annotations": 2
+    },
+    {
+      "file": "content/extract-text.ts",
+      "missing_function_annotations": 2
+    },
+    {
+      "file": "panel/extraction-presets.js",
+      "missing_function_annotations": 1
+    },
+    {
+      "file": "panel/extraction-presets.ts",
+      "missing_function_annotations": 1
+    },
+    {
+      "file": "panel/knowledge-connectors.js",
+      "missing_function_annotations": 1
+    },
+    {
+      "file": "panel/knowledge-connectors.ts",
+      "missing_function_annotations": 1
+    },
+    {
+      "file": "panel/runtime-profiles.js",
+      "missing_function_annotations": 1
+    },
+    {
+      "file": "panel/runtime-profiles.ts",
+      "missing_function_annotations": 1
+    },
+    {
+      "file": "utils/dom.js",
+      "missing_function_annotations": 5
+    },
+    {
+      "file": "utils/dom.ts",
+      "missing_function_annotations": 5
+    },
+    {
+      "file": "utils/logger.js",
+      "missing_function_annotations": 3
+    },
+    {
+      "file": "utils/logger.ts",
+      "missing_function_annotations": 3
+    },
+    {
+      "file": "utils/time.js",
+      "missing_function_annotations": 3
+    },
+    {
+      "file": "utils/time.ts",
+      "missing_function_annotations": 3
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "detected": [
+    "model_latency_dominance",
+    "memory_pressure_events"
+  ],
+  "summary": "bottlenecks_detected",
+  "p95_latency_ms": 3014,
+  "orchestration_overhead_ratio": 0.056,
+  "validation_overhead_ratio": 0.0435,
+  "event_dispatch_cost": 8.1257,
+  "memory_management_cost": 8.8977
+}
