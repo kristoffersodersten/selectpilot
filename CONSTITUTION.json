@@ -1,0 +1,88 @@
+{
+  "constitutional_principle": {
+    "id": "holistic_completion",
+    "name": "No Partial Completion",
+    "definition": "A component is considered complete only if it functions as a full, end-to-end, deterministic unit within the system. Partial implementation of layers or isolated subsystems must never be labeled as complete.",
+    "core_rule": "Nothing is complete unless it works fully from input to validated output.",
+    "prohibited_states": [
+      {
+        "id": "layer_complete",
+        "definition": "A single layer (e.g. intent, contract, UI) is marked as complete without full system integration."
+      },
+      {
+        "id": "pipeline_fragment",
+        "definition": "Multiple layers exist but are not connected into a functioning execution path."
+      },
+      {
+        "id": "unvalidated_output",
+        "definition": "Output is produced but not strictly validated against contract."
+      },
+      {
+        "id": "implicit_behavior",
+        "definition": "Execution depends on assumptions, fallback, or undefined behavior."
+      }
+    ],
+    "required_properties": {
+      "end_to_end_execution": {
+        "description": "Input must flow through the full pipeline to a valid output."
+      },
+      "deterministic_behavior": {
+        "description": "Same input and explicit state must produce identical output and decision path."
+      },
+      "contract_enforcement": {
+        "description": "All outputs must strictly conform to defined contracts."
+      },
+      "error_handling": {
+        "description": "All failure modes must be explicit, not implicit or silent."
+      },
+      "state_integrity": {
+        "description": "No execution may leave residual state affecting future runs."
+      },
+      "test_verification": {
+        "description": "Replay and fail→recovery tests must pass."
+      }
+    },
+    "definition_of_done": {
+      "all_must_be_true": [
+        "end_to_end_execution",
+        "contract_enforcement",
+        "deterministic_behavior",
+        "no_implicit_fallback",
+        "state_integrity",
+        "tests_pass"
+      ],
+      "otherwise": "not_complete"
+    },
+    "build_strategy": {
+      "type": "vertical_slice_only",
+      "rule": "Development must proceed in complete vertical slices, not horizontal layers.",
+      "implication": "Each implemented unit must include all necessary layers to function independently."
+    },
+    "validation_gate": {
+      "rule": "No component may be declared complete unless it passes all definition_of_done conditions.",
+      "enforcement": "Hard block"
+    },
+    "semantic_constraint": {
+      "rule": "The term 'complete' is reserved exclusively for fully functioning systems.",
+      "forbidden_usage": [
+        "complete_intent_layer",
+        "complete_backend",
+        "complete_ui",
+        "complete_partial_pipeline"
+      ]
+    },
+    "summary": "Completion is not a property of parts. Completion is a property of the whole system functioning correctly."
+  },
+  "product_standard": {
+    "installation": "zero_friction",
+    "learning_curve": "none",
+    "interaction": "natural_language_only",
+    "determinism": true,
+    "hallucination": "forbidden",
+    "latency": "perceived_instant",
+    "output": "contract_strict",
+    "error_handling": "explicit_only",
+    "state": "stateless_execution",
+    "consistency": "absolute"
+  }
+}

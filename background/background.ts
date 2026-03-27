@@ -1,7 +1,9 @@
-import { extract, summarize, transcribe, vision } from '../api/nano-client.js';
+import { compileIntent, extract, summarize, transcribe, vision } from '../api/nano-client.js';
 import { runPipeline } from '../agent/agent-pipeline.js';
 import { log, error } from '../utils/logger.js';
-import { requireFeature, getLicenseTier } from './tier-service.js';
+import { requireFeature, getLicenseTier, attachLicenseToken, refreshLicense } from './tier-service.js';
+import { getEntitlementSnapshot } from './entitlement-service.js';
+import { ApiRequestError } from '../api/request.js';
 import type { AgentContext } from '../agent/agent-types.js';
 
 type MemoryEntry = {
@@ -267,6 +269,18 @@ async function handleSelectionPreview(): Promise<any> {
   };
 }
 
+async function handleIntentCompile(intent: string): Promise<any> {
+  const trimmed = String(intent || '').trim();
+  if (!trimmed) throw new Error('Intent is required before compilation');
+
+  const context = await collectContext();
+  return compileIntent({
+    intent: trimmed,
+    has_selection: Boolean(context.selection && context.selection.trim()),
+    has_page_text: Boolean(context.pageText && context.pageText.trim()),
+  });
+}
+
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   (async () => {
     try {
@@ -294,8 +308,25 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         sendResponse({ tier: await getLicenseTier() });
         return;
       }
+      if (msg.type === 'entitlement:get') {
+        sendResponse(await getEntitlementSnapshot());
+        return;
+      }
+      if (msg.type === 'entitlement:refresh') {
+        sendResponse(await refreshLicense(true));
+        return;
+      }
+      if (msg.type === 'license:attach_token') {
+        if (!msg.token || typeof msg.token !== 'string') throw new Error('Missing token');
+        sendResponse(await attachLicenseToken(msg.token));
+        return;
+      }
       if (msg.type === 'panel:get_selection_preview') {
         sendResponse(await handleSelectionPreview());
+        return;
+      }
+      if (msg.type === 'panel:intent_compile') {
+        sendResponse(await handleIntentCompile(msg.intent));
         return;
       }
       if (msg.type === 'panel:memory_status') {
@@ -320,10 +351,30 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       }
     } catch (e: any) {
       error('bg', e?.message || e);
-      sendResponse({ error: e?.message || 'Unknown error' });
+      if (e instanceof ApiRequestError) {
+        sendResponse({
+          error: e.message || 'Unknown API error',
+          errorCode: e.code || 'api_error',
+          errorDetails: e.details || null,
+          traceId: e.traceId || null,
+          status: e.status,
+        });
+        return;
+      }
+      sendResponse({
+        error: e?.message || 'Unknown error',
+        errorCode: e?.code || 'unknown_error',
+        errorDetails: e?.details || null,
+        traceId: e?.traceId || e?.details?.trace_id || null,
+      });
     }
   })();
   return true;
 });
+
+void refreshLicense(false);
+setInterval(() => {
+  void refreshLicense(false);
+}, 10 * 60 * 1000);
 
 log('bg', 'service worker ready');

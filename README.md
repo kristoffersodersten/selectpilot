@@ -1,5 +1,8 @@
 # SelectPilot
 
+> **SelectPilot is not a prompt interface.**
+> It is a **deterministic execution layer** that compiles user intent into controlled, contract-bound operations over local models.
+
 Local AI in your browser.
 No data leaves your device on the core selected-text path.
 
@@ -109,7 +112,7 @@ Your hardware and selected profile determine latency/quality.
 - Target-specific format adapters
 - No persistent memory layer
 
-### Knowledge (Pro / Deep)
+### Knowledge (Deep)
 - Explicit opt-in local memory layer
 - Local embeddings/retrieval capabilities
 - Inspect / export / delete retained knowledge
@@ -128,14 +131,14 @@ Your hardware and selected profile determine latency/quality.
 
 ## What SelectPilot is
 
-- Local inference interface for selected text
-- Structured extraction engine with canonical output
-- Adapter-based export pipeline
+- Deterministic intent-to-operation compiler for selected text workflows
+- Contract-bound local execution layer over Ollama-hosted models
+- Structured extraction + canonical output + adapter-based export pipeline
 
 ## What SelectPilot is not
 
 - Cloud AI wrapper
-- Generic chatbot platform
+- Generic prompt/chat interface
 - Telemetry-driven data-harvesting tool
 
 ---
@@ -151,3 +154,38 @@ Current focus: stability, deterministic structure, and trust consistency.
 ## Repository
 
 https://github.com/kristoffersodersten/selectpilot
+
+---
+
+## Repository Governance (Phase 1)
+
+SelectPilot uses PR-first and status-check-first repository controls to keep code-state deterministic.
+
+### Branch protection (main)
+
+Enable these settings on `main`:
+
+- Require a pull request before merging
+- Require status checks to pass before merging
+- Require linear history
+- Do not allow force pushes
+- Do not allow branch deletion
+
+### Required checks
+
+Mark these as required in branch protection:
+
+- `CI / validate (20.x)`
+- `CI / validate (22.x)`
+- `Dependency Review / dependency-review`
+- `CodeQL / Analyze (javascript-typescript)`
+- `CodeQL / Analyze (python)`
+
+### CI coverage
+
+Current CI enforces:
+
+- lint (`pnpm lint`, `pnpm lint:manifest`)
+- typecheck (`pnpm typecheck`)
+- build (`pnpm build`)
+- baseline tests (`pnpm test`)

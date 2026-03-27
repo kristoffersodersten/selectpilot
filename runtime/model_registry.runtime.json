@@ -1,0 +1,70 @@
+{
+  "generated_at_unix_ms": 1700704147799,
+  "policy_version": "runtime-policy-d7833f631d57",
+  "models": [
+    {
+      "model_id": "qwen2.5:0.5b",
+      "ollama_name": "qwen2.5:0.5b",
+      "supported_operation_families": [
+        "extract",
+        "summarize",
+        "agent"
+      ],
+      "min_hardware_profile": "low",
+      "installation_state": "installed",
+      "runtime_status": "preferred",
+      "reliability_score": 0.81,
+      "policy_refs": [
+        "runtime/model_policy.json#qwen2.5:0.5b"
+      ]
+    },
+    {
+      "model_id": "qwen2.5:1.5b",
+      "ollama_name": "qwen2.5:1.5b",
+      "supported_operation_families": [
+        "extract",
+        "summarize",
+        "agent"
+      ],
+      "min_hardware_profile": "medium",
+      "installation_state": "installed",
+      "runtime_status": "preferred",
+      "reliability_score": 0.88,
+      "policy_refs": [
+        "runtime/model_policy.json#qwen2.5:1.5b"
+      ]
+    },
+    {
+      "model_id": "qwen2.5:7b",
+      "ollama_name": "qwen2.5:7b",
+      "supported_operation_families": [
+        "extract",
+        "summarize",
+        "agent"
+      ],
+      "min_hardware_profile": "medium_gpu",
+      "installation_state": "available",
+      "runtime_status": "fallback",
+      "reliability_score": 0.91,
+      "policy_refs": [
+        "runtime/model_policy.json#qwen2.5:7b"
+      ]
+    },
+    {
+      "model_id": "qwen2.5:14b",
+      "ollama_name": "qwen2.5:14b",
+      "supported_operation_families": [
+        "extract",
+        "summarize",
+        "agent"
+      ],
+      "min_hardware_profile": "high",
+      "installation_state": "available",
+      "runtime_status": "fallback",
+      "reliability_score": 0.93,
+      "policy_refs": [
+        "runtime/model_policy.json#qwen2.5:14b"
+      ]
+    }
+  ]
+}

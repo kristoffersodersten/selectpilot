@@ -1,0 +1,57 @@
+{
+  "generated_at_unix_ms": 1700704147799,
+  "policy_version": "runtime-policy-d7833f631d57",
+  "source_reports": [
+    "reports/aggregated_metrics.json",
+    "reports/frontier_decisions.json",
+    "reports/determinism_report.json",
+    "reports/architecture_decision_report.json"
+  ],
+  "events": [
+    {
+      "event_type": "compile_policy",
+      "generated_at_unix_ms": 1700704147799,
+      "promoted_count": 1,
+      "rejected_count": 0,
+      "policy_version": "runtime-policy-d7833f631d57"
+    },
+    {
+      "event_type": "rollback",
+      "generated_at_unix_ms": 1774549560013,
+      "rolled_back_from": "qwen2.5:0.5b",
+      "rolled_back_to": "none",
+      "reason": "manual_runtime_rollback",
+      "task_family": "agent",
+      "hardware_profile": "high"
+    },
+    {
+      "event_type": "compile_policy",
+      "generated_at_unix_ms": 1700704147799,
+      "promoted_count": 1,
+      "rejected_count": 0,
+      "policy_version": "runtime-policy-d7833f631d57"
+    },
+    {
+      "event_type": "rollback",
+      "generated_at_unix_ms": 1774549605424,
+      "rolled_back_from": "qwen2.5:0.5b",
+      "rolled_back_to": "qwen2.5:1.5b",
+      "reason": "manual_runtime_rollback",
+      "task_family": "agent",
+      "hardware_profile": "high"
+    }
+  ],
+  "gating_results": [
+    {
+      "candidate_model": "qwen2:0.5b",
+      "eligible": true,
+      "reason": "eligible",
+      "confidence": 0.9029,
+      "evidence_refs": [
+        "reports/frontier_decisions.json",
+        "reports/determinism_report.json",
+        "reports/aggregated_metrics.json"
+      ]
+    }
+  ]
+}

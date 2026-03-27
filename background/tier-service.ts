@@ -1,6 +1,9 @@
-import { verifyLicense } from '../licensing/license-verifier.js';
-import { loadLicense, saveLicense } from '../licensing/license-storage.js';
-import { log } from '../utils/logger.js';
+import {
+  getEntitlementTier,
+  hasEntitlementFeature,
+  refreshEntitlement,
+  setEntitlementToken,
+} from './entitlement-service.js';
 
 export type PricingConfig = {
   trial: { enabled: boolean; duration_days: number; access: 'pro' | 'plus' | 'essential' };
@@ -46,31 +49,20 @@ export async function isFeatureEnabled(feature: string, tier: 'essential' | 'plu
 }
 
 export async function getLicenseTier(): Promise<'essential' | 'plus' | 'pro'> {
-  const verified = await verifyLicense();
-  if (verified) return verified.tier;
-  const pricing = await getPricing();
-  if (pricing.trial.enabled) {
-    const stored = await loadLicense();
-    if (!stored) {
-      const trial: any = {
-        token: 'trial-local',
-        tier: pricing.trial.access,
-        issuedAt: Date.now(),
-        expiresAt: Date.now() + pricing.trial.duration_days * 24 * 60 * 60 * 1000
-      };
-      await saveLicense(trial);
-      log('tier', 'trial applied', trial);
-      return pricing.trial.access;
-    }
-    if (stored.expiresAt && Date.now() < stored.expiresAt) {
-      return stored.tier;
-    }
-  }
-  return 'essential';
+  return getEntitlementTier();
 }
 
 export async function requireFeature(feature: string): Promise<{ allowed: boolean; tier: string }> {
   const tier = await getLicenseTier();
-  const allowed = await isFeatureEnabled(feature, tier as any);
+  const allowed = await hasEntitlementFeature(feature);
   return { allowed, tier };
+}
+
+export async function refreshLicense(force = false) {
+  return refreshEntitlement(force);
+}
+
+export async function attachLicenseToken(token: string) {
+  await setEntitlementToken(token);
+  return refreshEntitlement(true);
 }

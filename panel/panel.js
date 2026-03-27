@@ -1,9 +1,13 @@
 import { $ } from '../utils/dom.js';
 import { getJSON, setJSON } from '../utils/storage.js';
 import { endpoints } from '../api/endpoints.js';
+import { getRuntimeMetaHealth, getRuntimeMetaStreamUrl } from '../api/nano-client.js';
 import { EXTRACTION_PRESETS, getExtractionPreset } from './extraction-presets.js';
 import { getRuntimeProfile, RUNTIME_PROFILES } from './runtime-profiles.js';
 import { buildKnowledgePackage } from './knowledge-connectors.js';
+import { applyRuntimeEvent, setIntent, setSelectionContext, setVisiblePanels } from './state/runtimeStore.js';
+import { loadBottleneckReport, loadDeterminismReport, loadFrontierReport } from './state/reportStore.js';
+import { getTopologyForComponent, validateTopologyMap } from './layout/topologyMap.js';
 const workflow = $('#workflow');
 const exportsEl = $('#exports');
 const runtimeStateEl = $('#runtime-state');
@@ -11,6 +15,9 @@ const memoryShellEl = $('#memory-shell');
 const memoryStatusEl = $('#memory-status');
 const memoryMetaEl = $('#memory-meta');
 const memoryTargetEl = $('#memory-target');
+const orderIdInputEl = $('#order-id');
+const syncOrderButtonEl = $('#btn-sync-order');
+const entitlementStatusEl = $('#entitlement-status');
 const memoryToggleButtonEl = $('#btn-memory-toggle');
 const memoryInspectButtonEl = $('#btn-memory-inspect');
 const memoryExportButtonEl = $('#btn-memory-export');
@@ -36,7 +43,21 @@ const leakageStatusEl = $('#leakage-status');
 const leakageDetailsEl = $('#leakage-details');
 const truthProfileEl = $('#truth-profile');
 const truthLatencyEl = $('#truth-latency');
+const intentInputEl = $('#intent-input');
+const intentSuggestionsEl = $('#intent-suggestions');
+const intentExecuteButtonEl = $('#btn-intent-execute');
+const intentClearButtonEl = $('#btn-intent-clear');
+const runtimeMetaOverlayEl = $('#runtime-meta-overlay');
+const runtimeMetaStatusEl = $('#runtime-meta-status');
+const runtimeMetaConnectionEl = $('#runtime-meta-connection');
+const runtimeMetaSummaryEl = $('#runtime-meta-summary');
+const runtimeMetaProgressBarEl = $('#runtime-meta-progress-bar');
+const runtimeMetaOperationEl = $('#runtime-meta-operation');
+const runtimeMetaStepEl = $('#runtime-meta-step');
+const runtimeMetaTraceEl = $('#runtime-meta-trace');
+const runtimeMetaEventsEl = $('#runtime-meta-events');
 const actionButtons = Array.from(document.querySelectorAll('.primary-action, .secondary-grid button, .advanced-grid button'));
+const ENTITLEMENT_FRESH_MS = 15 * 60 * 1000;
 let isBusy = false;
 let runtimeSnapshot = {
     ok: false,
@@ -70,7 +91,26 @@ let memorySnapshot = {
     entries: 0,
     lastUpdatedAt: null,
 };
+let entitlementSnapshot = null;
 const BENCHMARK_CACHE_KEY = 'selectpilot_runtime_benchmark_v1';
+const RUNTIME_META_MAX_EVENTS = 6;
+let runtimeMetaEventSource = null;
+let runtimeMetaReconnectTimer = null;
+let runtimeMetaReconnectDelayMs = 1200;
+const runtimeMetaOverlayState = {
+    connection: 'connecting',
+    status: 'idle',
+    operation: '—',
+    step: '—',
+    traceId: '—',
+    summary: 'Waiting for deterministic local runtime events.',
+    progress: 0,
+    latencyHintMs: null,
+    lastSeq: 0,
+    recentEvents: [],
+};
+let intentSuggestions = [];
+let selectedIntentSuggestion = null;
 const FAST_INSTALL_COMMANDS = [
     'ollama pull qwen2.5:0.5b',
     'ollama pull nomic-embed-text-v2-moe:latest',
@@ -140,6 +180,357 @@ function formatMemoryUpdatedAt(timestamp) {
         return 'No retained events yet.';
     return `Last updated ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 }
+function formatEntitlementUpdatedAt(timestamp) {
+    if (!timestamp)
+        return 'no cached entitlement';
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime()))
+        return 'no cached entitlement';
+    return `cached ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+}
+function toClockText(iso) {
+    if (!iso)
+        return '--:--:--';
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime()))
+        return '--:--:--';
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+function compactStep(step) {
+    if (!step)
+        return '—';
+    return step.replace(/_/g, ' ').toLowerCase();
+}
+function compactOperation(operation) {
+    if (!operation)
+        return '—';
+    return operation;
+}
+function compactTrace(trace) {
+    if (!trace)
+        return '—';
+    if (trace.length <= 16)
+        return trace;
+    return `${trace.slice(0, 8)}…${trace.slice(-4)}`;
+}
+function runtimeMetaEventLabel(event) {
+    const step = event.step ? compactStep(event.step) : '';
+    const base = step ? `${event.event_type} · ${step}` : event.event_type;
+    if (event.duration_ms)
+        return `${base} · ${event.duration_ms} ms`;
+    return base;
+}
+function inferRuntimeMetaProgress(eventType) {
+    switch (eventType) {
+        case 'RUNTIME_STARTED':
+            return 8;
+        case 'STEP_STARTED':
+            return 35;
+        case 'STEP_COMPLETED':
+            return 65;
+        case 'RUNTIME_COMPLETED':
+            return 100;
+        case 'STEP_FAILED':
+        case 'RUNTIME_FAILED':
+            return 100;
+        default:
+            return runtimeMetaOverlayState.progress;
+    }
+}
+function pushRuntimeMetaEvent(label, iso) {
+    runtimeMetaOverlayState.recentEvents = [{ label, at: toClockText(iso) }, ...runtimeMetaOverlayState.recentEvents].slice(0, RUNTIME_META_MAX_EVENTS);
+}
+function renderRuntimeMetaOverlay() {
+    if (!runtimeMetaOverlayEl)
+        return;
+    if (runtimeMetaStatusEl) {
+        runtimeMetaStatusEl.textContent = runtimeMetaOverlayState.status === 'idle'
+            ? 'Idle'
+            : runtimeMetaOverlayState.status === 'running'
+                ? 'Running'
+                : runtimeMetaOverlayState.status === 'completed'
+                    ? 'Completed'
+                    : 'Error';
+    }
+    if (runtimeMetaConnectionEl) {
+        runtimeMetaConnectionEl.classList.remove('is-live', 'is-degraded', 'is-offline');
+        if (runtimeMetaOverlayState.connection === 'live')
+            runtimeMetaConnectionEl.classList.add('is-live');
+        if (runtimeMetaOverlayState.connection === 'degraded')
+            runtimeMetaConnectionEl.classList.add('is-degraded');
+        if (runtimeMetaOverlayState.connection === 'offline')
+            runtimeMetaConnectionEl.classList.add('is-offline');
+        runtimeMetaConnectionEl.textContent = runtimeMetaOverlayState.connection;
+    }
+    if (runtimeMetaSummaryEl) {
+        const latency = runtimeMetaOverlayState.latencyHintMs ? ` · latency hint ${runtimeMetaOverlayState.latencyHintMs} ms` : '';
+        runtimeMetaSummaryEl.textContent = `${runtimeMetaOverlayState.summary}${latency}`;
+    }
+    if (runtimeMetaProgressBarEl) {
+        const clamped = Math.max(0, Math.min(100, runtimeMetaOverlayState.progress));
+        runtimeMetaProgressBarEl.style.width = `${clamped}%`;
+    }
+    if (runtimeMetaOperationEl)
+        runtimeMetaOperationEl.textContent = runtimeMetaOverlayState.operation;
+    if (runtimeMetaStepEl)
+        runtimeMetaStepEl.textContent = runtimeMetaOverlayState.step;
+    if (runtimeMetaTraceEl)
+        runtimeMetaTraceEl.textContent = runtimeMetaOverlayState.traceId;
+    if (runtimeMetaEventsEl) {
+        runtimeMetaEventsEl.replaceChildren();
+        for (const evt of runtimeMetaOverlayState.recentEvents) {
+            const li = document.createElement('li');
+            const left = document.createElement('span');
+            left.textContent = evt.label;
+            const right = document.createElement('span');
+            right.textContent = evt.at;
+            li.append(left, right);
+            runtimeMetaEventsEl.append(li);
+        }
+    }
+}
+function deriveIntentSuggestions(text) {
+    const value = (text || '').trim();
+    const normalized = value.toLowerCase();
+    const suggestions = [
+        'Extract structured JSON',
+        'Rewrite clearly and concisely',
+        'Summarize for quick decision',
+        'Extract concrete action items',
+        'Answer from this context',
+    ];
+    if (normalized.includes('?')) {
+        suggestions.unshift('Answer the main question precisely');
+    }
+    if (/\d/.test(normalized)) {
+        suggestions.unshift('Extract key numbers and facts');
+    }
+    if (value.length > 1200) {
+        suggestions.unshift('Compress into executive brief');
+    }
+    return Array.from(new Set(suggestions)).slice(0, 5);
+}
+function getIntentSource() {
+    const current = intentInputEl?.value.trim() || '';
+    if (!current)
+        return null;
+    return selectedIntentSuggestion && current === selectedIntentSuggestion ? 'suggestion' : 'manual';
+}
+function renderIntentSuggestions() {
+    clearNode(intentSuggestionsEl);
+    if (!intentSuggestionsEl)
+        return;
+    for (const suggestion of intentSuggestions) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = suggestion;
+        if (selectedIntentSuggestion === suggestion)
+            button.classList.add('is-selected');
+        button.disabled = isBusy || !runtimeSnapshot.ok;
+        button.addEventListener('click', () => {
+            selectedIntentSuggestion = suggestion;
+            if (intentInputEl)
+                intentInputEl.value = suggestion;
+            renderIntentSuggestions();
+            syncControlAvailability();
+        });
+        intentSuggestionsEl.append(button);
+    }
+}
+function refreshIntentSuggestions() {
+    const sourceText = selectionPreview.selection || selectionPreview.pageText || '';
+    intentSuggestions = deriveIntentSuggestions(sourceText);
+    const current = intentInputEl?.value.trim() || '';
+    if (!current || !intentSuggestions.includes(current)) {
+        selectedIntentSuggestion = null;
+    }
+    renderIntentSuggestions();
+}
+function renderIntentClarification(compiled) {
+    const question = compiled.question || 'Clarification is required before execution.';
+    const options = Array.isArray(compiled.options) ? compiled.options : [];
+    const markdown = options.length
+        ? `${question}\n\n${options.map((option) => `- ${option}`).join('\n')}`
+        : question;
+    renderOutput({
+        title: 'Clarification required',
+        eyebrow: 'Intent compiler',
+        markdown,
+        json: {
+            clarify_required: true,
+            ambiguity_score: compiled.ambiguity_score,
+            question,
+            options,
+            ir: compiled.ir,
+        },
+        meta: 'Deterministic intent compiler refused to guess. Clarify intent and run again.',
+        exportBase: 'selectpilot-intent-clarification',
+    });
+    renderExports({ markdown, json: { clarify_required: true, question, options, ir: compiled.ir }, basename: 'selectpilot-intent-clarification' });
+}
+async function doExecuteIntent() {
+    const intentText = intentInputEl?.value.trim() || '';
+    if (!intentText)
+        throw new Error('Intent is required before execution');
+    setIntent(intentText);
+    const source = getIntentSource() || 'manual';
+    setStatus(`Compiling intent (${source})...`);
+    const compiled = await request('panel:intent_compile', { intent: intentText });
+    if (compiled.clarify_required) {
+        renderIntentClarification(compiled);
+        setStatus('Clarification required before execution');
+        return;
+    }
+    const operation = compiled.operation;
+    if (operation === 'extract') {
+        const preset = intentText.toLowerCase().includes('action') ? 'action_brief' : undefined;
+        setStatus(`Executing compiled intent (${source}) → extract...`);
+        await doExtract(preset);
+        return;
+    }
+    if (operation === 'summarize') {
+        setStatus(`Executing compiled intent (${source}) → summarize...`);
+        await doSummarize();
+        return;
+    }
+    if (operation === 'agent' || !operation) {
+        if (agentPromptEl) {
+            agentPromptEl.value = intentText;
+        }
+        setStatus(`Executing compiled intent (${source}) → agent...`);
+        await doAsk();
+        return;
+    }
+    throw new Error('Intent compiler returned an unsupported operation');
+}
+function clearIntentInput() {
+    if (intentInputEl)
+        intentInputEl.value = '';
+    selectedIntentSuggestion = null;
+    renderIntentSuggestions();
+    syncControlAvailability();
+}
+function applyRuntimeMetaEvent(event) {
+    if (typeof event.seq === 'number') {
+        runtimeMetaOverlayState.lastSeq = Math.max(runtimeMetaOverlayState.lastSeq, event.seq);
+    }
+    runtimeMetaOverlayState.operation = compactOperation(event.operation);
+    runtimeMetaOverlayState.step = compactStep(event.step);
+    runtimeMetaOverlayState.traceId = compactTrace(event.trace_id);
+    runtimeMetaOverlayState.latencyHintMs = typeof event.latency_hint_ms === 'number' ? event.latency_hint_ms : runtimeMetaOverlayState.latencyHintMs;
+    if (event.event_type === 'RUNTIME_STARTED' || event.event_type === 'STEP_STARTED') {
+        runtimeMetaOverlayState.status = 'running';
+    }
+    else if (event.event_type === 'RUNTIME_COMPLETED') {
+        runtimeMetaOverlayState.status = 'completed';
+    }
+    else if (event.event_type === 'RUNTIME_FAILED' || event.event_type === 'STEP_FAILED') {
+        runtimeMetaOverlayState.status = 'error';
+    }
+    runtimeMetaOverlayState.progress = inferRuntimeMetaProgress(event.event_type);
+    runtimeMetaOverlayState.summary = event.message || runtimeMetaEventLabel(event);
+    const stepState = event.event_type === 'RUNTIME_COMPLETED' || event.event_type === 'STEP_COMPLETED'
+        ? 'done'
+        : event.event_type === 'RUNTIME_FAILED' || event.event_type === 'STEP_FAILED'
+            ? 'error'
+            : event.event_type === 'RUNTIME_STARTED' || event.event_type === 'STEP_STARTED'
+                ? 'running'
+                : 'waiting';
+    applyRuntimeEvent({
+        step: {
+            id: String(event.step || event.event_type || 'runtime_event'),
+            label: runtimeMetaEventLabel(event),
+            state: stepState,
+        },
+    });
+    pushRuntimeMetaEvent(runtimeMetaEventLabel(event), event.timestamp);
+    renderRuntimeMetaOverlay();
+}
+function clearRuntimeMetaReconnect() {
+    if (runtimeMetaReconnectTimer !== null) {
+        window.clearTimeout(runtimeMetaReconnectTimer);
+        runtimeMetaReconnectTimer = null;
+    }
+}
+function scheduleRuntimeMetaReconnect() {
+    clearRuntimeMetaReconnect();
+    runtimeMetaReconnectTimer = window.setTimeout(() => {
+        void connectRuntimeMetaStream();
+    }, runtimeMetaReconnectDelayMs);
+    runtimeMetaReconnectDelayMs = Math.min(10000, Math.round(runtimeMetaReconnectDelayMs * 1.35));
+}
+function disconnectRuntimeMetaStream() {
+    clearRuntimeMetaReconnect();
+    if (runtimeMetaEventSource) {
+        runtimeMetaEventSource.close();
+        runtimeMetaEventSource = null;
+    }
+}
+async function connectRuntimeMetaStream() {
+    disconnectRuntimeMetaStream();
+    try {
+        await getRuntimeMetaHealth();
+    }
+    catch {
+        runtimeMetaOverlayState.connection = 'offline';
+        runtimeMetaOverlayState.summary = 'Runtime meta stream unavailable.';
+        renderRuntimeMetaOverlay();
+        scheduleRuntimeMetaReconnect();
+        return;
+    }
+    runtimeMetaOverlayState.connection = 'connecting';
+    renderRuntimeMetaOverlay();
+    const source = new EventSource(getRuntimeMetaStreamUrl(runtimeMetaOverlayState.lastSeq));
+    runtimeMetaEventSource = source;
+    source.addEventListener('open', () => {
+        runtimeMetaOverlayState.connection = 'live';
+        runtimeMetaOverlayState.summary = runtimeMetaOverlayState.status === 'running'
+            ? runtimeMetaOverlayState.summary
+            : 'Runtime meta stream connected.';
+        runtimeMetaReconnectDelayMs = 1200;
+        renderRuntimeMetaOverlay();
+    });
+    source.addEventListener('runtime_meta', (evt) => {
+        const event = evt;
+        try {
+            const payload = JSON.parse(String(event.data || '{}'));
+            applyRuntimeMetaEvent(payload);
+        }
+        catch {
+            runtimeMetaOverlayState.connection = 'degraded';
+            runtimeMetaOverlayState.summary = 'Received invalid runtime meta event payload.';
+            renderRuntimeMetaOverlay();
+        }
+    });
+    source.addEventListener('heartbeat', () => {
+        if (runtimeMetaOverlayState.connection !== 'live') {
+            runtimeMetaOverlayState.connection = 'live';
+            renderRuntimeMetaOverlay();
+        }
+    });
+    source.addEventListener('error', () => {
+        runtimeMetaOverlayState.connection = 'degraded';
+        runtimeMetaOverlayState.summary = 'Runtime meta stream disconnected, reconnecting…';
+        renderRuntimeMetaOverlay();
+        disconnectRuntimeMetaStream();
+        scheduleRuntimeMetaReconnect();
+    });
+}
+function getEntitlementCacheState(snapshot) {
+    if (!snapshot?.token)
+        return 'cached';
+    const now = Date.now();
+    if (snapshot.expiresAt && now > snapshot.expiresAt)
+        return 'expired';
+    const age = now - (snapshot.cachedAt || 0);
+    if (!snapshot.cachedAt)
+        return 'cached';
+    if (age <= ENTITLEMENT_FRESH_MS)
+        return 'fresh';
+    if (age <= 24 * 60 * 60 * 1000)
+        return 'cached';
+    return 'stale';
+}
 function getEffectiveRecommendedProfileKey() {
     return benchmarkSnapshot?.recommended_profile || runtimeProfilesPayload.recommended_profile;
 }
@@ -206,7 +597,7 @@ function updateResultChrome() {
         tabReadableEl.classList.toggle('is-active', isReadable);
         tabReadableEl.setAttribute('aria-selected', String(isReadable));
     }
-    const hasStructured = Boolean(lastResult?.structured && Object.keys(lastResult.structured).length > 0);
+    const hasStructured = lastResult?.structured ? Object.keys(lastResult.structured).length > 0 : false;
     if (tabStructuredEl) {
         const isStructured = currentResultView === 'structured';
         tabStructuredEl.classList.toggle('is-active', isStructured);
@@ -280,9 +671,27 @@ function renderExports({ markdown, json, basename = 'selectpilot' }) {
 }
 async function request(type, payload = {}) {
     const res = await chrome.runtime.sendMessage({ type, ...payload });
-    if (res?.error)
-        throw new Error(res.error);
+    if (res?.error) {
+        const err = new Error(String(res.error));
+        err.code = res.errorCode;
+        err.details = res.errorDetails;
+        err.traceId = res.traceId;
+        err.status = res.status;
+        throw err;
+    }
     return res;
+}
+function formatPanelError(errorLike) {
+    const message = String(errorLike?.message || 'Request failed');
+    const code = errorLike?.code ? String(errorLike.code) : '';
+    const traceId = errorLike?.traceId ? String(errorLike.traceId) : '';
+    if (code && traceId)
+        return `${message} [${code}] · trace ${traceId}`;
+    if (code)
+        return `${message} [${code}]`;
+    if (traceId)
+        return `${message} · trace ${traceId}`;
+    return message;
 }
 async function fetchHealth() {
     const res = await fetch(endpoints.health, { cache: 'no-store' });
@@ -334,6 +743,57 @@ function renderMemoryState() {
         memoryToggleButtonEl.textContent = enabled ? 'Disable memory' : 'Enable memory';
     }
 }
+function renderEntitlementStatus() {
+    if (!entitlementStatusEl)
+        return;
+    const tier = entitlementSnapshot?.tier || 'essential';
+    const token = entitlementSnapshot?.token;
+    if (!token) {
+        entitlementStatusEl.textContent = 'No entitlement token attached yet.';
+        return;
+    }
+    const suffix = formatEntitlementUpdatedAt(entitlementSnapshot?.cachedAt);
+    const cacheState = getEntitlementCacheState(entitlementSnapshot);
+    entitlementStatusEl.textContent = `Token attached · tier ${tier} (${cacheState}) · ${suffix}`;
+}
+async function refreshEntitlementStatus() {
+    try {
+        entitlementSnapshot = await request('entitlement:get');
+    }
+    catch {
+        entitlementSnapshot = null;
+    }
+    renderEntitlementStatus();
+    syncControlAvailability();
+}
+async function doSyncOrderToken() {
+    const orderId = orderIdInputEl?.value.trim() || '';
+    if (!orderId)
+        throw new Error('Order ID is required');
+    setStatus('Checking order status...');
+    const orderRes = await fetch(endpoints.billingOrderStatus(orderId), { cache: 'no-store' });
+    if (!orderRes.ok) {
+        if (orderRes.status === 404)
+            throw new Error('No payment detected for this order ID');
+        throw new Error(`Order lookup failed (${orderRes.status})`);
+    }
+    const order = await orderRes.json();
+    if (!order.paid || !order.token) {
+        const confirmations = order.confirmations || 0;
+        const needed = order.confirmations_required || 0;
+        throw new Error(`No payment detected yet (${confirmations}/${needed} confirmations)`);
+    }
+    if (entitlementSnapshot?.token && entitlementSnapshot.token === order.token) {
+        await request('entitlement:refresh');
+        await refreshEntitlementStatus();
+        setStatus('Order already synced; entitlement refreshed');
+        return;
+    }
+    await request('license:attach_token', { token: order.token });
+    await request('entitlement:refresh');
+    await refreshEntitlementStatus();
+    setStatus('Token attached and entitlement refreshed');
+}
 async function refreshMemoryStatus() {
     try {
         memorySnapshot = await request('panel:memory_status');
@@ -367,6 +827,8 @@ function syncControlAvailability() {
         agentPromptEl.disabled = isBusy || !runtimeReady;
     if (extractPresetEl)
         extractPresetEl.disabled = isBusy || !runtimeReady || !selectionReady;
+    if (intentInputEl)
+        intentInputEl.disabled = isBusy || !runtimeReady || !selectionReady;
     if (refreshButtonEl)
         refreshButtonEl.disabled = isBusy;
     if (memoryToggleButtonEl)
@@ -383,6 +845,16 @@ function syncControlAvailability() {
         memoryExportButtonEl.disabled = isBusy || !flowExportSupported || !canExport;
     if (memoryDeleteButtonEl)
         memoryDeleteButtonEl.disabled = memoryActionsLocked || memorySnapshot.entries === 0;
+    if (syncOrderButtonEl) {
+        const hasOrderId = Boolean(orderIdInputEl?.value.trim());
+        syncOrderButtonEl.disabled = isBusy || !hasOrderId;
+    }
+    if (intentExecuteButtonEl) {
+        const hasIntent = Boolean(intentInputEl?.value.trim());
+        intentExecuteButtonEl.disabled = isBusy || !runtimeReady || !selectionReady || !hasIntent;
+    }
+    if (intentClearButtonEl)
+        intentClearButtonEl.disabled = isBusy;
 }
 function populatePresetOptions() {
     if (!extractPresetEl)
@@ -606,7 +1078,12 @@ async function refreshSelectionPreview() {
         url: preview.url || '',
         hasSelection: Boolean(preview.hasSelection),
     };
+    setSelectionContext({
+        selectionOrigin: selectionPreview.hasSelection ? 'selection' : 'page_context',
+        contentLength: selectionPreview.hasSelection ? selectionPreview.selection.length : selectionPreview.pageText.length,
+    });
     renderSelectionState();
+    refreshIntentSuggestions();
     syncControlAvailability();
 }
 async function refreshTier() {
@@ -641,6 +1118,10 @@ async function refreshRuntime() {
             hint: health?.ollama?.hint || null,
             error: null,
         };
+        setSelectionContext({
+            executionBoundary: runtimeSnapshot.privacyMode,
+            privacyMode: runtimeSnapshot.privacyMode,
+        });
         if (truthExecutionEl)
             truthExecutionEl.textContent = runtimeSnapshot.ok ? 'Local' : 'Degraded';
         if (truthModelEl)
@@ -648,7 +1129,7 @@ async function refreshRuntime() {
         if (truthBoundaryEl)
             truthBoundaryEl.textContent = runtimeSnapshot.privacyMode === 'local-only' ? 'Selected text stays local' : runtimeSnapshot.privacyMode;
         if (truthPrivacyEl) {
-            const localOnly = Boolean(privacyProofSnapshot?.ok) && !Boolean(privacyProofSnapshot?.outbound_observation?.external_calls_registered);
+            const localOnly = !!privacyProofSnapshot?.ok && !privacyProofSnapshot?.outbound_observation?.external_calls_registered;
             truthPrivacyEl.textContent = localOnly ? 'Verified local-only' : 'Boundary degraded';
             setLeakageFeedback(localOnly ? 'No leakage detected' : 'Potential leakage detected', localOnly
                 ? 'Core selected-text execution is verified local through Ollama on-device.'
@@ -708,6 +1189,15 @@ async function refreshRuntime() {
 async function doSummarize() {
     setStatus('Summarizing selected text...');
     const res = await request('panel:summarize');
+    if (res?.model_selection) {
+        applyRuntimeEvent({
+            taskFamily: 'summarize',
+            selectedModel: String(res.model_selection.model || res.model || 'unknown'),
+            selectionPath: res.model_selection.selection_path,
+            policyVersion: res.model_selection.policy_version ?? null,
+            executionGeography: 'local',
+        });
+    }
     renderOutput({
         title: 'Summary',
         markdown: res.markdown || res.summary || '',
@@ -722,6 +1212,15 @@ async function doExtract(presetKey) {
     const selectedPreset = getExtractionPreset(presetKey || extractPresetEl?.value);
     setStatus(`Extracting ${selectedPreset.label.toLowerCase()}...`);
     const res = await request('panel:extract', { preset: selectedPreset.key });
+    if (res?.model_selection) {
+        applyRuntimeEvent({
+            taskFamily: 'extract',
+            selectedModel: String(res.model_selection.model || res.model || 'unknown'),
+            selectionPath: res.model_selection.selection_path,
+            policyVersion: res.model_selection.policy_version ?? null,
+            executionGeography: 'local',
+        });
+    }
     renderOutput({
         title: res.label || selectedPreset.label,
         markdown: res.markdown || '',
@@ -756,6 +1255,15 @@ async function doAsk() {
     const prompt = agentPromptEl?.value.trim() || 'Answer the question using the selected text as context.';
     setStatus('Asking Ollama...');
     const res = await request('panel:agent', { prompt });
+    if (res?.model_selection) {
+        applyRuntimeEvent({
+            taskFamily: 'agent',
+            selectedModel: String(res.model_selection.model || res.model || 'unknown'),
+            selectionPath: res.model_selection.selection_path,
+            policyVersion: res.model_selection.policy_version ?? null,
+            executionGeography: 'local',
+        });
+    }
     const markdown = res.markdown || '';
     renderOutput({
         title: 'Answer',
@@ -771,6 +1279,19 @@ async function doAsk() {
 async function doBenchmark() {
     setStatus('Benchmarking local runtime...');
     benchmarkSnapshot = await runRuntimeBenchmark();
+    loadFrontierReport([]);
+    loadDeterminismReport({
+        selection_consistency_rate: 1,
+        output_shape_consistency_rate: 1,
+        frontier_decision_consistency_rate: 1,
+        score: 1,
+    });
+    loadBottleneckReport({
+        inference_dominance_ratio: 1,
+        validation_overhead_ratio: 0,
+        orchestration_overhead_ratio: 0,
+        dominant_cost_center: 'inference',
+    });
     await persistBenchmarkSnapshot(benchmarkSnapshot);
     if (truthProfileEl)
         truthProfileEl.textContent = getEffectiveRecommendedProfile().label;
@@ -852,16 +1373,18 @@ function bindActions() {
             await fn();
         }
         catch (e) {
-            setStatus(e?.message || 'Request failed');
+            const text = formatPanelError(e);
+            setStatus(text);
+            setStatusBar(text);
         }
         finally {
             isBusy = false;
             syncControlAvailability();
-            void Promise.all([refreshSelectionPreview(), refreshMemoryStatus()]);
+            void Promise.all([refreshSelectionPreview(), refreshMemoryStatus(), refreshEntitlementStatus()]);
         }
     };
     refreshButtonEl?.addEventListener('click', () => {
-        void Promise.all([refreshRuntime(), refreshSelectionPreview(), refreshMemoryStatus()]);
+        void Promise.all([refreshRuntime(), refreshSelectionPreview(), refreshMemoryStatus(), refreshEntitlementStatus()]);
     });
     $('#btn-extract')?.addEventListener('click', wrap(() => doExtract()));
     $('#btn-summarize')?.addEventListener('click', wrap(() => doSummarize()));
@@ -872,6 +1395,20 @@ function bindActions() {
     memoryInspectButtonEl?.addEventListener('click', wrap(() => doMemoryInspect()));
     memoryExportButtonEl?.addEventListener('click', wrap(() => doMemoryExport()));
     memoryDeleteButtonEl?.addEventListener('click', wrap(() => doMemoryDelete()));
+    intentExecuteButtonEl?.addEventListener('click', wrap(() => doExecuteIntent()));
+    intentClearButtonEl?.addEventListener('click', () => clearIntentInput());
+    intentInputEl?.addEventListener('input', () => {
+        selectedIntentSuggestion = null;
+        syncControlAvailability();
+    });
+    intentInputEl?.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter')
+            return;
+        event.preventDefault();
+        void wrap(() => doExecuteIntent())();
+    });
+    syncOrderButtonEl?.addEventListener('click', wrap(() => doSyncOrderToken()));
+    orderIdInputEl?.addEventListener('input', () => syncControlAvailability());
     $('#btn-transcribe')?.addEventListener('click', () => wrap(async () => {
         const res = await request('panel:transcribe');
         renderOutput({
@@ -918,20 +1455,50 @@ function bindActions() {
         renderResultBody();
     });
     window.addEventListener('focus', () => {
-        void Promise.all([refreshRuntime(), refreshSelectionPreview(), refreshMemoryStatus()]);
+        void Promise.all([refreshRuntime(), refreshSelectionPreview(), refreshMemoryStatus(), refreshEntitlementStatus()]);
     });
 }
 populatePresetOptions();
 bindActions();
 async function initialize() {
+    const topologyValidation = validateTopologyMap();
+    const requiredTopologyComponents = [
+        'panel_header',
+        'runtime_meta_overlay',
+        'truth_strip',
+        'runtime_state',
+        'selection_shell',
+        'intent_shell',
+        'workspace',
+        'result_shell',
+        'memory_shell',
+        'status_footer',
+    ];
+    const topologyBindingErrors = [];
+    for (const componentId of requiredTopologyComponents) {
+        if (!getTopologyForComponent(componentId)) {
+            topologyBindingErrors.push(`missing_topology:${componentId}`);
+        }
+    }
+    if (!topologyValidation.ok || topologyBindingErrors.length) {
+        setStatus(`Topology contract failed: ${[...topologyValidation.errors, ...topologyBindingErrors].join(', ')}`);
+    }
+    setVisiblePanels(['selection_surface', 'runtime_surface', 'report_surface']);
+    renderRuntimeMetaOverlay();
+    void connectRuntimeMetaStream();
+    refreshIntentSuggestions();
     await loadBenchmarkSnapshot();
     renderMemoryState();
     refreshTier();
     renderRuntimeState();
     renderSelectionState();
+    renderEntitlementStatus();
     updateResultChrome();
     renderResultBody();
     renderExports({});
-    await Promise.all([refreshRuntime(), refreshSelectionPreview(), refreshMemoryStatus()]);
+    await Promise.all([refreshRuntime(), refreshSelectionPreview(), refreshMemoryStatus(), refreshEntitlementStatus()]);
 }
 void initialize();
+window.addEventListener('beforeunload', () => {
+    disconnectRuntimeMetaStream();
+});

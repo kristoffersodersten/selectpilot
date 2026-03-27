@@ -1,0 +1,312 @@
+{
+  "policy_version": "runtime-policy-d7833f631d57",
+  "generated_at_unix_ms": 1700704147799,
+  "source_reports": [
+    "reports/aggregated_metrics.json",
+    "reports/frontier_decisions.json",
+    "reports/determinism_report.json",
+    "reports/architecture_decision_report.json"
+  ],
+  "global_guards": {
+    "determinism_min": 0.98,
+    "strict_json_schema_validity_min": 0.9,
+    "max_failure_rate": 0.1,
+    "max_retry_rate": 0.0593
+  },
+  "defaults": [
+    {
+      "task_family": "extract",
+      "hardware_profile": "low",
+      "output_mode": "strict_json",
+      "preferred_model_id": "qwen2.5:0.5b",
+      "fallback_model_ids": [],
+      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "evidence_refs": [
+        "reports/frontier_decisions.json",
+        "reports/determinism_report.json",
+        "reports/aggregated_metrics.json"
+      ],
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "extract",
+      "hardware_profile": "medium",
+      "output_mode": "strict_json",
+      "preferred_model_id": "qwen2.5:0.5b",
+      "fallback_model_ids": [
+        "qwen2.5:1.5b"
+      ],
+      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "evidence_refs": [
+        "reports/frontier_decisions.json",
+        "reports/determinism_report.json",
+        "reports/aggregated_metrics.json"
+      ],
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "extract",
+      "hardware_profile": "medium_gpu",
+      "output_mode": "strict_json",
+      "preferred_model_id": "qwen2.5:0.5b",
+      "fallback_model_ids": [
+        "qwen2.5:1.5b",
+        "qwen2.5:7b"
+      ],
+      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "evidence_refs": [
+        "reports/frontier_decisions.json",
+        "reports/determinism_report.json",
+        "reports/aggregated_metrics.json"
+      ],
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "extract",
+      "hardware_profile": "high",
+      "output_mode": "strict_json",
+      "preferred_model_id": "qwen2.5:0.5b",
+      "fallback_model_ids": [
+        "qwen2.5:1.5b",
+        "qwen2.5:7b",
+        "qwen2.5:14b"
+      ],
+      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "evidence_refs": [
+        "reports/frontier_decisions.json",
+        "reports/determinism_report.json",
+        "reports/aggregated_metrics.json"
+      ],
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "summarize",
+      "hardware_profile": "low",
+      "output_mode": "semi_structured",
+      "preferred_model_id": "qwen2.5:0.5b",
+      "fallback_model_ids": [],
+      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "evidence_refs": [
+        "reports/frontier_decisions.json",
+        "reports/determinism_report.json",
+        "reports/aggregated_metrics.json"
+      ],
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "summarize",
+      "hardware_profile": "medium",
+      "output_mode": "semi_structured",
+      "preferred_model_id": "qwen2.5:0.5b",
+      "fallback_model_ids": [
+        "qwen2.5:1.5b"
+      ],
+      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "evidence_refs": [
+        "reports/frontier_decisions.json",
+        "reports/determinism_report.json",
+        "reports/aggregated_metrics.json"
+      ],
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "summarize",
+      "hardware_profile": "medium_gpu",
+      "output_mode": "semi_structured",
+      "preferred_model_id": "qwen2.5:0.5b",
+      "fallback_model_ids": [
+        "qwen2.5:1.5b",
+        "qwen2.5:7b"
+      ],
+      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "evidence_refs": [
+        "reports/frontier_decisions.json",
+        "reports/determinism_report.json",
+        "reports/aggregated_metrics.json"
+      ],
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "summarize",
+      "hardware_profile": "high",
+      "output_mode": "semi_structured",
+      "preferred_model_id": "qwen2.5:0.5b",
+      "fallback_model_ids": [
+        "qwen2.5:1.5b",
+        "qwen2.5:7b",
+        "qwen2.5:14b"
+      ],
+      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "evidence_refs": [
+        "reports/frontier_decisions.json",
+        "reports/determinism_report.json",
+        "reports/aggregated_metrics.json"
+      ],
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "agent",
+      "hardware_profile": "low",
+      "output_mode": "freeform",
+      "preferred_model_id": "qwen2.5:0.5b",
+      "fallback_model_ids": [],
+      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "evidence_refs": [
+        "reports/frontier_decisions.json",
+        "reports/determinism_report.json",
+        "reports/aggregated_metrics.json"
+      ],
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "agent",
+      "hardware_profile": "medium",
+      "output_mode": "freeform",
+      "preferred_model_id": "qwen2.5:0.5b",
+      "fallback_model_ids": [
+        "qwen2.5:1.5b"
+      ],
+      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "evidence_refs": [
+        "reports/frontier_decisions.json",
+        "reports/determinism_report.json",
+        "reports/aggregated_metrics.json"
+      ],
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "agent",
+      "hardware_profile": "medium_gpu",
+      "output_mode": "freeform",
+      "preferred_model_id": "qwen2.5:0.5b",
+      "fallback_model_ids": [
+        "qwen2.5:1.5b",
+        "qwen2.5:7b"
+      ],
+      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "evidence_refs": [
+        "reports/frontier_decisions.json",
+        "reports/determinism_report.json",
+        "reports/aggregated_metrics.json"
+      ],
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "agent",
+      "hardware_profile": "high",
+      "output_mode": "freeform",
+      "preferred_model_id": "qwen2.5:1.5b",
+      "fallback_model_ids": [
+        "qwen2:0.5b",
+        "qwen2.5:7b",
+        "qwen2.5:14b"
+      ],
+      "selection_reason": "rollback:manual_runtime_rollback",
+      "evidence_refs": [
+        "reports/frontier_decisions.json",
+        "reports/determinism_report.json",
+        "reports/aggregated_metrics.json"
+      ],
+      "effective_from_unix_ms": 1774549605424
+    }
+  ],
+  "quarantined_models": [],
+  "promotion_history": [
+    {
+      "task_family": "extract",
+      "hardware_profile": "low",
+      "previous_model_id": "none",
+      "new_model_id": "qwen2:0.5b",
+      "decision_reason": "higher_correctness_same_or_lower_cost",
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "extract",
+      "hardware_profile": "medium",
+      "previous_model_id": "none",
+      "new_model_id": "qwen2:0.5b",
+      "decision_reason": "higher_correctness_same_or_lower_cost",
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "extract",
+      "hardware_profile": "medium_gpu",
+      "previous_model_id": "none",
+      "new_model_id": "qwen2:0.5b",
+      "decision_reason": "higher_correctness_same_or_lower_cost",
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "extract",
+      "hardware_profile": "high",
+      "previous_model_id": "none",
+      "new_model_id": "qwen2:0.5b",
+      "decision_reason": "higher_correctness_same_or_lower_cost",
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "summarize",
+      "hardware_profile": "low",
+      "previous_model_id": "none",
+      "new_model_id": "qwen2:0.5b",
+      "decision_reason": "higher_correctness_same_or_lower_cost",
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "summarize",
+      "hardware_profile": "medium",
+      "previous_model_id": "none",
+      "new_model_id": "qwen2:0.5b",
+      "decision_reason": "higher_correctness_same_or_lower_cost",
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "summarize",
+      "hardware_profile": "medium_gpu",
+      "previous_model_id": "none",
+      "new_model_id": "qwen2:0.5b",
+      "decision_reason": "higher_correctness_same_or_lower_cost",
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "summarize",
+      "hardware_profile": "high",
+      "previous_model_id": "none",
+      "new_model_id": "qwen2:0.5b",
+      "decision_reason": "higher_correctness_same_or_lower_cost",
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "agent",
+      "hardware_profile": "low",
+      "previous_model_id": "none",
+      "new_model_id": "qwen2:0.5b",
+      "decision_reason": "higher_correctness_same_or_lower_cost",
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "agent",
+      "hardware_profile": "medium",
+      "previous_model_id": "none",
+      "new_model_id": "qwen2:0.5b",
+      "decision_reason": "higher_correctness_same_or_lower_cost",
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "agent",
+      "hardware_profile": "medium_gpu",
+      "previous_model_id": "none",
+      "new_model_id": "qwen2:0.5b",
+      "decision_reason": "higher_correctness_same_or_lower_cost",
+      "effective_from_unix_ms": 1700704147799
+    },
+    {
+      "task_family": "agent",
+      "hardware_profile": "high",
+      "previous_model_id": "none",
+      "new_model_id": "qwen2:0.5b",
+      "decision_reason": "higher_correctness_same_or_lower_cost",
+      "effective_from_unix_ms": 1700704147799
+    }
+  ]
+}

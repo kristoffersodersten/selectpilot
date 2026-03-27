@@ -20,4 +20,15 @@ test('sidepanel harness can run extract action and render result', async ({ page
   await expect(page.locator('#workflow')).toContainText('"action": "extract"');
   await page.click('#btn-memory-delete');
   await expect(page.locator('#memory-status')).toContainText('0 retained events');
+
+  await page.fill('#order-id', 'SP-PENDING');
+  await page.click('#btn-sync-order');
+  await expect(page.locator('#status')).toContainText('No payment detected yet');
+
+  await page.fill('#order-id', 'SP-PAID');
+  await page.click('#btn-sync-order');
+  await expect(page.locator('#entitlement-status')).toContainText('Token attached · tier pro');
+
+  await page.click('#btn-sync-order');
+  await expect(page.locator('#status')).toContainText('Order already synced; entitlement refreshed');
 });

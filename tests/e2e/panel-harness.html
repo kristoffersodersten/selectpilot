@@ -29,16 +29,16 @@
     </section>
 
     <section class="runtime-state" id="runtime-state"></section>
-    <section class="memory-shell" id="memory-shell" aria-label="Pro memory controls">
+    <section class="memory-shell" id="memory-shell" aria-label="Deep memory controls">
       <div class="memory-header">
         <div>
-          <div class="section-kicker">Pro memory</div>
+          <div class="section-kicker">Deep memory</div>
           <h2>Retention control</h2>
         </div>
         <button class="ghost-button" id="btn-memory-toggle" type="button">Enable memory</button>
       </div>
       <p class="memory-copy" id="memory-status">Memory OFF · Stateless core mode is active.</p>
-      <p class="memory-copy" id="memory-meta">Upgrade to Pro to enable explicit local retention controls.</p>
+      <p class="memory-copy" id="memory-meta">Upgrade to Deep to enable explicit local retention controls.</p>
       <section class="memory-export-config">
         <label for="memory-target">Knowledge package target</label>
         <select id="memory-target">
@@ -53,6 +53,20 @@
         <button id="btn-memory-export" type="button">Export ledger</button>
         <button id="btn-memory-delete" type="button">Delete ledger</button>
       </div>
+    </section>
+    <section class="memory-shell" aria-label="Billing entitlement sync">
+      <div class="memory-header">
+        <div>
+          <div class="section-kicker">Billing</div>
+          <h2>Attach paid token</h2>
+        </div>
+        <button class="ghost-button" id="btn-sync-order" type="button">Sync order</button>
+      </div>
+      <section class="memory-export-config">
+        <label for="order-id">Order ID</label>
+        <input id="order-id" type="text" placeholder="SP-xxxx" />
+      </section>
+      <p class="memory-copy" id="entitlement-status">No entitlement token attached yet.</p>
     </section>
     <section class="selection-shell" id="selection-shell">
       <div class="section-kicker">Selection</div>
@@ -120,6 +134,11 @@
     const selection = 'Ship the update before Friday and inform the team.';
     let memoryEnabled = false;
     const memoryLedger = [];
+    const mockOrders = {
+      'SP-PAID': { paid: true, token: 'sp_paid_token_demo', confirmations: 12, confirmations_required: 10 },
+      'SP-PENDING': { paid: false, confirmations: 2, confirmations_required: 10 },
+    };
+    let entitlement = null;
 
     function pushMemory(action) {
       if (!memoryEnabled) return;
@@ -135,10 +154,23 @@
     globalThis.chrome = {
       runtime: {
         sendMessage: async (msg) => {
-          if (msg.type === 'panel:get_tier') return { tier: 'pro' };
+          if (msg.type === 'panel:get_tier') return { tier: entitlement?.tier || 'essential' };
+          if (msg.type === 'entitlement:get') return entitlement;
+          if (msg.type === 'entitlement:refresh') return entitlement;
+          if (msg.type === 'license:attach_token') {
+            if (!msg.token) return { error: 'Missing token' };
+            entitlement = {
+              token: msg.token,
+              tier: msg.token.includes('pro') || msg.token.includes('paid') ? 'pro' : 'plus',
+              features: ['connect', 'memory', 'ocr'],
+              cachedAt: Date.now(),
+              expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
+            };
+            return entitlement;
+          }
           if (msg.type === 'panel:memory_status') {
             return {
-              tier: 'pro',
+              tier: entitlement?.tier || 'pro',
               supported: true,
               enabled: memoryEnabled,
               entries: memoryLedger.length,
@@ -220,6 +252,14 @@
     globalThis.fetch = async (url, init = {}) => {
       const href = String(url);
       globalThis.__fetchLog.push({ href, method: init?.method || 'GET' });
+      if (href.includes('127.0.0.1:8090/order/')) {
+        const orderId = href.split('/order/')[1] || '';
+        const order = mockOrders[decodeURIComponent(orderId)];
+        if (!order) {
+          return { ok: false, status: 404, json: async () => ({ error: 'not_found' }) };
+        }
+        return { ok: true, status: 200, json: async () => ({ order_id: orderId, ...order }) };
+      }
       const ok = (payload) => ({ ok: true, status: 200, json: async () => payload });
       if (href.includes('/profiles')) {
         return ok({

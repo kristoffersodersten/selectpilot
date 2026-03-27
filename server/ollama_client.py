@@ -103,13 +103,92 @@ class OllamaError(RuntimeError):
 class OllamaClient:
     def __init__(self, config: OllamaConfig | None = None):
         if config is None:
+            default_generation_model = "llama3.2"
+            default_embed_model = "nomic-embed-text-v2-moe:latest"
+            runtime_profile = os.environ.get("CHROMEAI_RUNTIME_PROFILE", "auto")
+
+            try:
+                from runtime_profiles import get_runtime_profile, recommend_runtime_profile
+
+                recommendation = recommend_runtime_profile()
+                resolved_profile = recommendation["recommended_profile"] if runtime_profile == "auto" else runtime_profile
+                profile = get_runtime_profile(resolved_profile)
+                default_generation_model = profile.generation_model
+                default_embed_model = profile.embedding_model
+            except Exception:
+                pass
+
             config = OllamaConfig(
                 base_url=_normalize_base_url(os.environ.get("CHROMEAI_OLLAMA_BASE_URL", "http://127.0.0.1:11434")),
-                model=os.environ.get("CHROMEAI_OLLAMA_MODEL", "llama3.2"),
-                embed_model=os.environ.get("CHROMEAI_OLLAMA_EMBED_MODEL", "nomic-embed-text-v2-moe:latest"),
+                model=os.environ.get("CHROMEAI_OLLAMA_MODEL", default_generation_model),
+                embed_model=os.environ.get("CHROMEAI_OLLAMA_EMBED_MODEL", default_embed_model),
                 timeout_seconds=float(os.environ.get("CHROMEAI_OLLAMA_TIMEOUT_SECONDS", "30")),
         )
         self.config = config
+
+    def _model_available_locally(self, requested: str, local_models: list[str]) -> bool:
+        requested = str(requested or "").strip()
+        if not requested:
+            return False
+
+        # If caller requested an explicit tag (e.g. qwen2.5:3b), require
+        # that exact local tag to be present.
+        if ":" in requested:
+            return requested in local_models
+
+        # If caller requested an untagged model name (e.g. qwen2.5), allow
+        # any local tag variant of that family.
+        requested_base = requested.split(":", 1)[0]
+        return any(
+            candidate == requested_base or candidate.startswith(f"{requested_base}:")
+            for candidate in local_models
+        )
+
+    def pull_model(self, model_name: str) -> dict[str, Any]:
+        return self._request_json("/api/pull", {
+            "name": model_name,
+            "stream": False,
+        })
+
+    def ensure_models(self, model_names: list[str]) -> dict[str, Any]:
+        unique_models: list[str] = []
+        for model_name in model_names:
+            if model_name and model_name not in unique_models:
+                unique_models.append(model_name)
+
+        try:
+            local_models = self._model_names(local_only=True)
+        except OllamaError as e:
+            return {
+                "ok": False,
+                "error": str(e),
+                "already_present": [],
+                "pulled": [],
+                "failed": {},
+            }
+
+        already_present: list[str] = []
+        pulled: list[str] = []
+        failed: dict[str, str] = {}
+
+        for model_name in unique_models:
+            if self._model_available_locally(model_name, local_models):
+                already_present.append(model_name)
+                continue
+
+            try:
+                self.pull_model(model_name)
+                pulled.append(model_name)
+                local_models.append(model_name)
+            except OllamaError as e:
+                failed[model_name] = str(e)
+
+        return {
+            "ok": not bool(failed),
+            "already_present": already_present,
+            "pulled": pulled,
+            "failed": failed,
+        }
 
     def _tag_entries(self) -> list[dict[str, Any]]:
         tags = self.tags()

@@ -1,0 +1,16 @@
+{
+  "version": "0.2",
+  "language": "en,sv",
+  "words": [
+    "selectpilot",
+    "produktstandard",
+    "konstitutionell",
+    "rapportartefakter",
+    "kodändringar",
+    "slutrapport",
+    "stresstest"
+  ],
+  "ignorePaths": [
+    "**/Library/Application Support/Code/User/globalStorage/**"
+  ]
+}

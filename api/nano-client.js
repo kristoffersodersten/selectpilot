@@ -18,3 +18,15 @@ export async function embed(payload) {
 export async function agent(payload) {
     return apiRequest(endpoints.agent, { body: payload });
 }
+export async function compileIntent(payload) {
+    return apiRequest(endpoints.intentCompile, { body: payload });
+}
+export async function getRuntimeMetaHealth() {
+    return apiRequest(endpoints.runtimeMetaHealth, { method: 'GET' });
+}
+export function getRuntimeMetaStreamUrl(afterSeq) {
+    if (typeof afterSeq === 'number' && Number.isFinite(afterSeq) && afterSeq > 0) {
+        return `${endpoints.runtimeMetaStream}?after=${Math.floor(afterSeq)}`;
+    }
+    return endpoints.runtimeMetaStream;
+}

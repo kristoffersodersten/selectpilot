@@ -8,6 +8,11 @@ export type LicenseRecord = {
   tier: 'essential' | 'plus' | 'pro';
   issuedAt: number;
   expiresAt?: number;
+  features?: string[];
+  cachedAt?: number;
+  signature?: string;
+  alg?: string;
+  kid?: string;
 };
 
 export async function saveLicense(record: LicenseRecord): Promise<void> {

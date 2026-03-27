@@ -3,5 +3,7 @@ __pycache__/
 node_modules/
 package-lock.json
 npm-debug.log*
+test-results/
+playwright-report/
 /usr/local/var/log/chromeai/
 /usr/local/var/run/chromeai/

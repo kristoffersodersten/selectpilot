@@ -106,6 +106,120 @@ html, body {
   gap: 8px;
 }
 
+.runtime-meta-overlay {
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.62);
+  color: #f8fafc;
+  backdrop-filter: blur(14px) saturate(140%);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.runtime-meta-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.runtime-meta-header .section-kicker,
+.runtime-meta-grid .section-kicker {
+  color: rgba(248, 250, 252, 0.72);
+}
+
+.runtime-meta-header strong,
+.runtime-meta-grid strong {
+  color: #f8fafc;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.runtime-meta-badge {
+  border-radius: 999px;
+  border: 1px solid rgba(248, 250, 252, 0.24);
+  padding: 4px 10px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(248, 250, 252, 0.92);
+}
+
+.runtime-meta-badge.is-live {
+  border-color: rgba(16, 185, 129, 0.5);
+  color: #a7f3d0;
+}
+
+.runtime-meta-badge.is-degraded,
+.runtime-meta-badge.is-offline {
+  border-color: rgba(248, 113, 113, 0.5);
+  color: #fecaca;
+}
+
+.runtime-meta-copy {
+  margin: 0;
+  color: rgba(248, 250, 252, 0.9);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.runtime-meta-progress-shell {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(248, 250, 252, 0.16);
+  overflow: hidden;
+}
+
+.runtime-meta-progress-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.9), rgba(59, 130, 246, 0.95));
+  transition: width 160ms ease;
+}
+
+.runtime-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.runtime-meta-grid > div {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(248, 250, 252, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.runtime-meta-events {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.runtime-meta-events li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  color: rgba(248, 250, 252, 0.92);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(248, 250, 252, 0.08);
+}
+
+.runtime-meta-events li span:last-child {
+  color: rgba(248, 250, 252, 0.62);
+  white-space: nowrap;
+}
+
 .truth-chip,
 .runtime-state,
 .selection-card,
@@ -372,6 +486,74 @@ html, body {
   gap: 8px;
 }
 
+.intent-shell {
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.intent-shell label {
+  font-size: 12px;
+  color: var(--muted-strong);
+}
+
+.intent-shell input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  font: inherit;
+  color: var(--text);
+}
+
+.intent-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.intent-suggestions button {
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.intent-suggestions button.is-selected {
+  border-color: var(--panel-border-strong);
+  background: white;
+}
+
+.intent-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.intent-actions button {
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+  padding: 8px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.intent-actions #btn-intent-execute {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
 .extract-config {
   display: grid;
   gap: 8px;
@@ -576,7 +758,8 @@ pre {
 @media (max-width: 960px) {
   .truth-strip,
   .runtime-grid,
-  .profile-grid {
+  .profile-grid,
+  .runtime-meta-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -585,7 +768,9 @@ pre {
   .truth-strip,
   .runtime-grid,
   .profile-grid,
+  .runtime-meta-grid,
   .memory-actions,
+  .intent-actions,
   .secondary-grid,
   .advanced-grid {
     grid-template-columns: 1fr;

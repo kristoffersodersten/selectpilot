@@ -1,0 +1,45 @@
+{
+  "version": "runtime-registry-source.v1",
+  "models": [
+    {
+      "model_id": "qwen2.5:0.5b",
+      "ollama_name": "qwen2.5:0.5b",
+      "supported_operation_families": ["extract", "summarize", "agent"],
+      "min_hardware_profile": "low",
+      "installation_state": "installed",
+      "reliability_score": 0.81,
+      "quarantined": false,
+      "baseline_approved": true
+    },
+    {
+      "model_id": "qwen2.5:1.5b",
+      "ollama_name": "qwen2.5:1.5b",
+      "supported_operation_families": ["extract", "summarize", "agent"],
+      "min_hardware_profile": "medium",
+      "installation_state": "installed",
+      "reliability_score": 0.88,
+      "quarantined": false,
+      "baseline_approved": true
+    },
+    {
+      "model_id": "qwen2.5:7b",
+      "ollama_name": "qwen2.5:7b",
+      "supported_operation_families": ["extract", "summarize", "agent"],
+      "min_hardware_profile": "medium_gpu",
+      "installation_state": "available",
+      "reliability_score": 0.91,
+      "quarantined": false,
+      "baseline_approved": true
+    },
+    {
+      "model_id": "qwen2.5:14b",
+      "ollama_name": "qwen2.5:14b",
+      "supported_operation_families": ["extract", "summarize", "agent"],
+      "min_hardware_profile": "high",
+      "installation_state": "available",
+      "reliability_score": 0.93,
+      "quarantined": false,
+      "baseline_approved": true
+    }
+  ]
+}
