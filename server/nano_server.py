@@ -15,8 +15,8 @@ from pathlib import Path
 from datetime import datetime, timezone
 from urllib.parse import urlparse, parse_qs
 
-from ollama_client import OllamaClient, OllamaError
-from runtime_profiles import build_bootstrap_commands, list_runtime_profiles, recommend_runtime_profile
+from server.ollama_client import OllamaClient, OllamaError
+from server.runtime_profiles import build_bootstrap_commands, list_runtime_profiles, recommend_runtime_profile
 
 DEFAULT_PORT = 8083
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
@@ -1807,3 +1807,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
