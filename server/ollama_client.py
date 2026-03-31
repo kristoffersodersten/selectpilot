@@ -108,7 +108,7 @@ class OllamaClient:
             runtime_profile = os.environ.get("CHROMEAI_RUNTIME_PROFILE", "auto")
 
             try:
-                from runtime_profiles import get_runtime_profile, recommend_runtime_profile
+                from server.runtime_profiles import get_runtime_profile, recommend_runtime_profile
 
                 recommendation = recommend_runtime_profile()
                 resolved_profile = recommendation["recommended_profile"] if runtime_profile == "auto" else runtime_profile
