@@ -8,7 +8,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
-from extraction_presets import get_extraction_preset, render_extraction_markdown
+from server.extraction_presets import get_extraction_preset, render_extraction_markdown
 
 
 def _json_loads_maybe(value: Any) -> Any:
@@ -108,7 +108,7 @@ class OllamaClient:
             runtime_profile = os.environ.get("CHROMEAI_RUNTIME_PROFILE", "auto")
 
             try:
-                from runtime_profiles import get_runtime_profile, recommend_runtime_profile
+                from server.runtime_profiles import get_runtime_profile, recommend_runtime_profile
 
                 recommendation = recommend_runtime_profile()
                 resolved_profile = recommendation["recommended_profile"] if runtime_profile == "auto" else runtime_profile
