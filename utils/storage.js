@@ -1,10 +1,23 @@
 import { error, log } from './logger.js';
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
-const KEY_MATERIAL = 'chromeai_local_key_v1';
-async function getCryptoKey() {
-    const keyData = encoder.encode(KEY_MATERIAL);
+const KEY_STORAGE = 'selectpilot_encryption_key_v1';
+let cryptoKeyPromise = null;
+async function loadOrCreateCryptoKey() {
+    const stored = (await chrome.storage.local.get(KEY_STORAGE))[KEY_STORAGE];
+    let keyData;
+    if (Array.isArray(stored) && stored.length === 32 && stored.every((value) => Number.isInteger(value) && value >= 0 && value <= 255)) {
+        keyData = new Uint8Array(stored);
+    }
+    else {
+        keyData = crypto.getRandomValues(new Uint8Array(32));
+        await chrome.storage.local.set({ [KEY_STORAGE]: Array.from(keyData) });
+    }
     return crypto.subtle.importKey('raw', keyData, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+}
+function getCryptoKey() {
+    cryptoKeyPromise ||= loadOrCreateCryptoKey();
+    return cryptoKeyPromise;
 }
 export async function setEncrypted(key, value) {
     try {

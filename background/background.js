@@ -4,6 +4,7 @@ import { log, error } from '../utils/logger.js';
 import { requireFeature, getLicenseTier, attachLicenseToken, refreshLicense } from './tier-service.js';
 import { getEntitlementSnapshot } from './entitlement-service.js';
 import { ApiRequestError } from '../api/request.js';
+import { FIRST_RUN_EXAMPLE } from '../shared/first-run-example.js';
 const MEMORY_ENABLED_KEY = 'selectpilot_memory_enabled_v1';
 const MEMORY_LEDGER_KEY = 'selectpilot_memory_ledger_v1';
 async function canUseProjectMemory() {
@@ -190,6 +191,23 @@ async function handleExtract(preset) {
     });
     return result;
 }
+async function handleFirstRunExtract() {
+    const entitlement = await getEntitlementSnapshot();
+    const { allowed } = await requireFeature('structured_extraction');
+    if (!entitlement?.token || !allowed) {
+        throw new Error('Paid license required for deterministic extraction');
+    }
+    return extract({
+        text: FIRST_RUN_EXAMPLE.text,
+        preset: FIRST_RUN_EXAMPLE.preset,
+        url: FIRST_RUN_EXAMPLE.url,
+        title: FIRST_RUN_EXAMPLE.title,
+        metadata: {
+            source: 'selectpilot_first_run',
+            sample_version: FIRST_RUN_EXAMPLE.version,
+        },
+    });
+}
 async function handleTranscribe() {
     const { allowed } = await requireFeature('audio_transcription');
     if (!allowed)
@@ -266,6 +284,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
             }
             if (msg.type === 'panel:extract') {
                 sendResponse(await handleExtract(msg.preset));
+                return;
+            }
+            if (msg.type === 'panel:extract_demo') {
+                sendResponse(await handleFirstRunExtract());
                 return;
             }
             if (msg.type === 'panel:vision') {
