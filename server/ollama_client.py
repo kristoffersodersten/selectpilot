@@ -8,7 +8,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
-from extraction_presets import get_extraction_preset, render_extraction_markdown
+from server.extraction_presets import get_extraction_preset, render_extraction_markdown
 
 
 def _json_loads_maybe(value: Any) -> Any:

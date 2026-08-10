@@ -64,6 +64,7 @@
     "latency_stability": 0.8,
     "memory_integrity": 0.9,
     "contract_obedience": 0.95,
+    
     "ambiguity_handling": 0.9,
     "resource_efficiency": 0.75,
     "privacy_boundary_integrity": 1,

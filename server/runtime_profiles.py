@@ -132,3 +132,4 @@ def build_bootstrap_commands(profile_key: str, project_root: str | Path) -> dict
         "generation_model": profile.generation_model,
         "embedding_model": profile.embedding_model,
     }
+
