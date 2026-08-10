@@ -131,7 +131,8 @@
   </div>
 
   <script>
-    const selection = 'Ship the update before Friday and inform the team.';
+    const firstRunMode = new URLSearchParams(location.search).has('firstRun');
+    const selection = firstRunMode ? '' : 'Ship the update before Friday and inform the team.';
     let memoryEnabled = false;
     const memoryLedger = [];
     const mockOrders = {
@@ -151,9 +152,11 @@
       });
     }
 
+    globalThis.__messageLog = [];
     globalThis.chrome = {
       runtime: {
         sendMessage: async (msg) => {
+          globalThis.__messageLog.push(msg);
           if (msg.type === 'panel:get_tier') return { tier: entitlement?.tier || 'essential' };
           if (msg.type === 'entitlement:get') return entitlement;
           if (msg.type === 'entitlement:refresh') return entitlement;
@@ -212,7 +215,21 @@
               pageText: selection,
               title: 'Harness page',
               url: 'https://example.com',
-              hasSelection: true,
+              hasSelection: Boolean(selection),
+            };
+          }
+          if (msg.type === 'panel:extract_demo') {
+            return {
+              label: 'Action Brief',
+              description: 'Turn selected text into a concise action-oriented brief.',
+              markdown: '## Action Brief\n\n- Maya: privacy check by Thursday\n- Jonas: verify payment and store assets',
+              json: {
+                action_items: [
+                  'Maya completes the privacy check by Thursday',
+                  'Jonas verifies payment and store assets',
+                ],
+                risks: ['Publishing waits for both checks'],
+              },
             };
           }
           if (msg.type === 'panel:extract') {

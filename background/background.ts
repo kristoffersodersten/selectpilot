@@ -5,6 +5,7 @@ import { requireFeature, getLicenseTier, attachLicenseToken, refreshLicense } fr
 import { getEntitlementSnapshot } from './entitlement-service.js';
 import { ApiRequestError } from '../api/request.js';
 import type { AgentContext } from '../agent/agent-types.js';
+import { FIRST_RUN_EXAMPLE } from '../shared/first-run-example.js';
 
 type MemoryEntry = {
   action: 'extract' | 'summarize' | 'agent';
@@ -218,6 +219,24 @@ async function handleExtract(preset?: string): Promise<any> {
   return result;
 }
 
+async function handleFirstRunExtract(): Promise<any> {
+  const entitlement = await getEntitlementSnapshot();
+  const { allowed } = await requireFeature('structured_extraction');
+  if (!entitlement?.token || !allowed) {
+    throw new Error('Paid license required for deterministic extraction');
+  }
+  return extract({
+    text: FIRST_RUN_EXAMPLE.text,
+    preset: FIRST_RUN_EXAMPLE.preset,
+    url: FIRST_RUN_EXAMPLE.url,
+    title: FIRST_RUN_EXAMPLE.title,
+    metadata: {
+      source: 'selectpilot_first_run',
+      sample_version: FIRST_RUN_EXAMPLE.version,
+    },
+  });
+}
+
 async function handleTranscribe(): Promise<any> {
   const { allowed } = await requireFeature('audio_transcription');
   if (!allowed) throw new Error('Feature blocked: upgrade tier for audio transcription');
@@ -294,6 +313,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       }
       if (msg.type === 'panel:extract') {
         sendResponse(await handleExtract(msg.preset));
+        return;
+      }
+      if (msg.type === 'panel:extract_demo') {
+        sendResponse(await handleFirstRunExtract());
         return;
       }
       if (msg.type === 'panel:vision') {
