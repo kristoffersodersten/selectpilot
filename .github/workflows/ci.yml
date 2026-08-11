@@ -58,5 +58,8 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Smoke direct server entrypoint
+        run: python3 server/nano_server.py --help
+
       - name: Test
         run: pnpm test
