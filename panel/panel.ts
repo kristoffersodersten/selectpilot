@@ -8,6 +8,7 @@ import { buildKnowledgePackage, type KnowledgeTarget, type MemoryLedgerEntry } f
 import { applyRuntimeEvent, setIntent, setSelectionContext, setVisiblePanels } from './state/runtimeStore.js';
 import { loadBottleneckReport, loadDeterminismReport, loadFrontierReport } from './state/reportStore.js';
 import { getTopologyForComponent, validateTopologyMap } from './layout/topologyMap.js';
+import { FIRST_RUN_EXAMPLE } from '../shared/first-run-example.js';
 
 const workflow = $('#workflow');
 const exportsEl = $('#exports');
@@ -118,6 +119,7 @@ type EntitlementSnapshot = {
 } | null;
 
 const ENTITLEMENT_FRESH_MS = 15 * 60 * 1000;
+const FIRST_RUN_COMPLETED_KEY = 'selectpilot_first_run_completed_v1';
 
 type SelectionPreview = {
   selection: string;
@@ -185,6 +187,7 @@ let memorySnapshot: MemoryStatusSnapshot = {
   lastUpdatedAt: null,
 };
 let entitlementSnapshot: EntitlementSnapshot = null;
+let firstRunCompleted = false;
 const BENCHMARK_CACHE_KEY = 'selectpilot_runtime_benchmark_v1';
 const RUNTIME_META_MAX_EVENTS = 6;
 
@@ -916,6 +919,7 @@ async function refreshEntitlementStatus() {
     entitlementSnapshot = null;
   }
   renderEntitlementStatus();
+  renderSelectionState();
   syncControlAvailability();
 }
 
@@ -1002,6 +1006,8 @@ function syncControlAvailability() {
     intentExecuteButtonEl.disabled = isBusy || !runtimeReady || !selectionReady || !hasIntent;
   }
   if (intentClearButtonEl) intentClearButtonEl.disabled = isBusy;
+  const firstRunButton = document.querySelector<HTMLButtonElement>('#btn-first-run-example');
+  if (firstRunButton) firstRunButton.disabled = isBusy || !runtimeReady || !entitlementSnapshot?.token;
 }
 
 function populatePresetOptions() {
@@ -1246,16 +1252,25 @@ function renderSelectionState() {
   clearNode(selectionCardEl);
   if (!selectionCardEl) return;
 
+  const showFirstRunExample = runtimeSnapshot.ok
+    && Boolean(entitlementSnapshot?.token)
+    && !selectionPreview.hasSelection
+    && !firstRunCompleted;
+
   const header = document.createElement('div');
   header.className = 'output-eyebrow';
-  header.textContent = selectionPreview.hasSelection ? 'Active selection' : 'No active selection';
+  header.textContent = showFirstRunExample
+    ? 'First result'
+    : (selectionPreview.hasSelection ? 'Active selection' : 'No active selection');
 
   const title = document.createElement('h3');
-  title.textContent = selectionPreview.title || 'Current page';
+  title.textContent = showFirstRunExample ? 'See SelectPilot once' : (selectionPreview.title || 'Current page');
 
   const copy = document.createElement('p');
   copy.className = 'selection-copy';
-  if (selectionPreview.hasSelection) {
+  if (showFirstRunExample) {
+    copy.textContent = FIRST_RUN_EXAMPLE.text;
+  } else if (selectionPreview.hasSelection) {
     copy.textContent = shorten(selectionPreview.selection, 260);
   } else if (selectionPreview.pageText) {
     copy.textContent = 'Extract JSON requires highlighted text. Summarize and Ask can still fall back to page context.';
@@ -1266,9 +1281,20 @@ function renderSelectionState() {
   const meta = document.createElement('p');
   meta.className = 'selection-copy';
   const charCount = selectionPreview.hasSelection ? selectionPreview.selection.length : selectionPreview.pageText.length;
-  meta.textContent = `${selectionPreview.hasSelection ? 'Selection' : 'Page context'} · ${charCount} chars${selectionPreview.url ? ` · ${selectionPreview.url}` : ''}`;
+  meta.textContent = showFirstRunExample
+    ? 'Local example · Action Brief · no page content used'
+    : `${selectionPreview.hasSelection ? 'Selection' : 'Page context'} · ${charCount} chars${selectionPreview.url ? ` · ${selectionPreview.url}` : ''}`;
 
   selectionCardEl.append(header, title, copy, meta);
+  if (showFirstRunExample) {
+    const action = document.createElement('button');
+    action.id = 'btn-first-run-example';
+    action.className = 'selection-example-action';
+    action.type = 'button';
+    action.textContent = 'Try local example';
+    action.disabled = isBusy;
+    selectionCardEl.append(action);
+  }
 }
 
 async function refreshSelectionPreview() {
@@ -1377,6 +1403,7 @@ async function refreshRuntime() {
     setStatus(runtimeSnapshot.error || 'Ollama health check failed');
     renderRuntimeState();
   }
+  renderSelectionState();
   syncControlAvailability();
 }
 
@@ -1426,6 +1453,24 @@ async function doExtract(presetKey?: ExtractionPresetKey) {
   });
   renderExports({ markdown: res.markdown, json: res.json, basename: `selectpilot-${selectedPreset.key}` });
   setStatus('Done');
+}
+
+async function doFirstRunExample() {
+  const selectedPreset = getExtractionPreset(FIRST_RUN_EXAMPLE.preset);
+  const res = await request('panel:extract_demo');
+  renderOutput({
+    title: res.label || selectedPreset.label,
+    markdown: res.markdown || '',
+    json: res.json || {},
+    eyebrow: 'Your first structured result',
+    meta: 'Created locally from the example above. Ready to read or export.',
+    exportBase: 'selectpilot-first-result',
+  });
+  renderExports({ markdown: res.markdown, json: res.json, basename: 'selectpilot-first-result' });
+  await setJSON(FIRST_RUN_COMPLETED_KEY, true);
+  firstRunCompleted = true;
+  renderSelectionState();
+  setStatus('Ready to export');
 }
 
 async function doRewrite() {
@@ -1592,6 +1637,10 @@ function bindActions() {
     void Promise.all([refreshRuntime(), refreshSelectionPreview(), refreshMemoryStatus(), refreshEntitlementStatus()]);
   });
   $('#btn-extract')?.addEventListener('click', wrap(() => doExtract()));
+  selectionCardEl?.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.id === 'btn-first-run-example') void wrap(() => doFirstRunExample())();
+  });
   $('#btn-summarize')?.addEventListener('click', wrap(() => doSummarize()));
   $('#btn-rewrite')?.addEventListener('click', wrap(() => doRewrite()));
   $('#btn-actions')?.addEventListener('click', wrap(() => doActions()));
@@ -1693,6 +1742,7 @@ async function initialize() {
   }
 
   setVisiblePanels(['selection_surface', 'runtime_surface', 'report_surface']);
+  firstRunCompleted = Boolean(await getJSON<boolean>(FIRST_RUN_COMPLETED_KEY));
   renderRuntimeMetaOverlay();
   void connectRuntimeMetaStream();
   refreshIntentSuggestions();

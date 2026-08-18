@@ -15,6 +15,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     launchOptions: {
       args: ['--allow-file-access-from-files', '--disable-web-security'],
+      ...(process.env.SELECTPILOT_CHROME_EXECUTABLE
+        ? { executablePath: process.env.SELECTPILOT_CHROME_EXECUTABLE }
+        : {}),
     },
   },
 });

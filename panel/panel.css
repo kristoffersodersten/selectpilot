@@ -486,6 +486,24 @@ html, body {
   gap: 8px;
 }
 
+.selection-example-action {
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 10px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 14px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.selection-example-action:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
 .intent-shell {
   border: 1px solid var(--panel-border);
   border-radius: 18px;

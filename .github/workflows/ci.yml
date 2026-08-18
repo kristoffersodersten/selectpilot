@@ -23,17 +23,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Use pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-
-      - name: Use pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.33.0
 
       - name: Use Python 3.12
         uses: actions/setup-python@v5
@@ -57,6 +57,9 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Smoke direct server entrypoint
+        run: python3 server/nano_server.py --help
 
       - name: Test
         run: pnpm test
