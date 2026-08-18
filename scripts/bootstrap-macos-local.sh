@@ -101,14 +101,19 @@ fi
 if ! pgrep -x "ollama" >/dev/null 2>&1; then
   echo "Starting Ollama service..."
   nohup ollama serve >/tmp/selectpilot-ollama.log 2>&1 &
-  sleep 3
 fi
 
-if pgrep -x "ollama" >/dev/null 2>&1; then
-  STATUS_OLLAMA_RUNNING="ok"
-else
+for _attempt in $(seq 1 15); do
+  if curl -sSf "http://127.0.0.1:11434/api/tags" >/dev/null 2>&1; then
+    STATUS_OLLAMA_RUNNING="ok"
+    break
+  fi
+  sleep 1
+done
+
+if [[ "$STATUS_OLLAMA_RUNNING" != "ok" ]]; then
   STATUS_OLLAMA_RUNNING="failed"
-  echo "Ollama service did not start as expected." >&2
+  echo "Ollama API did not become reachable within 15 seconds." >&2
   exit 1
 fi
 
@@ -128,10 +133,31 @@ CHROMEAI_OLLAMA_NUM_CTX="$NUM_CTX" \
 "$ROOT/scripts/install-macos-local.sh"
 STATUS_LAUNCHAGENT="ok"
 
-if curl -sSf "$BRIDGE_HEALTH_URL" >/dev/null; then
+HEALTH_JSON="$(curl -sSf "$BRIDGE_HEALTH_URL" || true)"
+if python3 - "$HEALTH_JSON" <<'PY'
+import json
+import sys
+
+try:
+    payload = json.loads(sys.argv[1])
+except (IndexError, json.JSONDecodeError):
+    raise SystemExit(1)
+
+ollama = payload.get("ollama") or {}
+raise SystemExit(0 if (
+    payload.get("ok") is True
+    and ollama.get("reachable") is True
+    and ollama.get("model_available") is True
+    and ollama.get("embed_model_available") is True
+) else 1)
+PY
+then
   STATUS_BRIDGE_HEALTH="ok"
 else
   STATUS_BRIDGE_HEALTH="failed"
+  echo "Local bridge is reachable but the exact configured runtime contract is not healthy." >&2
+  echo "$HEALTH_JSON" >&2
+  exit 1
 fi
 
 cat <<EOF

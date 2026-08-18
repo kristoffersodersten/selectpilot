@@ -1,6 +1,6 @@
 import { test, expect, chromium } from '@playwright/test';
 
-test('real extension first-run sends only the canonical local example', async () => {
+test('real extension preserves privacy from selected text through rendered output', async () => {
   const executablePath = process.env.SELECTPILOT_CHROME_EXECUTABLE || chromium.executablePath();
 
   const context = await chromium.launchPersistentContext(test.info().outputPath('extension-user-data'), {
@@ -10,10 +10,21 @@ test('real extension first-run sends only the canonical local example', async ()
       `--disable-extensions-except=${process.cwd()}`,
       `--load-extension=${process.cwd()}`,
       '--disable-web-security',
+      '--disable-background-networking',
+      '--disable-component-update',
+      '--disable-default-apps',
+      '--no-first-run',
     ],
   });
 
-  let extractRequest = null;
+  const extractRequests = [];
+  const externalRequests = [];
+  context.on('request', (request) => {
+    const url = new URL(request.url());
+    if ((url.protocol === 'http:' || url.protocol === 'https:') && !['127.0.0.1', 'localhost'].includes(url.hostname)) {
+      externalRequests.push(request.url());
+    }
+  });
   await context.route('http://127.0.0.1:8083/**', async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
@@ -22,6 +33,7 @@ test('real extension first-run sends only the canonical local example', async ()
       contentType: 'application/json',
       body: JSON.stringify(body),
     });
+
 
     if (path === '/profiles') {
       return fulfill({
@@ -61,7 +73,7 @@ test('real extension first-run sends only the canonical local example', async ()
       return fulfill({ ok: false, stream_enabled: false, active_streams: 0, event_version: '1' });
     }
     if (path === '/extract') {
-      extractRequest = request.postDataJSON();
+      extractRequests.push(request.postDataJSON());
       return fulfill({
         preset: 'action_brief',
         label: 'Action Brief',
@@ -75,6 +87,11 @@ test('real extension first-run sends only the canonical local example', async ()
     }
     return fulfill({ ok: true });
   });
+  await context.route('https://selectpilot.test/e2e-selection', (route) => route.fulfill({
+    status: 200,
+    contentType: 'text/html',
+    body: '<!doctype html><title>Private launch plan</title><main><p id="selection">Maya owns the privacy review by Thursday. Publishing remains blocked until the review passes.</p></main>',
+  }));
 
   try {
     let [serviceWorker] = context.serviceWorkers();
@@ -86,7 +103,7 @@ test('real extension first-run sends only the canonical local example', async ()
 
     const lockedResponse = await panelPage.evaluate(() => globalThis.chrome.runtime.sendMessage({ type: 'panel:extract_demo' }));
     expect(lockedResponse.error).toBe('Paid license required for deterministic extraction');
-    expect(extractRequest).toBeNull();
+    expect(extractRequests).toEqual([]);
 
     await panelPage.evaluate(async () => {
       const storage = await import(globalThis.chrome.runtime.getURL('licensing/license-storage.js'));
@@ -100,8 +117,8 @@ test('real extension first-run sends only the canonical local example', async ()
 
     await expect(panelPage.locator('#btn-first-run-example')).toBeVisible();
     await panelPage.locator('#btn-first-run-example').click();
-    await expect.poll(() => extractRequest).not.toBeNull();
-    expect(extractRequest).toEqual({
+    await expect.poll(() => extractRequests.length).toBe(1);
+    expect(extractRequests[0]).toEqual({
       text: 'The launch review is Friday. Maya owns the privacy check by Thursday. Jonas will verify payment and store assets. Publishing stays blocked until both checks pass.',
       preset: 'action_brief',
       url: 'selectpilot://first-run',
@@ -117,6 +134,49 @@ test('real extension first-run sends only the canonical local example', async ()
 
     await panelPage.reload();
     await expect(panelPage.locator('#btn-first-run-example')).toHaveCount(0);
+
+    const sourcePage = await context.newPage();
+    await sourcePage.goto('https://selectpilot.test/e2e-selection');
+    await expect(sourcePage.locator('body')).toContainText('Maya owns the privacy review by Thursday');
+    await sourcePage.locator('#selection').selectText();
+    await expect.poll(() => sourcePage.evaluate(() => globalThis.getSelection()?.toString())).toContain('Maya owns the privacy review');
+    await sourcePage.waitForTimeout(250);
+    await sourcePage.bringToFront();
+
+    const activeTabUrl = await panelPage.evaluate(async () => {
+      const [tab] = await globalThis.chrome.tabs.query({ active: true, currentWindow: true });
+      return tab?.url || '';
+    });
+    expect(activeTabUrl).toBe('https://selectpilot.test/e2e-selection');
+    const directSelection = await panelPage.evaluate(async () => {
+      const [tab] = await globalThis.chrome.tabs.query({ active: true, currentWindow: true });
+      try {
+        return await globalThis.chrome.tabs.sendMessage(tab.id, { type: 'content:get_selection' });
+      } catch (error) {
+        return { error: String(error) };
+      }
+    });
+    expect(directSelection).toEqual({
+      text: {
+        text: 'Maya owns the privacy review by Thursday. Publishing remains blocked until the review passes.',
+        url: 'https://selectpilot.test/e2e-selection',
+        title: 'Private launch plan',
+      },
+    });
+
+    await panelPage.locator('#btn-refresh').evaluate((button) => button.click());
+    await expect(panelPage.locator('#selection-card')).toContainText('Maya owns the privacy review by Thursday');
+    await expect(panelPage.locator('#btn-extract')).toBeEnabled();
+
+    externalRequests.length = 0;
+    await panelPage.locator('#btn-extract').evaluate((button) => button.click());
+    await expect.poll(() => extractRequests.length).toBe(2);
+    expect(extractRequests[1].text).toBe('Maya owns the privacy review by Thursday. Publishing remains blocked until the review passes.');
+    expect(extractRequests[1].url).toBe('https://selectpilot.test/e2e-selection');
+    expect(extractRequests[1].title).toBe('Private launch plan');
+    await expect(panelPage.locator('#result-title')).toHaveText('Action Brief');
+    await expect(panelPage.locator('#workflow')).toContainText('Maya: privacy check by Thursday');
+    expect(externalRequests).toEqual([]);
   } finally {
     await context.close();
   }

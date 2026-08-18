@@ -15,8 +15,11 @@ from ollama_client import OllamaClient, OllamaError  # noqa: E402
 
 
 class RuntimeProfileTests(unittest.TestCase):
-    def test_unknown_profile_falls_back_to_fast(self) -> None:
-        profile = get_runtime_profile("missing")
+    def test_unknown_profile_fails_explicitly(self) -> None:
+        with self.assertRaisesRegex(ValueError, "Unknown runtime profile"):
+            get_runtime_profile("missing")
+
+        profile = get_runtime_profile(None)
         self.assertEqual(profile.key, "fast")
         self.assertEqual(profile.generation_model, "gemma4:e2b-it-qat")
         self.assertEqual(profile.num_ctx, 16384)

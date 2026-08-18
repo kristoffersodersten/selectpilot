@@ -120,9 +120,11 @@ def list_runtime_profiles() -> list[dict[str, Any]]:
 
 
 def get_runtime_profile(key: str | None) -> RuntimeProfile:
-    if key and key in RUNTIME_PROFILES:
+    if key in RUNTIME_PROFILES:
         return RUNTIME_PROFILES[key]
-    return RUNTIME_PROFILES["fast"]
+    if key is None:
+        return RUNTIME_PROFILES["fast"]
+    raise ValueError(f"Unknown runtime profile: {key}")
 
 
 def build_bootstrap_commands(profile_key: str, project_root: str | Path) -> dict[str, str]:

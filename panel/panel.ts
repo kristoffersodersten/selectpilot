@@ -210,9 +210,9 @@ let intentSuggestions: string[] = [];
 let selectedIntentSuggestion: string | null = null;
 
 const FAST_INSTALL_COMMANDS = [
-  'ollama pull qwen2.5:0.5b',
+  'ollama pull gemma4:e2b-it-qat',
   'ollama pull nomic-embed-text-v2-moe:latest',
-  'CHROMEAI_OLLAMA_MODEL=qwen2.5:0.5b ./scripts/install-macos-local.sh',
+  'CHROMEAI_OLLAMA_MODEL=gemma4:e2b-it-qat CHROMEAI_OLLAMA_NUM_CTX=16384 ./scripts/install-macos-local.sh',
 ].join('\n');
 
 const QUICK_SETUP_COMMANDS = [

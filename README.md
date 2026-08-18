@@ -40,22 +40,30 @@ SelectPilot is built to keep the core workflow local-first and inspectable.
 
 ## Quick Start
 
-1. Install Ollama
-2. Bootstrap local runtime + extension build:
+1. From the repository folder, run the one-command setup:
 
 ```bash
 pnpm setup:local
-pnpm build
 ```
 
-3. Load unpacked extension in `chrome://extensions`
-4. Select text → open side panel → click **Extract JSON**
+This installs dependencies, builds the extension, installs/starts Ollama when needed, selects a hardware-safe local profile, pulls the exact models, installs the LaunchAgent, and refuses to finish unless the bridge and both configured models are healthy.
+
+2. Open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select this repository folder.
+3. Highlight text on a page → open SelectPilot → click **Extract JSON**.
 
 Optional local checks:
 
 ```bash
 curl http://127.0.0.1:8083/health
 pnpm test:privacy
+```
+
+If setup stops, no fallback was applied. Copy/paste these diagnostics:
+
+```bash
+tail -n 80 ~/Library/Logs/SelectPilot/nano.err
+tail -n 80 ~/Library/Logs/SelectPilot/nano.log
+curl -sSf http://127.0.0.1:8083/health
 ```
 
 ---

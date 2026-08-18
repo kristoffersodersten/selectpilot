@@ -32,8 +32,8 @@
 
 ### 4) Onboarding-friktion är för hög
 
-- **Status:** 🟡 Delvis löst (bootstrap-script finns).
-- **Åtgärd kvar:** ge ett verkligt one-command bootstrap-flöde som fungerar utan manuell felsökning.
+- **Status:** ✅ Löst för det lokala macOS-flödet.
+- **Implementerat:** `pnpm setup:local` bygger extensionen, installerar/startar Ollama vid behov, väljer hårdvaruprofil, hämtar exakta modeller, installerar LaunchAgent och failar om exakt bridge-/modellhälsa inte kan verifieras.
 
 ### 5) Nginx/hosts-topologi bör vara osynlig
 
@@ -42,15 +42,15 @@
 
 ### 6) README saknar tydligt 5-minutersflöde högst upp
 
-- **Status:** 🟡 Delvis löst (sektionen "Local setup" är bra men inte tydligt märkt som snabbstart).
-- **Åtgärd kvar:** lägg en kort **Quick Start (5 min)** tidigt i README med exakta steg i ordning.
+- **Status:** ✅ Löst.
+- **Implementerat:** trestegs Quick Start tidigt i README, ett enda setup-kommando och copy/paste-diagnostik utan dold fallback.
 
 ### 7) Inga end-to-end-tester för extension-flödet
 
-- **Status:** 🟡 Delvis löst.
+- **Status:** ✅ Löst för det primära selected-text-flödet.
 - **Implementerat:** Playwright-konfiguration och E2E-suite för runtime/privacy + mockad selected-text response shape.
 - **Implementerat nu även:** harness-baserat sidepanel E2E-flöde som verifierar privacy-indikator + lokal fetch-trafik i panelens användarflöde.
-- **Åtgärd kvar:** utöka till full browser-extension user flow (markera text → sidepanel action → renderat svar) utan harness.
+- **Implementerat:** riktig unpacked-extension-path med injicerat content script: markera text på webbsida → background/context → sidepanel-action → renderat svar, utan harness.
 
 ---
 
@@ -58,12 +58,12 @@
 
 ### 8) Inga automatiska regressionstester för privacy boundary
 
-- **Status:** 🟡 Delvis löst.
+- **Status:** ✅ Löst för kärnflödet.
 - **Implementerat:**
   - servertest för privacy proof (`tests/server/test_privacy_proof.py`)
   - Playwright-test som verifierar local-only privacy proof och local endpoints
   - Playwright-test (`tests/e2e/panel-no-leakage.spec.mjs`) som assertar lokal fetch-trafik + subtil visuell privacy proof i panel-harness
-- **Åtgärd kvar:** utöka med strikt nätverks-assert på full extensionnivå (ingen extern trafik i hela sidepanel-flödet utan harness).
+- **Implementerat:** full-extension-testet registrerar all HTTP(S)-trafik under kärnoperationen och kräver noll externa anrop.
 
 ### 9) Privacy-påstående är inte synligt verifierbart för ny användare
 
@@ -107,13 +107,8 @@
 
 ### Nästa sprint (måste först)
 
-1. **P1.7** Full extension E2E (markera text → sidepanel action → svar)
-2. **P1.8** Strikt nätverksregressionstest för hela extension-flödet
-3. **P1.6** Tydlig Quick Start (5 min) i README-toppen
-
-### Därefter (releasekvalitet)
-
-4. **P1.4** Minska onboarding-friktion ytterligare i bootstrap
+1. Verifiera one-command onboarding och verklig Ollama-inferens på namngiven Apple Silicon-målmaskin.
+2. Samla långinput-, minnes- och latensevidens för Fast/Balanced innan slutlig modellpromotion.
 
 ### Strategisk polish
 
@@ -131,18 +126,12 @@
 ### 1) One-command installation (absolut först)
 
 - **Mål:** användaren ska klara onboarding med en enda kommando-rad.
-- **Kvar att leverera:**
-  - gör `pnpm bootstrap:local` helt självbärande med robust felhantering
-  - automatisk kontroll av Ollama, modeller, launchd och `/health`
-  - tydlig slutrapport med exakt "klart/återstår" och nästa steg
+- **Status:** Implementerat och kontraktstestat; verklig målmaskinsverifiering återstår.
 
 ### 2) "89-åring-läge" i README (ultrakort onboarding)
 
 - **Mål:** inga tekniska beslut i första flödet.
-- **Kvar att leverera:**
-  - 3-stegs quick start högst upp i README (kopiera kommando → ladda extension → klart)
-  - separera nybörjarflöde från advanced/dev-sektioner
-  - lägg till "om något går fel" med copy/paste-kommandon
+- **Status:** Trestegsflöde och copy/paste-diagnostik implementerade; användbarhetsvalidering på ren målmaskin återstår.
 
 ### 3) UI/UX-polish till premium-kvalitet
 
@@ -155,10 +144,7 @@
 ### 4) E2E-bevis för verkligt användarflöde
 
 - **Mål:** kunna verifiera funktion och privacy med reproducerbara tester.
-- **Kvar att leverera:**
-  - deterministisk start/stop av lokal server i testflödet
-  - full extension-path: markera text → sidepanel action → renderat svar
-  - strikt nätverksregression: ingen extern trafik i kärnflödet
+- **Status:** ✅ Implementerat: deterministisk serverlivscykel, full extension-path och strikt extern nätverksassert.
 
 ### 5) Strategisk finish (efter kvalitet + onboarding)
 
@@ -176,18 +162,18 @@
 | 1  | Versionsdrift              | P0        | Löst    | Låg    |
 | 2  | Dubbla lock-filer          | P0        | Löst    | Låg    |
 | 3  | Ogiltiga manifest-fält     | P0        | Löst    | Låg    |
-| 4  | Onboarding-friktion        | P1        | Delvis  | Hög    |
+| 4  | Onboarding-friktion        | P1        | Löst*   | Hög    |
 | 5  | Nginx/hosts osynlighet     | P1        | Löst*   | Hög    |
-| 6  | README Quick Start         | P1        | Delvis  | Låg    |
-| 7  | E2E-tester extension       | P1        | Delvis  | Medium |
-| 8  | Privacy regressionstester  | P1        | Delvis  | Medium |
+| 6  | README Quick Start         | P1        | Löst    | Låg    |
+| 7  | E2E-tester extension       | P1        | Löst    | Medium |
+| 8  | Privacy regressionstester  | P1        | Löst    | Medium |
 | 9  | Verifierbar privacy-yta    | P1        | Löst    | Medium |
 | 10 | Omformulera positioning    | P2        | Delvis  | Låg    |
 | 11 | Utbyggbara presets         | P2        | Delvis  | Medium |
 | 12 | Team/self-hosted-path      | P2        | Delvis  | Låg    |
 | 13 | Tier/pricing-integritet    | P2        | Delvis  | Medium |
 
-\* Löst i huvudflödet, men behöver fortsatt skyddas från regression i docs/scripts.
+\* Kod- och kontraktsnivå är löst; verklig ren målmaskinsverifiering återstår före fullsystems-DoD.
 
 ---
 
