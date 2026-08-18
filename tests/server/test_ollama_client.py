@@ -58,6 +58,26 @@ class OllamaClientContractTests(unittest.TestCase):
         with self.assertRaisesRegex(OllamaError, "missing required fields"):
             client.summarize("content")
 
+    def test_all_structured_routes_send_closed_object_schemas(self) -> None:
+        responses = [
+            {"response": '{"summary":"S","bullets":[],"action_items":[],"title":"T","tags":[]}'},
+            {"response": '{"reasoning":[],"markdown":"M","json":{}}'},
+            {"response": '{"summary":"S","action_items":[],"decisions":[],"risks":[],"follow_ups":[]}'},
+        ]
+        client = StubOllamaClient(responses.pop(0))
+        payloads = []
+        for operation in (
+            lambda: client.summarize("content"),
+            lambda: client.agent("prompt"),
+            lambda: client.extract("content", preset_key="action_brief"),
+        ):
+            operation()
+            payloads.append(client.last_payload)
+            if responses:
+                client.response = responses.pop(0)
+        self.assertEqual([payload["format"]["type"] for payload in payloads], ["object"] * 3)
+        self.assertTrue(all(payload["format"]["additionalProperties"] is False for payload in payloads))
+
 
 if __name__ == "__main__":
     unittest.main()

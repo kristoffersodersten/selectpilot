@@ -101,32 +101,39 @@ class OllamaError(RuntimeError):
     pass
 
 
+def _positive_int(value: Any, name: str) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError) as exc:
+        raise OllamaError(f"{name} must be a positive integer") from exc
+    if parsed <= 0:
+        raise OllamaError(f"{name} must be a positive integer")
+    return parsed
+
+
 class OllamaClient:
     def __init__(self, config: OllamaConfig | None = None):
         if config is None:
-            default_generation_model = "llama3.2"
+            default_generation_model = "gemma4:e2b-it-qat"
             default_embed_model = "nomic-embed-text-v2-moe:latest"
             default_num_ctx = 16384
             runtime_profile = os.environ.get("CHROMEAI_RUNTIME_PROFILE", "auto")
 
-            try:
-                from runtime_profiles import get_runtime_profile, recommend_runtime_profile
+            from runtime_profiles import get_runtime_profile, recommend_runtime_profile
 
-                recommendation = recommend_runtime_profile()
-                resolved_profile = recommendation["recommended_profile"] if runtime_profile == "auto" else runtime_profile
-                profile = get_runtime_profile(resolved_profile)
-                default_generation_model = profile.generation_model
-                default_embed_model = profile.embedding_model
-                default_num_ctx = profile.num_ctx
-            except Exception:
-                pass
+            recommendation = recommend_runtime_profile()
+            resolved_profile = recommendation["recommended_profile"] if runtime_profile == "auto" else runtime_profile
+            profile = get_runtime_profile(resolved_profile)
+            default_generation_model = profile.generation_model
+            default_embed_model = profile.embedding_model
+            default_num_ctx = profile.num_ctx
 
             config = OllamaConfig(
                 base_url=_normalize_base_url(os.environ.get("CHROMEAI_OLLAMA_BASE_URL", "http://127.0.0.1:11434")),
                 model=os.environ.get("CHROMEAI_OLLAMA_MODEL", default_generation_model),
                 embed_model=os.environ.get("CHROMEAI_OLLAMA_EMBED_MODEL", default_embed_model),
                 timeout_seconds=float(os.environ.get("CHROMEAI_OLLAMA_TIMEOUT_SECONDS", "30")),
-                num_ctx=int(os.environ.get("CHROMEAI_OLLAMA_NUM_CTX", str(default_num_ctx))),
+                num_ctx=_positive_int(os.environ.get("CHROMEAI_OLLAMA_NUM_CTX", default_num_ctx), "CHROMEAI_OLLAMA_NUM_CTX"),
         )
         self.config = config
 
