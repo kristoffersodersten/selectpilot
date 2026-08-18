@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from urllib.parse import urlparse, parse_qs
 
 from ollama_client import OllamaClient, OllamaError
+from extraction_presets import get_extraction_preset
 from runtime_profiles import build_bootstrap_commands, list_runtime_profiles, recommend_runtime_profile
 
 DEFAULT_PORT = 8083
@@ -175,7 +176,16 @@ def validate_summarize_payload(payload: object) -> dict:
 def validate_extract_payload(payload: object) -> dict:
     body = _expect_dict(payload)
     _expect_string(body, "text", required=True, allow_empty=False)
-    _expect_string(body, "preset", required=False, allow_empty=True)
+    preset = _expect_string(body, "preset", required=False, allow_empty=True)
+    try:
+        get_extraction_preset(preset or None)
+    except ValueError as exc:
+        raise ValidationError(
+            "unknown_extraction_preset",
+            str(exc),
+            status=422,
+            details={"preset": preset},
+        ) from exc
     _expect_string(body, "title", required=False, allow_empty=True)
     _expect_string(body, "url", required=False, allow_empty=True)
     _expect_optional_dict(body, "metadata")

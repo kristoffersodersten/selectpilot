@@ -35,6 +35,7 @@ SelectPilot is built to keep the core workflow local-first and inspectable.
 - Generates canonical metadata (source, intent, timestamps)
 - Exports to adapter targets (e.g. Obsidian/Notion package formats)
 - Uses profile-based local runtime selection (Fast / Balanced / Advanced)
+- Uses editable, closed-schema extraction presets from `presets/extraction-presets.json`
 
 ---
 
@@ -134,6 +135,7 @@ Your hardware and selected profile determine latency/quality.
 - `server/` — local Python bridge and runtime endpoints
 - `api/` — extension-to-local-bridge client layer
 - `tests/` — E2E + privacy/no-leakage tests
+- `presets/` — canonical editable extraction preset registry ([format](docs/extraction-presets.md))
 
 ---
 
