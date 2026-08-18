@@ -111,6 +111,8 @@ class RuntimeProfileTests(unittest.TestCase):
         generation_payloads = [call.args[1] for call in request_json.call_args_list]
         self.assertEqual([payload["options"]["num_ctx"] for payload in generation_payloads], [32_768] * 3)
         self.assertEqual([payload["options"]["temperature"] for payload in generation_payloads], [0.2, 0.2, 0.1])
+        self.assertEqual([payload["format"]["type"] for payload in generation_payloads], ["object"] * 3)
+        self.assertTrue(all(payload["format"]["additionalProperties"] is False for payload in generation_payloads))
 
 
 if __name__ == "__main__":
