@@ -111,20 +111,21 @@ Your hardware and selected profile determine latency/quality.
 
 ## Tiers
 
-### Core (Essential)
-- Structured extraction
-- Canonical metadata
-- Manual export/copy
+The repository configuration is authoritative for price and entitlement mapping:
 
-### Connect (Plus)
-- One-click connector exports
-- Target-specific format adapters
-- No persistent memory layer
+| Tier | Price | Product boundary |
+| --- | ---: | --- |
+| Essential | $1.99 | Local structured extraction, canonical metadata and manual copy/export |
+| Plus | $5.99 | Essential plus stateless summaries, batch clipping and connector-format exports |
+| Pro | $14.99 | Plus plus multimodal processing and an explicit opt-in local knowledge layer |
 
-### Knowledge (Deep)
-- Explicit opt-in local memory layer
-- Local embeddings/retrieval capabilities
-- Inspect / export / delete retained knowledge
+Essential and Plus do not retain a knowledge history. Pro stateful features must remain local, visible and user-controlled: retained data can be inspected, exported and deleted. A feature is available only when the signed entitlement and `pricing/tier-feature-map.json` both permit it; there is no silent downgrade or fallback.
+
+Prices and Paddle product identifiers live in `pricing/pricing-global.json` and `pricing/paddle-products.json`. Their presence is configuration evidence, not proof that production checkout or entitlement issuance is operational.
+
+### Team / self-hosted
+
+Team/self-hosted mode is planned, not shipped. Its admission contract requires an operator-owned Ollama endpoint, zero-access encrypted synchronization where synchronization is enabled, explicit tenant and retention controls, auditable entitlement administration, and the same no-cloud-fallback rule as the individual product. Until those paths pass real deployment, privacy, failure/recovery and multi-user isolation tests, SelectPilot makes no Team or self-hosted availability claim.
 
 ---
 
@@ -157,7 +158,7 @@ Your hardware and selected profile determine latency/quality.
 
 Active development.
 Core local pipeline is functional and test-backed.
-Current focus: stability, deterministic structure, and trust consistency.
+Current focus: protected-main admission and physical Apple-hardware runtime verification. Team/self-hosted mode remains planned.
 
 ---
 
