@@ -1,3 +1,5 @@
+# module_name: tests_server_test_ollama_client_py
+# spec_ref: "testing_strategy.integration_tests"
 from __future__ import annotations
 
 import sys

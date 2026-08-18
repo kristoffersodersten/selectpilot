@@ -1,3 +1,6 @@
+// module_name: runtime_model_selector
+// spec_ref: "model_selection_layer"
+// @spec_ref model_registry
 import type {
   RuntimeModelPolicy,
   RuntimeModelRegistry,
@@ -7,6 +10,7 @@ import type {
 
 type SelectorInput = RuntimeSelectionInput;
 
+// @spec_ref model_selection_layer
 export function selectRuntimeModel(
   input: SelectorInput,
   policy: RuntimeModelPolicy,
@@ -74,3 +78,6 @@ export function selectRuntimeModel(
     promotion_applied: true,
   };
 }
+// module_name: runtime_model_selector
+// spec_ref: "model_selection_layer"
+// @spec_ref model_registry

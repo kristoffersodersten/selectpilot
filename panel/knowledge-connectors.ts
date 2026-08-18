@@ -1,3 +1,5 @@
+// module_name: panel_knowledge-connectors_ts
+// spec_ref: "frontend_state_contract"
 export type KnowledgeTarget = 'generic' | 'notion' | 'craft' | 'obsidian';
 
 export type MemoryLedgerEntry = {
@@ -92,6 +94,7 @@ function toCanonicalEntries(entries: MemoryLedgerEntry[]): CanonicalEntry[] {
   });
 }
 
+// @spec_ref frontend_state_contract
 export function buildKnowledgePackage(target: KnowledgeTarget, entries: MemoryLedgerEntry[]) {
   const generatedAt = new Date().toISOString();
   const canonical = toCanonicalEntries(entries);

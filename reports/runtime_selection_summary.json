@@ -1,6 +1,6 @@
 {
-  "generated_at_unix_ms": 1700704147799,
-  "policy_version": "runtime-policy-d7833f631d57",
+  "generated_at_unix_ms": 1700798162081,
+  "policy_version": "runtime-policy-c44de2e4a8a1",
   "defaults_count": 12,
   "preferred_models": [
     "qwen2.5:0.5b"

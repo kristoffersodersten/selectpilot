@@ -1,3 +1,5 @@
+// module_name: server_model_runtimeRollback_ts
+// spec_ref: "validation_layer"
 import fs from 'node:fs';
 import path from 'node:path';
 import type { RuntimeModelPolicy, PromotionAuditRecord } from '../../shared/types/runtimePolicy.js';
@@ -43,6 +45,7 @@ function appendFeedback(record: Record<string, unknown>): void {
   fs.appendFileSync(liveFeedbackPath, `${JSON.stringify(record)}\n`, 'utf8');
 }
 
+// @spec_ref validation_layer
 export function performRuntimeRollback(reason = 'manual_runtime_rollback'): RollbackResult {
   const policy = readJson<RuntimeModelPolicy>(policyPath);
   if (!policy) {

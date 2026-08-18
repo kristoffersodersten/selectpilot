@@ -1,3 +1,5 @@
+// module_name: agent_agent-client_ts
+// spec_ref: "execution_layer"
 import { agent as agentEndpoint } from '../api/nano-client.js';
 import { AgentContext, AgentOutput } from './agent-types.js';
 

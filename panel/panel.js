@@ -1,3 +1,7 @@
+// module_name: panel_surface
+// spec_ref: "intent_popup"
+// @spec_ref observability_layer
+// @spec_ref probabilistic_suggestion_engine
 import { $ } from '../utils/dom.js';
 import { getJSON, setJSON } from '../utils/storage.js';
 import { endpoints } from '../api/endpoints.js';

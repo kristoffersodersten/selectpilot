@@ -1,3 +1,5 @@
+// module_name: popup_popup_ts
+// spec_ref: "frontend_state_contract"
 import { log } from '../utils/logger.js';
 
 const btn = document.getElementById('open-panel');

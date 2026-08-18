@@ -1,3 +1,5 @@
+// module_name: extension_privacy_integration
+// spec_ref: "privacy_and_debug_policy"
 import { test, expect, chromium } from '@playwright/test';
 
 test('real extension preserves privacy from selected text through rendered output', async () => {

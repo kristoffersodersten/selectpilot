@@ -1,3 +1,5 @@
+// module_name: agent_agent-types_ts
+// spec_ref: "execution_layer"
 export type DetectedInput = {
   kind: 'text' | 'audio' | 'video' | 'image';
   content: string;

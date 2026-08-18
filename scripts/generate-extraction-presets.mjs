@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// module_name: scripts_generate-extraction-presets_mjs
+// spec_ref: "reporting"
 
 import fs from 'node:fs/promises';
 import path from 'node:path';

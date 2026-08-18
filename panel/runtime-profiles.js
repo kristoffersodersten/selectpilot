@@ -34,6 +34,7 @@ export const RUNTIME_PROFILES = [
         command: './scripts/bootstrap-macos-local.sh --profile advanced',
     },
 ];
+// @spec_ref frontend_state_contract
 export function getRuntimeProfile(key) {
     return RUNTIME_PROFILES.find((profile) => profile.key === key) || RUNTIME_PROFILES[0];
 }

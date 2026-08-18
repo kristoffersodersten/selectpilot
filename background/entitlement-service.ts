@@ -1,3 +1,5 @@
+// module_name: background_entitlement-service_ts
+// spec_ref: "execution_layer"
 import { endpoints } from '../api/endpoints.js';
 import { error, log, warn } from '../utils/logger.js';
 import { loadLicense, loadToken, saveLicense, type LicenseRecord } from '../licensing/license-storage.js';

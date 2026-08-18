@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# module_name: deterministic_bridge
+# spec_ref: "validation_layer"
+# @spec_ref output_enforcement
+# @spec_ref model_switch_hysteresis
+# @spec_ref failure_isolation
+# @spec_ref latency_budget
 import argparse
 import base64
 import hmac

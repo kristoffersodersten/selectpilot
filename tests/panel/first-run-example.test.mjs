@@ -1,3 +1,5 @@
+// module_name: tests_panel_first-run-example_test_mjs
+// spec_ref: "testing_strategy.integration_tests"
 import test from 'node:test';
 import assert from 'node:assert/strict';
 

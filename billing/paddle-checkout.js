@@ -1,3 +1,5 @@
+// module_name: billing_paddle-checkout_ts
+// spec_ref: "validation_layer"
 import { log, warn } from '../utils/logger.js';
 import { getPricing } from '../background/tier-service.js';
 const PADDLE_SCRIPT = 'https://cdn.paddle.com/paddle/paddle.js';

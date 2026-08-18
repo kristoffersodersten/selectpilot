@@ -1,5 +1,8 @@
 {
-  "generated_at": "2026-03-26T18:08:26.167Z",
+  "evidence_class": "deterministic_simulation",
+  "runtime_verified": false,
+  "promotion_eligible": false,
+  "generated_at": "2026-08-18T19:23:33.758Z",
   "engine_recommendation": "Do not start with full C++ engine. Start with high-level orchestration and instrument everything. Add native hot paths only if measurements justify it.",
   "bottleneck_summary": [
     "strict_json_validation",

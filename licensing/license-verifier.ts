@@ -1,3 +1,5 @@
+// module_name: licensing_license-verifier_ts
+// spec_ref: "validation_layer"
 import { endpoints } from '../api/endpoints.js';
 import { apiRequest } from '../api/request.js';
 import { daysFrom } from '../utils/time.js';

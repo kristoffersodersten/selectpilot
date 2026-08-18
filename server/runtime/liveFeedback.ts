@@ -1,3 +1,5 @@
+// module_name: runtime_event_feedback
+// spec_ref: "runtime_event_contract"
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -12,6 +14,7 @@ export type RuntimeFeedbackRecord = {
   [key: string]: unknown;
 };
 
+// @spec_ref runtime_event_contract
 export function appendRuntimeFeedback(record: RuntimeFeedbackRecord): void {
   fs.mkdirSync(path.dirname(feedbackPath), { recursive: true });
   const payload = {
@@ -22,3 +25,5 @@ export function appendRuntimeFeedback(record: RuntimeFeedbackRecord): void {
   };
   fs.appendFileSync(feedbackPath, `${JSON.stringify(payload)}\n`, 'utf8');
 }
+// module_name: runtime_event_feedback
+// spec_ref: "runtime_event_contract"

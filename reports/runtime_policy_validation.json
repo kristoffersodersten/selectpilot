@@ -15,8 +15,8 @@
     "fallback_cycle_detected",
     "quarantined_model_promoted"
   ],
-  "policy_version": "runtime-policy-d7833f631d57",
-  "checked_at_unix_ms": 1700704147799,
+  "policy_version": "runtime-policy-c44de2e4a8a1",
+  "checked_at_unix_ms": 1700798162081,
   "policy_path": "runtime/model_policy.json",
   "runtime_registry_path": "runtime/model_registry.runtime.json"
 }

@@ -1,3 +1,5 @@
+// module_name: shared_types_benchmarkTypes_ts
+// spec_ref: "frontend_state_contract"
 export type AggregatedMetrics = {
   correctness?: {
     retry_rate?: number;

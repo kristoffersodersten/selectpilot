@@ -1,3 +1,5 @@
+// module_name: shared_first-run-example_ts
+// spec_ref: "frontend_state_contract"
 import type { ExtractionPresetKey } from '../panel/extraction-presets.js';
 
 export type FirstRunExample = Readonly<{

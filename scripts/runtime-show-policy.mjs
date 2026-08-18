@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// module_name: scripts_runtime-show-policy_mjs
+// spec_ref: "reporting"
 import path from 'node:path';
 import {
   PATHS,

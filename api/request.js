@@ -1,3 +1,5 @@
+// module_name: api_request_ts
+// spec_ref: "execution_layer"
 import { log, warn } from '../utils/logger.js';
 export class ApiRequestError extends Error {
     status;

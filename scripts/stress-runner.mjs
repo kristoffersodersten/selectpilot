@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+// module_name: simulation_metrics
+// spec_ref: "simulation_and_benchmarking.metrics"
+// @spec_ref simulation_and_benchmarking
+// @spec_ref simulation_and_benchmarking.fixtures
 import fs from 'node:fs/promises';
 import fssync from 'node:fs';
 import path from 'node:path';
@@ -826,3 +830,6 @@ main().catch((error) => {
   );
   process.exit(1);
 });
+// module_name: simulation_metrics
+// spec_ref: "simulation_and_benchmarking.metrics"
+// @spec_ref simulation_and_benchmarking

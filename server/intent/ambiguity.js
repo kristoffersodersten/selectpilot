@@ -17,6 +17,7 @@ function hasContradictorySignals(text) {
 function looksLikeSimpleFactualStatement(text) {
     return /\bis\b/.test(text) && /[.!?]$/.test(text) && !hasContradictorySignals(text);
 }
+// @spec_ref intent_ambiguity_handling
 export function scoreIntentOperations(intentNormalized) {
     const text = String(intentNormalized || '').toLowerCase();
     const scores = {
@@ -58,6 +59,7 @@ export function scoreIntentOperations(intentNormalized) {
     }
     return scores;
 }
+// @spec_ref intent_ambiguity_handling
 export function selectTopOperationFamily(scores) {
     const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
     const [top] = ranked;
@@ -65,6 +67,7 @@ export function selectTopOperationFamily(scores) {
         return 'unknown';
     return top[0];
 }
+// @spec_ref intent_ambiguity_handling
 export function computeAmbiguityScore(scores) {
     const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
     const top = ranked[0]?.[1] ?? 0;
@@ -76,6 +79,9 @@ export function computeAmbiguityScore(scores) {
     const ratio = second / top;
     return Math.max(0, Math.min(1, Number(ratio.toFixed(4))));
 }
+// @spec_ref intent_ambiguity_handling
 export function needsIntentClarification(ambiguityScore, threshold = 0.4) {
     return Number(ambiguityScore) >= Number(threshold);
 }
+// module_name: ambiguity_detector
+// spec_ref: "intent_ambiguity_handling"

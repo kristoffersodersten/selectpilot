@@ -1,3 +1,5 @@
+// module_name: shared_types_runtimePolicy_ts
+// spec_ref: "frontend_state_contract"
 export type OutputMode = 'freeform' | 'semi_structured' | 'strict_json';
 
 export type RuntimePolicyDefault = {

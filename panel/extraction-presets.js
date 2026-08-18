@@ -1,9 +1,12 @@
+// module_name: panel_extraction-presets_ts
+// spec_ref: "frontend_state_contract"
 import { DEFAULT_EXTRACTION_PRESET, EXTRACTION_PRESET_DEFINITIONS } from './extraction-presets.generated.js';
 export const EXTRACTION_PRESETS = EXTRACTION_PRESET_DEFINITIONS.map(({ key, label, description }) => ({
     key,
     label,
     description,
 }));
+// @spec_ref frontend_state_contract
 export function getExtractionPreset(key) {
     const resolvedKey = key ?? DEFAULT_EXTRACTION_PRESET;
     const preset = EXTRACTION_PRESETS.find((candidate) => candidate.key === resolvedKey);

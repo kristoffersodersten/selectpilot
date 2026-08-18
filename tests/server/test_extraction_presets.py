@@ -1,3 +1,5 @@
+# module_name: tests_server_test_extraction_presets_py
+# spec_ref: "testing_strategy.integration_tests"
 from __future__ import annotations
 
 import sys

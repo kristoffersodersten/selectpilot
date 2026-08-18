@@ -54,6 +54,7 @@ function toCanonicalEntries(entries) {
         };
     });
 }
+// @spec_ref frontend_state_contract
 export function buildKnowledgePackage(target, entries) {
     const generatedAt = new Date().toISOString();
     const canonical = toCanonicalEntries(entries);

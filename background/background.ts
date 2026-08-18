@@ -1,3 +1,5 @@
+// module_name: background_background_ts
+// spec_ref: "execution_layer"
 import { compileIntent, extract, summarize, transcribe, vision } from '../api/nano-client.js';
 import { runPipeline } from '../agent/agent-pipeline.js';
 import { log, error } from '../utils/logger.js';

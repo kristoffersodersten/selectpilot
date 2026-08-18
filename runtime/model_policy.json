@@ -1,6 +1,10 @@
 {
-  "policy_version": "runtime-policy-d7833f631d57",
-  "generated_at_unix_ms": 1700704147799,
+  "policy_version": "runtime-policy-c44de2e4a8a1",
+  "generated_at_unix_ms": 1700798162081,
+  "promotion_evidence": {
+    "runtime_verified": false,
+    "status": "simulation_only_no_promotion"
+  },
   "source_reports": [
     "reports/aggregated_metrics.json",
     "reports/frontier_decisions.json",
@@ -20,13 +24,11 @@
       "output_mode": "strict_json",
       "preferred_model_id": "qwen2.5:0.5b",
       "fallback_model_ids": [],
-      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
-        "reports/frontier_decisions.json",
-        "reports/determinism_report.json",
-        "reports/aggregated_metrics.json"
+        "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700704147799
+      "effective_from_unix_ms": 1700798162081
     },
     {
       "task_family": "extract",
@@ -36,13 +38,11 @@
       "fallback_model_ids": [
         "qwen2.5:1.5b"
       ],
-      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
-        "reports/frontier_decisions.json",
-        "reports/determinism_report.json",
-        "reports/aggregated_metrics.json"
+        "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700704147799
+      "effective_from_unix_ms": 1700798162081
     },
     {
       "task_family": "extract",
@@ -53,13 +53,11 @@
         "qwen2.5:1.5b",
         "qwen2.5:7b"
       ],
-      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
-        "reports/frontier_decisions.json",
-        "reports/determinism_report.json",
-        "reports/aggregated_metrics.json"
+        "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700704147799
+      "effective_from_unix_ms": 1700798162081
     },
     {
       "task_family": "extract",
@@ -71,13 +69,11 @@
         "qwen2.5:7b",
         "qwen2.5:14b"
       ],
-      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
-        "reports/frontier_decisions.json",
-        "reports/determinism_report.json",
-        "reports/aggregated_metrics.json"
+        "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700704147799
+      "effective_from_unix_ms": 1700798162081
     },
     {
       "task_family": "summarize",
@@ -85,13 +81,11 @@
       "output_mode": "semi_structured",
       "preferred_model_id": "qwen2.5:0.5b",
       "fallback_model_ids": [],
-      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
-        "reports/frontier_decisions.json",
-        "reports/determinism_report.json",
-        "reports/aggregated_metrics.json"
+        "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700704147799
+      "effective_from_unix_ms": 1700798162081
     },
     {
       "task_family": "summarize",
@@ -101,13 +95,11 @@
       "fallback_model_ids": [
         "qwen2.5:1.5b"
       ],
-      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
-        "reports/frontier_decisions.json",
-        "reports/determinism_report.json",
-        "reports/aggregated_metrics.json"
+        "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700704147799
+      "effective_from_unix_ms": 1700798162081
     },
     {
       "task_family": "summarize",
@@ -118,13 +110,11 @@
         "qwen2.5:1.5b",
         "qwen2.5:7b"
       ],
-      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
-        "reports/frontier_decisions.json",
-        "reports/determinism_report.json",
-        "reports/aggregated_metrics.json"
+        "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700704147799
+      "effective_from_unix_ms": 1700798162081
     },
     {
       "task_family": "summarize",
@@ -136,13 +126,11 @@
         "qwen2.5:7b",
         "qwen2.5:14b"
       ],
-      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
-        "reports/frontier_decisions.json",
-        "reports/determinism_report.json",
-        "reports/aggregated_metrics.json"
+        "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700704147799
+      "effective_from_unix_ms": 1700798162081
     },
     {
       "task_family": "agent",
@@ -150,13 +138,11 @@
       "output_mode": "freeform",
       "preferred_model_id": "qwen2.5:0.5b",
       "fallback_model_ids": [],
-      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
-        "reports/frontier_decisions.json",
-        "reports/determinism_report.json",
-        "reports/aggregated_metrics.json"
+        "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700704147799
+      "effective_from_unix_ms": 1700798162081
     },
     {
       "task_family": "agent",
@@ -166,13 +152,11 @@
       "fallback_model_ids": [
         "qwen2.5:1.5b"
       ],
-      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
-        "reports/frontier_decisions.json",
-        "reports/determinism_report.json",
-        "reports/aggregated_metrics.json"
+        "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700704147799
+      "effective_from_unix_ms": 1700798162081
     },
     {
       "task_family": "agent",
@@ -183,130 +167,29 @@
         "qwen2.5:1.5b",
         "qwen2.5:7b"
       ],
-      "selection_reason": "higher_correctness_same_or_lower_cost",
+      "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
-        "reports/frontier_decisions.json",
-        "reports/determinism_report.json",
-        "reports/aggregated_metrics.json"
+        "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700704147799
+      "effective_from_unix_ms": 1700798162081
     },
     {
       "task_family": "agent",
       "hardware_profile": "high",
       "output_mode": "freeform",
-      "preferred_model_id": "qwen2.5:1.5b",
+      "preferred_model_id": "qwen2.5:0.5b",
       "fallback_model_ids": [
-        "qwen2:0.5b",
+        "qwen2.5:1.5b",
         "qwen2.5:7b",
         "qwen2.5:14b"
       ],
-      "selection_reason": "rollback:manual_runtime_rollback",
+      "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
-        "reports/frontier_decisions.json",
-        "reports/determinism_report.json",
-        "reports/aggregated_metrics.json"
+        "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1774549605424
+      "effective_from_unix_ms": 1700798162081
     }
   ],
   "quarantined_models": [],
-  "promotion_history": [
-    {
-      "task_family": "extract",
-      "hardware_profile": "low",
-      "previous_model_id": "none",
-      "new_model_id": "qwen2:0.5b",
-      "decision_reason": "higher_correctness_same_or_lower_cost",
-      "effective_from_unix_ms": 1700704147799
-    },
-    {
-      "task_family": "extract",
-      "hardware_profile": "medium",
-      "previous_model_id": "none",
-      "new_model_id": "qwen2:0.5b",
-      "decision_reason": "higher_correctness_same_or_lower_cost",
-      "effective_from_unix_ms": 1700704147799
-    },
-    {
-      "task_family": "extract",
-      "hardware_profile": "medium_gpu",
-      "previous_model_id": "none",
-      "new_model_id": "qwen2:0.5b",
-      "decision_reason": "higher_correctness_same_or_lower_cost",
-      "effective_from_unix_ms": 1700704147799
-    },
-    {
-      "task_family": "extract",
-      "hardware_profile": "high",
-      "previous_model_id": "none",
-      "new_model_id": "qwen2:0.5b",
-      "decision_reason": "higher_correctness_same_or_lower_cost",
-      "effective_from_unix_ms": 1700704147799
-    },
-    {
-      "task_family": "summarize",
-      "hardware_profile": "low",
-      "previous_model_id": "none",
-      "new_model_id": "qwen2:0.5b",
-      "decision_reason": "higher_correctness_same_or_lower_cost",
-      "effective_from_unix_ms": 1700704147799
-    },
-    {
-      "task_family": "summarize",
-      "hardware_profile": "medium",
-      "previous_model_id": "none",
-      "new_model_id": "qwen2:0.5b",
-      "decision_reason": "higher_correctness_same_or_lower_cost",
-      "effective_from_unix_ms": 1700704147799
-    },
-    {
-      "task_family": "summarize",
-      "hardware_profile": "medium_gpu",
-      "previous_model_id": "none",
-      "new_model_id": "qwen2:0.5b",
-      "decision_reason": "higher_correctness_same_or_lower_cost",
-      "effective_from_unix_ms": 1700704147799
-    },
-    {
-      "task_family": "summarize",
-      "hardware_profile": "high",
-      "previous_model_id": "none",
-      "new_model_id": "qwen2:0.5b",
-      "decision_reason": "higher_correctness_same_or_lower_cost",
-      "effective_from_unix_ms": 1700704147799
-    },
-    {
-      "task_family": "agent",
-      "hardware_profile": "low",
-      "previous_model_id": "none",
-      "new_model_id": "qwen2:0.5b",
-      "decision_reason": "higher_correctness_same_or_lower_cost",
-      "effective_from_unix_ms": 1700704147799
-    },
-    {
-      "task_family": "agent",
-      "hardware_profile": "medium",
-      "previous_model_id": "none",
-      "new_model_id": "qwen2:0.5b",
-      "decision_reason": "higher_correctness_same_or_lower_cost",
-      "effective_from_unix_ms": 1700704147799
-    },
-    {
-      "task_family": "agent",
-      "hardware_profile": "medium_gpu",
-      "previous_model_id": "none",
-      "new_model_id": "qwen2:0.5b",
-      "decision_reason": "higher_correctness_same_or_lower_cost",
-      "effective_from_unix_ms": 1700704147799
-    },
-    {
-      "task_family": "agent",
-      "hardware_profile": "high",
-      "previous_model_id": "none",
-      "new_model_id": "qwen2:0.5b",
-      "decision_reason": "higher_correctness_same_or_lower_cost",
-      "effective_from_unix_ms": 1700704147799
-    }
-  ]
+  "promotion_history": []
 }

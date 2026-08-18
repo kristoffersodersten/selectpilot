@@ -1,3 +1,4 @@
+// @spec_ref model_selection_layer
 export function selectRuntimeModel(input, policy, registry) {
     const available = new Set(input.availableModelIds);
     const registryById = new Map(registry.models.map((m) => [m.model_id, m]));
@@ -56,3 +57,6 @@ export function selectRuntimeModel(input, policy, registry) {
         promotion_applied: true,
     };
 }
+// module_name: runtime_model_selector
+// spec_ref: "model_selection_layer"
+// @spec_ref model_registry

@@ -1,3 +1,5 @@
+// module_name: panel_runtime-profiles_ts
+// spec_ref: "frontend_state_contract"
 export type RuntimeProfileKey = 'fast' | 'balanced' | 'advanced';
 
 export type RuntimeProfile = {
@@ -50,6 +52,7 @@ export const RUNTIME_PROFILES: RuntimeProfile[] = [
   },
 ];
 
+// @spec_ref frontend_state_contract
 export function getRuntimeProfile(key: string | null | undefined): RuntimeProfile {
   return RUNTIME_PROFILES.find((profile) => profile.key === key) || RUNTIME_PROFILES[0];
 }

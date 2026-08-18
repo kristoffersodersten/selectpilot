@@ -1,3 +1,5 @@
+// module_name: panel_unit_tests
+// spec_ref: "testing_strategy.unit_tests"
 import test from 'node:test';
 import assert from 'node:assert/strict';
 

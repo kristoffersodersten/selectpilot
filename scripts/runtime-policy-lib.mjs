@@ -1,3 +1,5 @@
+// module_name: frontier_evaluator
+// spec_ref: "dynamic_model_evaluation_layer"
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -27,6 +29,7 @@ export const PATHS = {
   selectionSummary: path.resolve(repoRoot, 'reports/runtime_selection_summary.json'),
 };
 
+// @spec_ref dynamic_model_evaluation_layer
 export function stableStringify(value) {
   return JSON.stringify(value, null, 2);
 }
@@ -50,11 +53,13 @@ export async function writeJson(filePath, payload) {
   await fs.writeFile(filePath, `${stableStringify(payload)}\n`, 'utf8');
 }
 
+// @spec_ref dynamic_model_evaluation_layer
 export function deterministicSeed(parts) {
   const hash = crypto.createHash('sha256').update(parts.join('|')).digest('hex');
   return hash;
 }
 
+// @spec_ref dynamic_model_evaluation_layer
 export function deterministicUnixMsFromSeed(seedHex) {
   const base = Number.parseInt(seedHex.slice(0, 12), 16);
   const epoch = 1_700_000_000_000;
@@ -70,6 +75,7 @@ function compatibleWithHardware(minRequired, currentHardware) {
   return hardwareRank(currentHardware) >= hardwareRank(minRequired);
 }
 
+// @spec_ref dynamic_model_evaluation_layer
 export function validatePolicyInvariants(policy, runtimeRegistry) {
   const errors = [];
 
@@ -120,6 +126,7 @@ export function validatePolicyInvariants(policy, runtimeRegistry) {
   };
 }
 
+// @spec_ref dynamic_model_evaluation_layer
 export function buildValidationReport(policy, runtimeRegistry) {
   const validation = validatePolicyInvariants(policy, runtimeRegistry);
   return {
@@ -144,6 +151,7 @@ export function buildValidationReport(policy, runtimeRegistry) {
   };
 }
 
+// @spec_ref dynamic_model_evaluation_layer
 export function applyRollback(policy, audit, reason = 'manual_runtime_rollback') {
   const nextPolicy = JSON.parse(JSON.stringify(policy || {}));
   const nextAudit = JSON.parse(JSON.stringify(audit || { events: [] }));
@@ -221,6 +229,7 @@ export function applyRollback(policy, audit, reason = 'manual_runtime_rollback')
   };
 }
 
+// @spec_ref dynamic_model_evaluation_layer
 export function buildRuntimeRegistryFromPolicy(policy, registrySource, rejectedCandidates = []) {
   const preferredSet = new Set((policy.defaults || []).map((d) => d.preferred_model_id));
   const fallbackSet = new Set((policy.defaults || []).flatMap((d) => d.fallback_model_ids || []));
@@ -319,7 +328,12 @@ export async function compileRuntimePolicy() {
   ]);
   const generatedAt = deterministicUnixMsFromSeed(seed);
 
-  const promoted = Array.isArray(frontier) ? frontier.filter((d) => d.decision === 'promote') : [];
+  const runtimeEvidenceVerified = aggregated.runtime_verified === true
+    && determinism.runtime_verified === true
+    && architecture.runtime_verified === true;
+  const promoted = runtimeEvidenceVerified && Array.isArray(frontier)
+    ? frontier.filter((d) => d.decision === 'promote' && d.runtime_verified === true && d.promotion_eligible === true)
+    : [];
   const gatingResults = [];
   for (const decision of promoted) {
     const retryRate = Number(decision.retry_rate ?? aggregated.correctness?.retry_rate ?? 1);
@@ -365,17 +379,23 @@ export async function compileRuntimePolicy() {
   const taskFamilies = ['extract', 'summarize', 'agent'];
   const hardwareProfiles = (benchmarkSpec.hardware_simulation?.profiles || []).map((p) => p.id);
   const defaults = [];
-  const promotionHistory = Array.isArray(existingPolicy?.promotion_history) ? [...existingPolicy.promotion_history] : [];
+  const promotionHistory = runtimeEvidenceVerified && Array.isArray(existingPolicy?.promotion_history)
+    ? [...existingPolicy.promotion_history]
+    : [];
 
   for (const taskFamily of taskFamilies) {
     for (const hardwareProfile of hardwareProfiles) {
       const outputMode = pickOutputMode(taskFamily);
       const tupleKey = `${taskFamily}|${hardwareProfile}|${outputMode}`;
-      const previous = (existingPolicy?.defaults || []).find((d) => `${d.task_family}|${d.hardware_profile}|${d.output_mode}` === tupleKey);
+      const previous = runtimeEvidenceVerified
+        ? (existingPolicy?.defaults || []).find((d) => `${d.task_family}|${d.hardware_profile}|${d.output_mode}` === tupleKey)
+        : null;
 
       let preferred = previous?.preferred_model_id || null;
-      let reason = previous?.selection_reason || 'baseline_selector';
-      let evidenceRefs = Array.isArray(previous?.evidence_refs) ? previous.evidence_refs : ['reports/frontier_decisions.json'];
+      let reason = previous?.selection_reason || 'baseline_registry_no_runtime_promotion';
+      let evidenceRefs = Array.isArray(previous?.evidence_refs)
+        ? previous.evidence_refs
+        : ['server/model/registry_source.json'];
       const lastPromotion = [...promotionHistory].reverse().find((p) => p.task_family === taskFamily && p.hardware_profile === hardwareProfile);
       const cooldownActive = lastPromotion ? (generatedAt - Number(lastPromotion.effective_from_unix_ms || 0)) < cooldownMs : false;
 
@@ -453,6 +473,10 @@ export async function compileRuntimePolicy() {
   const policy = {
     policy_version: `runtime-policy-${seed.slice(0, 12)}`,
     generated_at_unix_ms: generatedAt,
+    promotion_evidence: {
+      runtime_verified: runtimeEvidenceVerified,
+      status: runtimeEvidenceVerified ? 'qualified_runtime_evidence' : 'simulation_only_no_promotion',
+    },
     source_reports: [
       'reports/aggregated_metrics.json',
       'reports/frontier_decisions.json',
@@ -487,6 +511,7 @@ export async function compileRuntimePolicy() {
         generated_at_unix_ms: generatedAt,
         promoted_count: eligible.length,
         rejected_count: gatingResults.filter((r) => !r.eligible).length,
+        runtime_evidence_verified: runtimeEvidenceVerified,
         policy_version: policy.policy_version,
       },
     ],
@@ -523,3 +548,5 @@ export async function compileRuntimePolicy() {
     validation,
   };
 }
+// module_name: frontier_evaluator
+// spec_ref: "dynamic_model_evaluation_layer"

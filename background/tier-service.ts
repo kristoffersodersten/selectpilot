@@ -1,3 +1,5 @@
+// module_name: background_tier-service_ts
+// spec_ref: "execution_layer"
 import {
   getEntitlementTier,
   hasEntitlementFeature,

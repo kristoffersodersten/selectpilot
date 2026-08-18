@@ -1,3 +1,5 @@
+# module_name: tests_server_test_model_feedback_py
+# spec_ref: "testing_strategy.integration_tests"
 from __future__ import annotations
 
 import json

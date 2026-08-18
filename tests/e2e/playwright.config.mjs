@@ -1,3 +1,5 @@
+// module_name: tests_e2e_playwright_config_mjs
+// spec_ref: "testing_strategy.integration_tests"
 import { defineConfig } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 

@@ -35,6 +35,7 @@ function inferPrecisionRequirement(compiledIntent) {
         return 'low';
     return 'medium';
 }
+// @spec_ref task_analysis_layer
 export function analyzeTask(compiledIntent) {
     const runtimeEnv = globalThis.process;
     const hardwareProfile = String(runtimeEnv?.env?.CHROMEAI_HARDWARE_PROFILE || 'medium').trim() || 'medium';
@@ -47,3 +48,5 @@ export function analyzeTask(compiledIntent) {
         precision_requirement: inferPrecisionRequirement(compiledIntent),
     };
 }
+// module_name: task_analyzer
+// spec_ref: "task_analysis_layer"

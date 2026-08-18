@@ -1,3 +1,5 @@
+// module_name: scripts_lint-manifest_mjs
+// spec_ref: "reporting"
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';

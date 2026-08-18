@@ -1,3 +1,5 @@
+// module_name: panel_layout_layoutRules_ts
+// spec_ref: "frontend_state_contract"
 export const BASE_GRID = 8;
 export const SUB_GRID = 4;
 export const MAX_VISIBLE_PANELS = 3;

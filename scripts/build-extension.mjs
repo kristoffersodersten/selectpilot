@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// module_name: scripts_build-extension_mjs
+// spec_ref: "reporting"
 
 import { build } from 'esbuild';
 import path from 'node:path';

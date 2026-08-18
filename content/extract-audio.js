@@ -1,3 +1,4 @@
+// @spec_ref execution_layer
 export function extractAudio() {
     const audio = document.querySelector('audio');
     if (!audio)

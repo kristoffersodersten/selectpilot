@@ -1,3 +1,5 @@
+// module_name: content_extract-video_ts
+// spec_ref: "execution_layer"
 export type VideoExtraction = {
   poster?: string;
   currentTime?: number;

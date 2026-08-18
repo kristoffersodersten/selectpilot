@@ -8,7 +8,7 @@
       "missing_node_report"
     ],
     "completion_score": 2,
-    "generated_at": "2026-03-26T18:08:26.167Z"
+    "generated_at": "2026-08-18T19:23:33.758Z"
   },
   {
     "phase_id": "phase_1_repo_plan",
@@ -19,7 +19,7 @@
       "module_manifest.json"
     ],
     "completion_score": 34,
-    "generated_at": "2026-03-26T18:08:26.167Z"
+    "generated_at": "2026-08-18T19:23:33.758Z"
   },
   {
     "phase_id": "phase_2_type_contracts",
@@ -32,7 +32,7 @@
       "shared/types/events.ts"
     ],
     "completion_score": 4,
-    "generated_at": "2026-03-26T18:08:26.167Z"
+    "generated_at": "2026-08-18T19:23:33.758Z"
   },
   {
     "phase_id": "phase_3_module_scaffolds",
@@ -42,7 +42,7 @@
       "scaffold_report.json"
     ],
     "completion_score": 1,
-    "generated_at": "2026-03-26T18:08:26.167Z"
+    "generated_at": "2026-08-18T19:23:33.758Z"
   },
   {
     "phase_id": "phase_4_core_implementation",
@@ -50,7 +50,7 @@
     "objective": "Implement backend deterministic core before UI polish.",
     "outputs_declared": [],
     "completion_score": 0,
-    "generated_at": "2026-03-26T18:08:26.167Z"
+    "generated_at": "2026-08-18T19:23:33.758Z"
   },
   {
     "phase_id": "phase_5_ui_implementation",
@@ -58,7 +58,7 @@
     "objective": "Implement frontend surfaces after runtime contracts are stable.",
     "outputs_declared": [],
     "completion_score": 0,
-    "generated_at": "2026-03-26T18:08:26.167Z"
+    "generated_at": "2026-08-18T19:23:33.758Z"
   },
   {
     "phase_id": "phase_6_verification",
@@ -66,7 +66,7 @@
     "objective": "Run static, behavioral, privacy, and state-machine validation.",
     "outputs_declared": [],
     "completion_score": 0,
-    "generated_at": "2026-03-26T18:08:26.167Z"
+    "generated_at": "2026-08-18T19:23:33.758Z"
   },
   {
     "phase_id": "phase_7_simulation",
@@ -74,7 +74,7 @@
     "objective": "Run realistic local simulations against multiple models, hardware profiles, and task scenarios.",
     "outputs_declared": [],
     "completion_score": 0,
-    "generated_at": "2026-03-26T18:08:26.167Z"
+    "generated_at": "2026-08-18T19:23:33.758Z"
   },
   {
     "phase_id": "phase_8_benchmark_analysis",
@@ -82,7 +82,7 @@
     "objective": "Compute metrics, frontier comparisons, regressions, and promotion eligibility.",
     "outputs_declared": [],
     "completion_score": 0,
-    "generated_at": "2026-03-26T18:08:26.167Z"
+    "generated_at": "2026-08-18T19:23:33.758Z"
   },
   {
     "phase_id": "phase_9_decision_reports",
@@ -90,6 +90,6 @@
     "objective": "Emit actionable reports on model policy, performance, and architecture choices.",
     "outputs_declared": [],
     "completion_score": 0,
-    "generated_at": "2026-03-26T18:08:26.167Z"
+    "generated_at": "2026-08-18T19:23:33.758Z"
   }
 ]

@@ -66,7 +66,7 @@
     "selected_model_id": "qwen2.5:0.5b",
     "selection_path": "runtime_policy_fallback",
     "selection_reason": "runtime_policy_fallback_no_models_available_simulated_degraded_mode",
-    "policy_version": "runtime-policy-d7833f631d57",
+    "policy_version": "runtime-policy-bbc138feed76",
     "promotion_applied": false
   },
   "active_model": "qwen2.5:0.5b",
@@ -76,11 +76,11 @@
       "selected_model_id": "qwen2.5:0.5b",
       "selection_path": "runtime_policy_fallback",
       "selection_reason": "runtime_policy_fallback_no_models_available_simulated_degraded_mode",
-      "policy_version": "runtime-policy-d7833f631d57",
+      "policy_version": "runtime-policy-bbc138feed76",
       "promotion_applied": false
     },
-    "pipeline_trace_a": "sp_2d9a752f83e1cc37",
-    "pipeline_trace_b": "sp_2d9a752f83e1cc37",
+    "pipeline_trace_a": "sp_eed3e21ecb6df3ca",
+    "pipeline_trace_b": "sp_eed3e21ecb6df3ca",
     "deterministic_repeat_stable": true,
     "state_reset_checks": {
       "ephemeral_state_cleared": true,

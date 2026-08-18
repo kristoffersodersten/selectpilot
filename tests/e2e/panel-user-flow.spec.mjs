@@ -1,3 +1,5 @@
+// module_name: tests_e2e_panel-user-flow_spec_mjs
+// spec_ref: "testing_strategy.integration_tests"
 import { test, expect } from '@playwright/test';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';

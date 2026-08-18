@@ -1,3 +1,5 @@
+// module_name: intent_compiler
+// spec_ref: "intent_compilation_layer"
 import type {
   CompiledIntent,
   IntentCompilationResult,
@@ -74,6 +76,7 @@ function buildClarification(compiledIntent: CompiledIntent): IntentClarification
   };
 }
 
+// @spec_ref intent_compilation_layer
 export function compileIntent(intentRaw: string): IntentCompilationResult {
   const resolved = resolveIntent(intentRaw);
   const scores = scoreIntentOperations(resolved.intent_normalized);
@@ -106,3 +109,5 @@ export function compileIntent(intentRaw: string): IntentCompilationResult {
     clarification: buildClarification(compiledIntent),
   };
 }
+// module_name: intent_compiler
+// spec_ref: "intent_compilation_layer"

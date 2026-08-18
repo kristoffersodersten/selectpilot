@@ -1,7 +1,10 @@
+// module_name: runtime_event_feedback
+// spec_ref: "runtime_event_contract"
 import fs from 'node:fs';
 import path from 'node:path';
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const feedbackPath = path.resolve(repoRoot, 'runtime/live_feedback.jsonl');
+// @spec_ref runtime_event_contract
 export function appendRuntimeFeedback(record) {
     fs.mkdirSync(path.dirname(feedbackPath), { recursive: true });
     const payload = {
@@ -12,3 +15,5 @@ export function appendRuntimeFeedback(record) {
     };
     fs.appendFileSync(feedbackPath, `${JSON.stringify(payload)}\n`, 'utf8');
 }
+// module_name: runtime_event_feedback
+// spec_ref: "runtime_event_contract"

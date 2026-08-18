@@ -1,3 +1,5 @@
+// module_name: billing_billing-ui_ts
+// spec_ref: "validation_layer"
 import { openCheckout } from './paddle-checkout.js';
 import { getPricing } from '../background/tier-service.js';
 import { button, setHTML } from '../utils/dom.js';

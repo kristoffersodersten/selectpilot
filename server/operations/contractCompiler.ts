@@ -1,3 +1,6 @@
+// module_name: operation_contract_compiler
+// spec_ref: "operation_mapping_layer"
+// @spec_ref execution_layer
 import type { CompiledIntent } from '../../shared/types/intent.js';
 import type { TaskAnalysis } from '../task/analyzer.js';
 
@@ -39,6 +42,7 @@ function latencyBudgetForTask(taskFamily: TaskAnalysis['task_family']): number {
   }
 }
 
+// @spec_ref operation_mapping_layer
 export function compileOperationContract(
   compiledIntent: CompiledIntent,
   taskAnalysis: TaskAnalysis,
@@ -112,3 +116,6 @@ export function compileOperationContract(
     },
   };
 }
+// module_name: operation_contract_compiler
+// spec_ref: "operation_mapping_layer"
+// @spec_ref execution_layer

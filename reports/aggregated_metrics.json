@@ -1,4 +1,7 @@
 {
+  "evidence_class": "deterministic_simulation",
+  "runtime_verified": false,
+  "promotion_eligible": false,
   "totals": {
     "execution_matrix_rows": 448,
     "runs": 4480,

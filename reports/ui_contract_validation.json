@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-26T18:50:53.927Z",
+  "generated_at": "2026-08-18T18:41:44.263Z",
   "validator": "ui_contract_validator",
   "type": "strict_file_contract_and_mue_ui_governance",
   "hard_rule": "if_feature_fails_any_required_fat_dimension_it_must_not_enter_runtime_ui",

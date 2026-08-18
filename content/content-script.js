@@ -1,3 +1,5 @@
+// module_name: content_content-script_ts
+// spec_ref: "execution_layer"
 import { extractSelection, extractDocumentText } from './extract-text.js';
 import { extractAudio } from './extract-audio.js';
 import { extractVideo } from './extract-video.js';

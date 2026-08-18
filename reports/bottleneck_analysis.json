@@ -1,4 +1,7 @@
 {
+  "evidence_class": "deterministic_simulation",
+  "runtime_verified": false,
+  "promotion_eligible": false,
   "detected": [
     "model_latency_dominance",
     "memory_pressure_events"

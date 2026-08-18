@@ -1,3 +1,5 @@
+// module_name: content_extract-audio_ts
+// spec_ref: "execution_layer"
 export type AudioExtraction = {
   audioUrl?: string;
   duration?: number;
@@ -5,6 +7,7 @@ export type AudioExtraction = {
   pageUrl: string;
 };
 
+// @spec_ref execution_layer
 export function extractAudio(): AudioExtraction | null {
   const audio = document.querySelector('audio');
   if (!audio) return null;

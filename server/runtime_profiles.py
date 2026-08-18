@@ -1,3 +1,5 @@
+# module_name: hardware_detector
+# spec_ref: "hardware_detection_layer"
 from __future__ import annotations
 
 import os

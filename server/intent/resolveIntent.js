@@ -1,3 +1,4 @@
+// @spec_ref intent_model
 export function resolveIntent(intentRaw) {
     const raw = String(intentRaw ?? '');
     const normalized = raw
@@ -14,3 +15,5 @@ export function resolveIntent(intentRaw) {
         intent_normalized: normalized,
     };
 }
+// module_name: intent_normalizer
+// spec_ref: "intent_model"

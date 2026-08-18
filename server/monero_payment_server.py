@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# module_name: server_monero_payment_server_py
+# spec_ref: "validation_layer"
 """
 Minimal Monero -> entitlement bridge for local-first billing MVP.
 

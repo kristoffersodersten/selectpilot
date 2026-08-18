@@ -1,3 +1,5 @@
+// module_name: tests_e2e_privacy-and-runtime_spec_mjs
+// spec_ref: "testing_strategy.integration_tests"
 import { test, expect } from '@playwright/test';
 
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost']);

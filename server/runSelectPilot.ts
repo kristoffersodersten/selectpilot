@@ -1,3 +1,6 @@
+// module_name: pipeline_executor
+// spec_ref: "execution_layer"
+// @spec_ref memory_guard
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -72,6 +75,7 @@ function deterministicTraceId(payload: Record<string, unknown>): string {
   return `sp_${digest}`;
 }
 
+// @spec_ref execution_layer
 export function runSelectPilot(input: RunSelectPilotInput): RunSelectPilotResult {
   const root = repoRoot();
   const compilation = compileIntent(input.intent);
@@ -176,3 +180,6 @@ export function runSelectPilot(input: RunSelectPilotInput): RunSelectPilotResult
 
   return result;
 }
+// module_name: pipeline_executor
+// spec_ref: "execution_layer"
+// @spec_ref memory_guard

@@ -1,5 +1,8 @@
 [
   {
+    "evidence_class": "deterministic_simulation",
+    "runtime_verified": false,
+    "promotion_eligible": false,
     "baseline_model": "qwen2:1.5b",
     "candidate_model": "qwen2:0.5b",
     "decision": "promote",
@@ -10,6 +13,9 @@
     "weighted_score": 0.8854
   },
   {
+    "evidence_class": "deterministic_simulation",
+    "runtime_verified": false,
+    "promotion_eligible": false,
     "baseline_model": "qwen2:1.5b",
     "candidate_model": "qwen2:1.5b",
     "decision": "reject",
@@ -20,6 +26,9 @@
     "weighted_score": 0.857
   },
   {
+    "evidence_class": "deterministic_simulation",
+    "runtime_verified": false,
+    "promotion_eligible": false,
     "baseline_model": "qwen2:1.5b",
     "candidate_model": "qwen2:7b",
     "decision": "reject",
@@ -30,6 +39,9 @@
     "weighted_score": 0.7605
   },
   {
+    "evidence_class": "deterministic_simulation",
+    "runtime_verified": false,
+    "promotion_eligible": false,
     "baseline_model": "qwen2:1.5b",
     "candidate_model": "qwen2:14b",
     "decision": "reject",

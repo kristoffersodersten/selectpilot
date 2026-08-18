@@ -1,5 +1,8 @@
 {
-  "generated_at": "2026-03-26T18:08:26.167Z",
+  "generated_at": "2026-08-18T19:23:33.758Z",
+  "verification_scope": "static_traceability_only",
+  "full_system_ok": false,
+  "runtime_verified": false,
   "static_checks": [
     {
       "name": "typecheck",
@@ -19,7 +22,7 @@
     },
     {
       "name": "spec_ref_coverage_scan",
-      "status": "failed"
+      "status": "completed"
     }
   ],
   "behavioral_checks": [
@@ -85,38 +88,11 @@
     }
   ],
   "pass_fail_summary": {
-    "ok": false,
-    "missing_spec_refs": [
-      "dynamic_model_evaluation_layer",
-      "execution_layer",
-      "failure_isolation",
-      "frontend_state_contract",
-      "hardware_detection_layer",
-      "intent_ambiguity_handling",
-      "intent_compilation_layer",
-      "intent_model",
-      "intent_popup",
-      "latency_budget",
-      "memory_guard",
-      "model_registry",
-      "model_selection_layer",
-      "model_switch_hysteresis",
-      "observability_layer",
-      "operation_mapping_layer",
-      "output_enforcement",
-      "privacy_and_debug_policy",
-      "probabilistic_suggestion_engine",
-      "prompt_determinism",
-      "provisioning_layer",
-      "reporting",
-      "runtime_event_contract",
-      "simulation_and_benchmarking",
-      "simulation_and_benchmarking.fixtures",
-      "simulation_and_benchmarking.metrics",
-      "task_analysis_layer",
-      "testing_strategy.integration_tests",
-      "testing_strategy.unit_tests",
-      "validation_layer"
-    ]
+    "ok": true,
+    "scope": "static_traceability_only",
+    "full_system_ok": false,
+    "missing_spec_refs": [],
+    "unmapped_files": [],
+    "unmapped_functions": []
   }
 }

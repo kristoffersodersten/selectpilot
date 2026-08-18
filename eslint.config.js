@@ -1,3 +1,5 @@
+// module_name: eslint_config_js
+// spec_ref: "frontend_state_contract"
 import js from '@eslint/js';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';

@@ -1,3 +1,5 @@
+// module_name: agent_agent-pipeline_ts
+// spec_ref: "execution_layer"
 import { runAgent } from './agent-client.js';
 function detectInput(context) {
     if (context.media?.videoFrame)

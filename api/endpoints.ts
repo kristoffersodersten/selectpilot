@@ -1,3 +1,5 @@
+// module_name: api_endpoints_ts
+// spec_ref: "execution_layer"
 export const API_BASE = 'http://127.0.0.1:8083';
 export const BILLING_BASE = 'http://127.0.0.1:8090';
 

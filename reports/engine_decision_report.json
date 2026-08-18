@@ -1,4 +1,7 @@
 {
+  "evidence_class": "deterministic_simulation",
+  "runtime_verified": false,
+  "promotion_eligible": false,
   "recommendation": "keep_ts_runtime",
   "reason": "current_costs_within_thresholds",
   "thresholds": {

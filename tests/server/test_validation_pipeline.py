@@ -1,3 +1,5 @@
+"""module_name: server_integration_tests; spec_ref: "testing_strategy.integration_tests"."""
+
 from __future__ import annotations
 
 import sys
@@ -255,3 +257,4 @@ class ValidationPipelineTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+"""module_name: server_integration_tests; spec_ref: "testing_strategy.integration_tests"."""

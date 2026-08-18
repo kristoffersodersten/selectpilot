@@ -73,8 +73,8 @@
   "runtime_selection": {
     "selected_model_id": "qwen2.5:0.5b",
     "selection_path": "runtime_policy_preferred",
-    "selection_reason": "higher_correctness_same_or_lower_cost",
-    "policy_version": "runtime-policy-d7833f631d57",
+    "selection_reason": "baseline_registry_no_runtime_promotion",
+    "policy_version": "runtime-policy-bbc138feed76",
     "promotion_applied": true
   },
   "active_model": "qwen2.5:0.5b",
@@ -83,12 +83,12 @@
     "runtime_selection": {
       "selected_model_id": "qwen2.5:0.5b",
       "selection_path": "runtime_policy_preferred",
-      "selection_reason": "higher_correctness_same_or_lower_cost",
-      "policy_version": "runtime-policy-d7833f631d57",
+      "selection_reason": "baseline_registry_no_runtime_promotion",
+      "policy_version": "runtime-policy-bbc138feed76",
       "promotion_applied": true
     },
-    "pipeline_trace_a": "sp_296a4c74be1a3da8",
-    "pipeline_trace_b": "sp_296a4c74be1a3da8",
+    "pipeline_trace_a": "sp_4b8c9d891186235f",
+    "pipeline_trace_b": "sp_4b8c9d891186235f",
     "deterministic_repeat_stable": true,
     "state_reset_checks": {
       "ephemeral_state_cleared": true,

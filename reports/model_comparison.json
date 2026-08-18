@@ -1,5 +1,8 @@
 [
   {
+    "evidence_class": "deterministic_simulation",
+    "runtime_verified": false,
+    "promotion_eligible": false,
     "model": "qwen2:0.5b",
     "weighted_score": 0.8854,
     "schema_validity_rate": 0.9717,
@@ -7,6 +10,9 @@
     "p95_latency_ms": 628
   },
   {
+    "evidence_class": "deterministic_simulation",
+    "runtime_verified": false,
+    "promotion_eligible": false,
     "model": "qwen2:1.5b",
     "weighted_score": 0.857,
     "schema_validity_rate": 0.9709,
@@ -14,6 +20,9 @@
     "p95_latency_ms": 825
   },
   {
+    "evidence_class": "deterministic_simulation",
+    "runtime_verified": false,
+    "promotion_eligible": false,
     "model": "qwen2:7b",
     "weighted_score": 0.7605,
     "schema_validity_rate": 0.9678,
@@ -21,6 +30,9 @@
     "p95_latency_ms": 1582
   },
   {
+    "evidence_class": "deterministic_simulation",
+    "runtime_verified": false,
+    "promotion_eligible": false,
     "model": "qwen2:14b",
     "weighted_score": 0.6719,
     "schema_validity_rate": 0.9648,

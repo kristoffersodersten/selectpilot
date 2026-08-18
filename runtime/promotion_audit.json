@@ -1,6 +1,6 @@
 {
-  "generated_at_unix_ms": 1700704147799,
-  "policy_version": "runtime-policy-d7833f631d57",
+  "generated_at_unix_ms": 1700798162081,
+  "policy_version": "runtime-policy-c44de2e4a8a1",
   "source_reports": [
     "reports/aggregated_metrics.json",
     "reports/frontier_decisions.json",
@@ -39,19 +39,54 @@
       "reason": "manual_runtime_rollback",
       "task_family": "agent",
       "hardware_profile": "high"
+    },
+    {
+      "event_type": "compile_policy",
+      "generated_at_unix_ms": 1700080928761,
+      "promoted_count": 0,
+      "rejected_count": 0,
+      "policy_version": "runtime-policy-20fa39a37df9"
+    },
+    {
+      "event_type": "compile_policy",
+      "generated_at_unix_ms": 1700080928761,
+      "promoted_count": 0,
+      "rejected_count": 0,
+      "runtime_evidence_verified": false,
+      "policy_version": "runtime-policy-20fa39a37df9"
+    },
+    {
+      "event_type": "compile_policy",
+      "generated_at_unix_ms": 1700890687120,
+      "promoted_count": 0,
+      "rejected_count": 0,
+      "runtime_evidence_verified": false,
+      "policy_version": "runtime-policy-237557c53290"
+    },
+    {
+      "event_type": "compile_policy",
+      "generated_at_unix_ms": 1700611533398,
+      "promoted_count": 0,
+      "rejected_count": 0,
+      "runtime_evidence_verified": false,
+      "policy_version": "runtime-policy-83fb9814da56"
+    },
+    {
+      "event_type": "compile_policy",
+      "generated_at_unix_ms": 1700559313270,
+      "promoted_count": 0,
+      "rejected_count": 0,
+      "runtime_evidence_verified": false,
+      "policy_version": "runtime-policy-bbc138feed76"
+    },
+    {
+      "event_type": "compile_policy",
+      "generated_at_unix_ms": 1700798162081,
+      "promoted_count": 0,
+      "rejected_count": 0,
+      "runtime_evidence_verified": false,
+      "policy_version": "runtime-policy-c44de2e4a8a1"
     }
   ],
-  "gating_results": [
-    {
-      "candidate_model": "qwen2:0.5b",
-      "eligible": true,
-      "reason": "eligible",
-      "confidence": 0.9029,
-      "evidence_refs": [
-        "reports/frontier_decisions.json",
-        "reports/determinism_report.json",
-        "reports/aggregated_metrics.json"
-      ]
-    }
-  ]
+  "gating_results": []
 }

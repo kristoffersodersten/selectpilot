@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// module_name: specification_reporting
+// spec_ref: "reporting"
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
@@ -34,6 +36,11 @@ const REQUIRED_TOP_LEVEL_NODES = [
 
 const SCAN_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs', '.py']);
 const SCAN_IGNORE = new Set(['.git', 'node_modules', 'test-results', 'dist']);
+const SIMULATION_EVIDENCE = {
+  evidence_class: 'deterministic_simulation',
+  runtime_verified: false,
+  promotion_eligible: false,
+};
 
 function stableStringify(value) {
   return JSON.stringify(value, null, 2);
@@ -204,6 +211,7 @@ function buildDeterminismReport(rawMetrics, target) {
 
   const score = groupScores.length ? groupScores.reduce((a, b) => a + b, 0) / groupScores.length : 0;
   return {
+    ...SIMULATION_EVIDENCE,
     target,
     group_count: byGroup.size,
     bounded_output_variance: Number((score >= target ? score : Math.max(0, score - 0.01)).toFixed(4)),
@@ -232,6 +240,7 @@ function analyzeBottlenecks(rawMetrics) {
   if (memoryEvents > 0) detected.push('memory_pressure_events');
 
   return {
+    ...SIMULATION_EVIDENCE,
     detected,
     summary: detected.length ? 'bottlenecks_detected' : 'no_critical_bottleneck',
     p95_latency_ms: Math.round(p95Latency),
@@ -251,6 +260,7 @@ function decideEngine(bottleneckAnalysis) {
   };
 
   const decision = {
+    ...SIMULATION_EVIDENCE,
     recommendation: 'keep_ts_runtime',
     reason: 'current_costs_within_thresholds',
     thresholds: {
@@ -331,6 +341,13 @@ async function walkFiles(dirPath, files = []) {
       continue;
     }
     if (!SCAN_EXTENSIONS.has(path.extname(entry.name))) continue;
+    if (entry.name.endsWith('.bundle.js') || entry.name.includes('.generated.')) continue;
+    if (entry.name.endsWith('.js')) {
+      const typeScriptSource = resolved.slice(0, -3) + '.ts';
+      const hasTypeScriptSource = await fsp.access(typeScriptSource).then(() => true).catch(() => false);
+      if (hasTypeScriptSource) continue;
+    }
+    if (entry.name === '__init__.py') continue;
     files.push(resolved);
   }
   return files;
@@ -392,6 +409,18 @@ function buildModuleManifest(spec) {
   return modules.sort((a, b) => a.path.localeCompare(b.path));
 }
 
+async function validateModuleManifest(moduleManifest) {
+  const missing = [];
+  for (const module of moduleManifest) {
+    const resolved = path.resolve(repoRoot, module.path);
+    const exists = await fsp.access(resolved).then(() => true).catch(() => false);
+    if (!exists) missing.push({ module_name: module.module_name, path: module.path, spec_ref: module.spec_ref });
+  }
+  if (missing.length) {
+    fail('repo_mapping_path_missing', 'Repository mapping references missing implementation paths', { missing });
+  }
+}
+
 function buildRepoPlan(spec, moduleManifest) {
   const phases = spec.build_pipeline?.phases || [];
   return {
@@ -439,21 +468,32 @@ async function validateSharedTypes() {
 function buildVerificationReport(spec, traceability, requiredRefs) {
   const discovered = new Set(traceability.discovered_refs);
   const missingSpecRefs = requiredRefs.filter((ref) => !discovered.has(ref));
+  const unmappedFiles = traceability.files.filter((file) => file.refs.length === 0).map((file) => file.file);
+  const unmappedFunctions = traceability.files
+    .filter((file) => file.missing_function_annotations > 0)
+    .map((file) => ({ file: file.file, missing_function_annotations: file.missing_function_annotations }));
   return {
     generated_at: new Date().toISOString(),
+    verification_scope: 'static_traceability_only',
+    full_system_ok: false,
+    runtime_verified: false,
     static_checks: [
       { name: 'typecheck', status: 'pending' },
       { name: 'lint', status: 'pending' },
       { name: 'dead_code_scan', status: 'pending' },
-      { name: 'traceability_scan', status: 'completed' },
+      { name: 'traceability_scan', status: unmappedFiles.length || unmappedFunctions.length ? 'failed' : 'completed' },
       { name: 'spec_ref_coverage_scan', status: missingSpecRefs.length ? 'failed' : 'completed' },
     ],
     behavioral_checks: (spec.verification?.behavioral_checks || []).map((name) => ({ name, status: 'pending' })),
     privacy_checks: (spec.verification?.privacy_checks || []).map((name) => ({ name, status: 'pending' })),
     runtime_checks: (spec.verification?.runtime_checks || []).map((name) => ({ name, status: 'pending' })),
     pass_fail_summary: {
-      ok: missingSpecRefs.length === 0,
+      ok: missingSpecRefs.length === 0 && unmappedFiles.length === 0 && unmappedFunctions.length === 0,
+      scope: 'static_traceability_only',
+      full_system_ok: false,
       missing_spec_refs: missingSpecRefs,
+      unmapped_files: unmappedFiles,
+      unmapped_functions: unmappedFunctions,
     },
   };
 }
@@ -475,6 +515,7 @@ function buildSpecCoverageReport(traceability, requiredRefs) {
 
 function buildSimulationReport(spec) {
   return {
+    ...SIMULATION_EVIDENCE,
     generated_at: new Date().toISOString(),
     scenario_matrix: spec.simulation_and_benchmarking?.scenario_matrix || {},
     raw_metrics: [],
@@ -488,6 +529,7 @@ function buildSimulationReport(spec) {
 
 function buildFrontierReport(spec) {
   return {
+    ...SIMULATION_EVIDENCE,
     generated_at: new Date().toISOString(),
     current_frontier: [],
     candidate_comparisons: [],
@@ -500,6 +542,7 @@ function buildFrontierReport(spec) {
 function buildArchitectureDecisionReport(spec) {
   const recommendation = spec.initial_engine_recommendation || {};
   return {
+    ...SIMULATION_EVIDENCE,
     generated_at: new Date().toISOString(),
     engine_recommendation: recommendation.recommendation || null,
     bottleneck_summary: recommendation.likely_hotpaths_for_native_if_needed || [],
@@ -597,6 +640,7 @@ function buildBenchmarkOutputs(benchmarkSpec, mode) {
       + ((1 - Math.min(1, avg('peak_ram_mb') / 5000)) * 0.15);
 
     return {
+      ...SIMULATION_EVIDENCE,
       combo_id: comboId,
       scenario: first.scenario,
       hardware_profile: first.hardware_profile,
@@ -625,6 +669,7 @@ function buildBenchmarkOutputs(benchmarkSpec, mode) {
   const modelComparison = Array.from(byModel.entries()).map(([model, rows]) => {
     const avg = (selector) => rows.reduce((s, r) => s + selector(r), 0) / rows.length;
     return {
+      ...SIMULATION_EVIDENCE,
       model,
       weighted_score: Number(avg((r) => r.aggregate.weighted_score).toFixed(4)),
       schema_validity_rate: Number(avg((r) => r.aggregate.schema_validity_rate).toFixed(4)),
@@ -645,6 +690,7 @@ function buildBenchmarkOutputs(benchmarkSpec, mode) {
   const frontierDecisions = modelComparison.map((candidate) => {
     const evalResult = evaluateFrontierDecision(candidate, baseline, thresholds);
     return {
+      ...SIMULATION_EVIDENCE,
       baseline_model: baseline.model,
       candidate_model: candidate.model,
       ...evalResult,
@@ -657,6 +703,7 @@ function buildBenchmarkOutputs(benchmarkSpec, mode) {
   const determinismReport = buildDeterminismReport(rawMetrics, Number(benchmarkSpec.determinism_audit?.score?.target || 0.95));
 
   const aggregatedMetrics = {
+    ...SIMULATION_EVIDENCE,
     totals: {
       execution_matrix_rows: executionMatrix.length,
       runs: rawMetrics.length,
@@ -724,6 +771,7 @@ async function main() {
   const requiredRefs = collectRequiredSpecRefs(spec);
   const traceability = await traceabilityScan();
   const moduleManifest = buildModuleManifest(spec);
+  await validateModuleManifest(moduleManifest);
   const repoPlan = buildRepoPlan(spec, moduleManifest);
   const phaseReports = buildPhaseReports(spec, moduleManifest, missingTopNodes);
   const specCoverageReport = buildSpecCoverageReport(traceability, requiredRefs);
@@ -754,6 +802,9 @@ async function main() {
 
   const result = {
     ok: verificationReport.pass_fail_summary.ok,
+    scope: 'spec_traceability_and_deterministic_simulation_only',
+    runtime_verified: false,
+    promotion_eligible: false,
     mode,
     input: path.relative(repoRoot, SPEC_PATH),
     benchmark_input: path.relative(repoRoot, BENCHMARK_SPEC_PATH),
@@ -782,6 +833,8 @@ async function main() {
     fail('spec_coverage_incomplete', 'Specification coverage is incomplete', {
       reports: result.reports,
       missing_spec_refs: verificationReport.pass_fail_summary.missing_spec_refs,
+      unmapped_files: verificationReport.pass_fail_summary.unmapped_files,
+      unmapped_functions: verificationReport.pass_fail_summary.unmapped_functions,
     });
   }
   console.log(stableStringify(result));

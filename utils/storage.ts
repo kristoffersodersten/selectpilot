@@ -1,3 +1,5 @@
+// module_name: utils_storage_ts
+// spec_ref: "frontend_state_contract"
 import { error, log } from './logger.js';
 
 const encoder = new TextEncoder();

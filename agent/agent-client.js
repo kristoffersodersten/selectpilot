@@ -1,3 +1,5 @@
+// module_name: agent_agent-client_ts
+// spec_ref: "execution_layer"
 import { agent as agentEndpoint } from '../api/nano-client.js';
 export async function runAgent(prompt, context) {
     const payload = { prompt, context };
