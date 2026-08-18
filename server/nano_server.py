@@ -536,19 +536,67 @@ def _now_ms() -> int:
     return int(time.time() * 1000)
 
 
+def _recent_model_feedback(model_id: str, limit: int = MODEL_FAILURE_ISOLATION_WINDOW) -> list[dict]:
+    if not model_id or not LIVE_FEEDBACK_PATH.exists():
+        return []
+    records: list[dict] = []
+    try:
+        with _LIVE_FEEDBACK_LOCK:
+            lines = LIVE_FEEDBACK_PATH.read_text(encoding="utf-8").splitlines()
+        for line in reversed(lines):
+            try:
+                item = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if item.get("type") == "model_feedback" and item.get("model_id") == model_id:
+                records.append(item)
+                if len(records) >= limit:
+                    break
+    except OSError:
+        return []
+    return list(reversed(records))
+
+
 def record_model_feedback(model_id: str, *, success: bool, retries: int, latency_ms: int, cancelled: bool = False) -> None:
-    return
+    if not model_id:
+        return
+    _append_live_feedback({
+        "type": "model_feedback",
+        "model_id": model_id,
+        "success": bool(success),
+        "retries": max(0, int(retries)),
+        "latency_ms": max(0, int(latency_ms)),
+        "cancelled": bool(cancelled),
+    })
 
 
 def _is_quarantined(model_id: str) -> bool:
-    return False
+    records = _recent_model_feedback(model_id)
+    if len(records) < MODEL_FAILURE_ISOLATION_WINDOW:
+        return False
+    failures = sum(1 for item in records if not item.get("success") or item.get("cancelled"))
+    return (failures / len(records)) > MODEL_FAILURE_ISOLATION_THRESHOLD
 
 
 def _recent_feedback_penalty(model_id: str) -> float:
-    return 0.0
+    records = _recent_model_feedback(model_id)
+    if not records:
+        return 0.0
+    failure_ratio = sum(1 for item in records if not item.get("success") or item.get("cancelled")) / len(records)
+    retry_ratio = sum(min(3, int(item.get("retries") or 0)) for item in records) / (len(records) * 3)
+    latency_overrun_ratio = sum(1 for item in records if int(item.get("latency_ms") or 0) > 10_000) / len(records)
+    return round(failure_ratio + (retry_ratio * 0.25) + (latency_overrun_ratio * 0.1), 4)
 
 
 def apply_hysteresis(task_type: str, selected_model_id: str, available_model_ids: list[str]) -> str:
+    del task_type
+    if selected_model_id not in available_model_ids or _is_quarantined(selected_model_id):
+        raise ValidationError(
+            "selected_model_unavailable",
+            "Selected model is unavailable or quarantined",
+            status=503,
+            details={"selected_model_id": selected_model_id},
+        )
     return selected_model_id
 
 
@@ -975,6 +1023,8 @@ def select_smallest_sufficient_model(task_analysis: dict) -> dict:
             },
         )
 
+    selected_id = apply_hysteresis(task_type, selected_id, available_ids)
+    selected = next(item[0] for item in sorted_candidates if str(item[0].get("id") or "") == selected_id)
     selected_penalty = _recent_feedback_penalty(selected_id)
     return {
         "model": selected.get("id"),
@@ -1656,6 +1706,8 @@ class Handler(BaseHTTPRequestHandler):
             return
         except (RuntimeError, OllamaError) as e:
             duration_ms = round((time.perf_counter() - started_at) * 1000)
+            if runtime_model_id and path in {'/summarize', '/agent', '/extract'}:
+                record_model_feedback(runtime_model_id, success=False, retries=retry_count, latency_ms=duration_ms)
             _append_live_feedback({
                 "trace_id": trace_id,
                 "operation": contract.name,

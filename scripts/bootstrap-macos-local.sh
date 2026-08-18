@@ -62,6 +62,7 @@ print(json.dumps({
     "reason": recommendation["reason"],
     "generation_model": runtime_profile.generation_model,
     "embedding_model": runtime_profile.embedding_model,
+    "num_ctx": runtime_profile.num_ctx,
     "command": commands["command"],
 }))
 PY
@@ -74,7 +75,7 @@ import shlex
 import sys
 
 payload = json.loads(sys.argv[1])
-for key in ("selected_profile", "generation_model", "embedding_model", "reason"):
+for key in ("selected_profile", "generation_model", "embedding_model", "num_ctx", "reason"):
     print(f"{key.upper()}={shlex.quote(str(payload[key]))}")
 PY
 )"
@@ -123,6 +124,7 @@ fi
 
 CHROMEAI_OLLAMA_MODEL="$GEN_MODEL" \
 CHROMEAI_OLLAMA_EMBED_MODEL="$EMBED_MODEL" \
+CHROMEAI_OLLAMA_NUM_CTX="$NUM_CTX" \
 "$ROOT/scripts/install-macos-local.sh"
 STATUS_LAUNCHAGENT="ok"
 
@@ -140,6 +142,7 @@ Profile: $SELECTED_PROFILE
 Reason: $REASON
 Generation model: $GEN_MODEL
 Embedding model: $EMBED_MODEL
+Context window: $NUM_CTX
 
 Next recommended command:
   pnpm benchmark:local

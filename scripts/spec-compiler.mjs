@@ -14,6 +14,7 @@ const SPEC_PATH = path.resolve(repoRoot, 'selectpilot_monolith_v3.json');
 const BENCHMARK_SPEC_PATH = path.resolve(repoRoot, 'selectpilot_benchmark_v1.json');
 const REPORTS_DIR = path.resolve(repoRoot, 'reports');
 const SHARED_TYPES_DIR = path.resolve(repoRoot, 'shared', 'types');
+const REQUIRED_SHARED_TYPE_FILES = ['runtime.ts', 'model.ts', 'intent.ts', 'events.ts'];
 
 const VALID_MODES = new Set(['full', 'single', 'family', 'frontier', 'determinism', 'engine']);
 
@@ -419,16 +420,20 @@ function buildPhaseReports(spec, moduleManifest, missingTopNodes) {
   }));
 }
 
-function buildSharedTypes(spec) {
-  const taskTypes = ['extract', 'summarize', 'agent'];
-  const candidateModels = spec.simulation_and_benchmarking?.candidate_models || [];
-
-  return {
-    'runtime.ts': `export type RuntimeStatus = 'idle' | 'running' | 'completed' | 'error';\n`,
-    'model.ts': `export type TaskType = ${taskTypes.map((v) => `'${v}'`).join(' | ')};\nexport type CandidateModelId = ${candidateModels.length ? candidateModels.map((v) => `'${v}'`).join(' | ') : 'string'};\n`,
-    'intent.ts': `export type CompiledIntent = { clarify_required: boolean; ambiguity_score: number; };\n`,
-    'events.ts': `export type TerminalEventType = 'RUNTIME_COMPLETED' | 'RUNTIME_FAILED';\n`,
-  };
+async function validateSharedTypes() {
+  const missing = [];
+  for (const fileName of REQUIRED_SHARED_TYPE_FILES) {
+    const filePath = path.join(SHARED_TYPES_DIR, fileName);
+    const source = await fsp.readFile(filePath, 'utf8').catch(() => '');
+    if (!source.trim() || !/\bexport\s+(?:type|interface)\b/.test(source)) {
+      missing.push(path.relative(repoRoot, filePath));
+    }
+  }
+  if (missing.length) {
+    fail('typed_contract_missing', 'Required maintained shared type contracts are missing or empty', {
+      missing,
+    });
+  }
 }
 
 function buildVerificationReport(spec, traceability, requiredRefs) {
@@ -714,7 +719,7 @@ async function main() {
   }
 
   await ensureDir(REPORTS_DIR);
-  await ensureDir(SHARED_TYPES_DIR);
+  await validateSharedTypes();
 
   const requiredRefs = collectRequiredSpecRefs(spec);
   const traceability = await traceabilityScan();
@@ -727,11 +732,6 @@ async function main() {
   const frontierReport = buildFrontierReport(spec);
   const architectureDecisionReport = buildArchitectureDecisionReport(spec);
   const benchmarkOutputs = buildBenchmarkOutputs(benchmarkSpec, mode);
-
-  const sharedTypes = buildSharedTypes(spec);
-  for (const [fileName, source] of Object.entries(sharedTypes)) {
-    await writeText(path.join(SHARED_TYPES_DIR, fileName), source);
-  }
 
   await writeJson(path.join(REPORTS_DIR, 'repo_plan.json'), repoPlan);
   await writeJson(path.join(REPORTS_DIR, 'module_manifest.json'), moduleManifest);
@@ -752,8 +752,8 @@ async function main() {
   await writeJson(path.join(REPORTS_DIR, 'engine_decision_report.json'), benchmarkOutputs.engineDecision);
   await writeText(path.join(REPORTS_DIR, 'frontier_summary.html'), buildFrontierSummaryHtml(benchmarkOutputs.frontierDecisions));
 
-  console.log(stableStringify({
-    ok: true,
+  const result = {
+    ok: verificationReport.pass_fail_summary.ok,
     mode,
     input: path.relative(repoRoot, SPEC_PATH),
     benchmark_input: path.relative(repoRoot, BENCHMARK_SPEC_PATH),
@@ -777,7 +777,14 @@ async function main() {
       'reports/engine_decision_report.json',
       'reports/frontier_summary.html',
     ],
-  }));
+  };
+  if (!result.ok) {
+    fail('spec_coverage_incomplete', 'Specification coverage is incomplete', {
+      reports: result.reports,
+      missing_spec_refs: verificationReport.pass_fail_summary.missing_spec_refs,
+    });
+  }
+  console.log(stableStringify(result));
 }
 
 main().catch((err) => {

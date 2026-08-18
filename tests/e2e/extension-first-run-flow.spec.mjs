@@ -1,8 +1,7 @@
 import { test, expect, chromium } from '@playwright/test';
 
 test('real extension first-run sends only the canonical local example', async () => {
-  const executablePath = process.env.SELECTPILOT_CHROME_EXECUTABLE;
-  test.skip(!executablePath, 'SELECTPILOT_CHROME_EXECUTABLE is required for unpacked-extension proof');
+  const executablePath = process.env.SELECTPILOT_CHROME_EXECUTABLE || chromium.executablePath();
 
   const context = await chromium.launchPersistentContext(test.info().outputPath('extension-user-data'), {
     executablePath,

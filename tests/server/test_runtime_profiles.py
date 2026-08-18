@@ -16,7 +16,8 @@ class RuntimeProfileTests(unittest.TestCase):
     def test_unknown_profile_falls_back_to_fast(self) -> None:
         profile = get_runtime_profile("missing")
         self.assertEqual(profile.key, "fast")
-        self.assertEqual(profile.generation_model, "qwen2.5:0.5b")
+        self.assertEqual(profile.generation_model, "gemma4:e2b-it-qat")
+        self.assertEqual(profile.num_ctx, 16384)
 
     def test_auto_recommendation_prefers_balanced_on_large_machines(self) -> None:
         recommendation = recommend_runtime_profile(
@@ -27,6 +28,7 @@ class RuntimeProfileTests(unittest.TestCase):
     def test_bootstrap_command_contains_profile(self) -> None:
         command = build_bootstrap_commands("balanced", ROOT)
         self.assertIn("--profile balanced", command["command"])
+        self.assertEqual(command["num_ctx"], 32768)
 
 
 if __name__ == "__main__":

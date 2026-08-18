@@ -94,6 +94,7 @@ class OllamaConfig:
     model: str
     embed_model: str
     timeout_seconds: float
+    num_ctx: int
 
 
 class OllamaError(RuntimeError):
@@ -105,6 +106,7 @@ class OllamaClient:
         if config is None:
             default_generation_model = "llama3.2"
             default_embed_model = "nomic-embed-text-v2-moe:latest"
+            default_num_ctx = 16384
             runtime_profile = os.environ.get("CHROMEAI_RUNTIME_PROFILE", "auto")
 
             try:
@@ -115,6 +117,7 @@ class OllamaClient:
                 profile = get_runtime_profile(resolved_profile)
                 default_generation_model = profile.generation_model
                 default_embed_model = profile.embedding_model
+                default_num_ctx = profile.num_ctx
             except Exception:
                 pass
 
@@ -123,6 +126,7 @@ class OllamaClient:
                 model=os.environ.get("CHROMEAI_OLLAMA_MODEL", default_generation_model),
                 embed_model=os.environ.get("CHROMEAI_OLLAMA_EMBED_MODEL", default_embed_model),
                 timeout_seconds=float(os.environ.get("CHROMEAI_OLLAMA_TIMEOUT_SECONDS", "30")),
+                num_ctx=int(os.environ.get("CHROMEAI_OLLAMA_NUM_CTX", str(default_num_ctx))),
         )
         self.config = config
 
@@ -210,15 +214,40 @@ class OllamaClient:
         return models
 
     def _resolve_model(self, requested: str, preferences: list[str], models: list[str]) -> str:
-        if requested in models:
-            return requested
-        for candidate in preferences:
-            for model in models:
-                if model == candidate or model.startswith(f"{candidate}:"):
-                    return model
-        if models:
-            return models[0]
+        del preferences
+        if self._model_available_locally(requested, models):
+            if requested in models:
+                return requested
+            requested_base = requested.split(":", 1)[0]
+            return next(model for model in models if model == requested_base or model.startswith(f"{requested_base}:"))
         return requested
+
+    def _generation_options(self, temperature: float) -> dict[str, Any]:
+        return {"temperature": temperature, "num_ctx": self.config.num_ctx}
+
+    def _require_structured_object(self, raw_response: str, schema: dict[str, Any], operation: str) -> dict[str, Any]:
+        content = _parse_jsonish(raw_response)
+        if not isinstance(content, dict):
+            raise OllamaError(f"{operation} returned non-object structured output")
+
+        missing = [key for key in schema.get("required", []) if key not in content]
+        if missing:
+            raise OllamaError(f"{operation} structured output is missing required fields: {', '.join(missing)}")
+
+        properties = schema.get("properties", {})
+        if schema.get("additionalProperties") is False:
+            unexpected = sorted(set(content) - set(properties))
+            if unexpected:
+                raise OllamaError(f"{operation} structured output has unexpected fields: {', '.join(unexpected)}")
+
+        type_map = {"string": str, "array": list, "object": dict}
+        for key, definition in properties.items():
+            if key not in content:
+                continue
+            expected = type_map.get(definition.get("type"))
+            if expected is not None and not isinstance(content[key], expected):
+                raise OllamaError(f"{operation} structured output field {key} has invalid type")
+        return content
 
     def _request_json(self, path: str, payload: dict[str, Any] | None = None) -> Any:
         url = urljoin(self.config.base_url + "/", path.lstrip("/"))
@@ -263,6 +292,7 @@ class OllamaClient:
                 "active_model": self.config.model,
                 "active_embed_model": self.config.embed_model,
                 "timeout_seconds": self.config.timeout_seconds,
+                "num_ctx": self.config.num_ctx,
                 "reachable": False,
                 "status": "degraded",
                 "error": str(e),
@@ -286,6 +316,7 @@ class OllamaClient:
             "active_model": active_model,
             "active_embed_model": active_embed_model,
             "timeout_seconds": self.config.timeout_seconds,
+            "num_ctx": self.config.num_ctx,
         }
         return {
             **base,
@@ -338,19 +369,11 @@ class OllamaClient:
             "system": "You write precise summaries for selected text in a browser side panel.",
             "stream": False,
             "format": schema,
-            "options": {"temperature": 0.2},
+            "options": self._generation_options(0.2),
         }
         response = self._request_json("/api/generate", payload)
         raw_response = str(response.get("response", "")).strip()
-        content = _parse_jsonish(raw_response)
-        if not isinstance(content, dict):
-            content = {
-                "summary": raw_response or "No summary produced.",
-                "bullets": [],
-                "action_items": [],
-                "title": title or "Summary",
-                "tags": ["ollama", "fallback"],
-            }
+        content = self._require_structured_object(raw_response, schema, "summarize")
 
         summary = str(content.get("summary", "")).strip()
         bullets = [str(item).strip() for item in content.get("bullets", []) if str(item).strip()]
@@ -401,20 +424,11 @@ class OllamaClient:
             "system": "You are a practical browser copilot that rewrites and structures selected text locally.",
             "stream": False,
             "format": schema,
-            "options": {"temperature": 0.2},
+            "options": self._generation_options(0.2),
         }
         response = self._request_json("/api/generate", payload)
         raw_response = str(response.get("response", "")).strip()
-        content = _parse_jsonish(raw_response)
-        if not isinstance(content, dict):
-            content = {
-                "reasoning": ["Model response was not valid JSON"],
-                "markdown": raw_response or "No response produced.",
-                "json": {
-                    "raw": raw_response,
-                    "prompt": prompt,
-                },
-            }
+        content = self._require_structured_object(raw_response, schema, "agent")
 
         if "reasoning" not in content or "markdown" not in content or "json" not in content:
             result = content.get("result", {}) if isinstance(content.get("result"), dict) else {}
@@ -509,13 +523,11 @@ class OllamaClient:
             "system": "You generate clean structured extraction results for highlighted browser text.",
             "stream": False,
             "format": preset.schema,
-            "options": {"temperature": 0.1},
+            "options": self._generation_options(0.1),
         }
         response = self._request_json("/api/generate", payload)
         raw_response = str(response.get("response", "")).strip()
-        content = _parse_jsonish(raw_response)
-        if not isinstance(content, dict):
-            content = {}
+        content = self._require_structured_object(raw_response, preset.schema, "extract")
 
         normalized: dict[str, Any] = {}
         schema_props = preset.schema.get("properties", {})
@@ -532,7 +544,7 @@ class OllamaClient:
                 normalized[key] = str(raw_value or "").strip()
 
         if not any(normalized.values()):
-            normalized[preset.intro_key] = raw_response or "No extraction produced."
+            raise OllamaError("extract structured output contains no usable values")
 
         markdown = render_extraction_markdown(preset, normalized)
         return {

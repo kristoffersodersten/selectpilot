@@ -6,8 +6,9 @@ TEMPLATE="$ROOT/launchd/com.chromeai.nano.plist"
 DEST="${HOME}/Library/LaunchAgents/com.chromeai.nano.plist"
 HASH="$(shasum -a 256 "$ROOT/server/nano_server.py" | awk '{print $1}')"
 OLLAMA_BASE_URL="${CHROMEAI_OLLAMA_BASE_URL:-http://127.0.0.1:11434}"
-OLLAMA_MODEL="${CHROMEAI_OLLAMA_MODEL:-qwen2.5:0.5b}"
+OLLAMA_MODEL="${CHROMEAI_OLLAMA_MODEL:-gemma4:e2b-it-qat}"
 OLLAMA_EMBED_MODEL="${CHROMEAI_OLLAMA_EMBED_MODEL:-nomic-embed-text-v2-moe:latest}"
+OLLAMA_NUM_CTX="${CHROMEAI_OLLAMA_NUM_CTX:-16384}"
 RUN_DIR="${CHROMEAI_RUN_DIR:-${HOME}/Library/Application Support/SelectPilot/run}"
 LOG_DIR="${CHROMEAI_LOG_DIR:-${HOME}/Library/Logs/SelectPilot}"
 
@@ -22,6 +23,7 @@ sed \
   -e "s|__OLLAMA_BASE_URL__|$OLLAMA_BASE_URL|g" \
   -e "s|__OLLAMA_MODEL__|$OLLAMA_MODEL|g" \
   -e "s|__OLLAMA_EMBED_MODEL__|$OLLAMA_EMBED_MODEL|g" \
+  -e "s|__OLLAMA_NUM_CTX__|$OLLAMA_NUM_CTX|g" \
   "$TEMPLATE" > "$DEST"
 
 launchctl unload "$DEST" 2>/dev/null || true
@@ -37,7 +39,8 @@ Next steps:
   2. Current Ollama base URL: $OLLAMA_BASE_URL
   3. Current Ollama model: $OLLAMA_MODEL
   4. Local bridge URL: http://127.0.0.1:8083
-  5. Run dir: $RUN_DIR
-  6. Log dir: $LOG_DIR
-  7. Run 'pnpm benchmark:local' to validate latency on this machine.
+  5. Ollama context window: $OLLAMA_NUM_CTX
+  6. Run dir: $RUN_DIR
+  7. Log dir: $LOG_DIR
+  8. Run 'pnpm benchmark:local' to validate latency on this machine.
 EOF
