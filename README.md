@@ -189,3 +189,9 @@ Current CI enforces:
 - typecheck (`pnpm typecheck`)
 - build (`pnpm build`)
 - baseline tests (`pnpm test`)
+
+## Compute Distribution
+
+This project follows the Mac Mini / Hetzner split documented in `docs/compute-distribution.md`.
+Use VS Code Remote SSH for normal implementation and use GitHub Actions or Hetzner output as proof for heavy gates.
+See `docs/operator-tooling.md` and `docs/remote-workspace.md` for the operator contract and remote workspace proof rules.
