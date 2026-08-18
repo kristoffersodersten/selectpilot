@@ -24,8 +24,8 @@ RUNTIME_PROFILES: dict[str, RuntimeProfile] = {
     "fast": RuntimeProfile(
         key="fast",
         label="Fast",
-        description="Smallest viable local profile for structured extraction and low-latency summaries.",
-        generation_model="qwen2.5:0.5b",
+        description="Memory-safe local profile for structured extraction and low-latency summaries.",
+        generation_model="gemma4:e2b-it-qat",
         embedding_model="nomic-embed-text-v2-moe:latest",
         target_latency="1-4s",
         intended_for="Selected-text extraction, action briefs, and quick summaries.",
@@ -34,8 +34,8 @@ RUNTIME_PROFILES: dict[str, RuntimeProfile] = {
     "balanced": RuntimeProfile(
         key="balanced",
         label="Balanced",
-        description="Higher quality local profile for rewrite and general-purpose browser transforms.",
-        generation_model="qwen2.5:3b",
+        description="Efficient local profile for higher-quality browser transforms on 16 GB or more.",
+        generation_model="gemma4:e4b-it-qat",
         embedding_model="nomic-embed-text-v2-moe:latest",
         target_latency="2-6s",
         intended_for="Daily use when you want better quality without drifting into heavy models.",
@@ -132,4 +132,3 @@ def build_bootstrap_commands(profile_key: str, project_root: str | Path) -> dict
         "generation_model": profile.generation_model,
         "embedding_model": profile.embedding_model,
     }
-

@@ -98,6 +98,16 @@ Exports are mapped to target formats without lock-in.
 ### Local-first execution
 Your hardware and selected profile determine latency/quality.
 
+Automatic selection uses the smallest effective local profile:
+
+- Fast: `gemma4:e2b-it-qat` for unknown or under-16-GB hardware and Intel Macs
+- Balanced: `gemma4:e4b-it-qat` for Apple Silicon with 16 GB or more
+- Advanced: explicit opt-in only; it is never selected automatically
+
+An explicit `CHROMEAI_OLLAMA_MODEL` override remains authoritative. If that
+model is unavailable locally, SelectPilot reports the missing model instead of
+silently substituting another model.
+
 ---
 
 ## Tiers

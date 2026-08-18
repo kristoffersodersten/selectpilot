@@ -65,29 +65,6 @@ def _build_markdown(summary: str, bullets: list[str], action_items: list[str] | 
     return "\n".join(lines).strip() + "\n"
 
 
-GENERATION_MODEL_PREFERENCES = [
-    "llama3.2",
-    "llama3.1",
-    "qwen2.5",
-    "mistral",
-    "phi4",
-    "gemma3",
-    "glm-5-extended:latest",
-    "glm-5:cloud",
-    "gpt-oss:20b-cloud",
-    "qwen3.5:cloud",
-    "kimi-k2.5:cloud",
-    "minimax-m2.5:cloud",
-    "deepseek-v3.2:cloud",
-]
-
-EMBED_MODEL_PREFERENCES = [
-    "nomic-embed-text-v2-moe:latest",
-    "nomic-embed-text",
-    "mxbai-embed-large",
-]
-
-
 @dataclass(frozen=True)
 class OllamaConfig:
     base_url: str
@@ -103,7 +80,7 @@ class OllamaError(RuntimeError):
 class OllamaClient:
     def __init__(self, config: OllamaConfig | None = None):
         if config is None:
-            default_generation_model = "llama3.2"
+            default_generation_model = "gemma4:e2b-it-qat"
             default_embed_model = "nomic-embed-text-v2-moe:latest"
             runtime_profile = os.environ.get("CHROMEAI_RUNTIME_PROFILE", "auto")
 
@@ -209,17 +186,6 @@ class OllamaClient:
                 models.append(str(name))
         return models
 
-    def _resolve_model(self, requested: str, preferences: list[str], models: list[str]) -> str:
-        if requested in models:
-            return requested
-        for candidate in preferences:
-            for model in models:
-                if model == candidate or model.startswith(f"{candidate}:"):
-                    return model
-        if models:
-            return models[0]
-        return requested
-
     def _request_json(self, path: str, payload: dict[str, Any] | None = None) -> Any:
         url = urljoin(self.config.base_url + "/", path.lstrip("/"))
         data = None if payload is None else json.dumps(payload).encode("utf-8")
@@ -243,12 +209,12 @@ class OllamaClient:
         return self._request_json("/api/tags", None)
 
     def active_generation_model(self, models: list[str] | None = None) -> str:
-        models = models if models is not None else self._model_names()
-        return self._resolve_model(self.config.model, GENERATION_MODEL_PREFERENCES, models)
+        # The configured hardware profile is authoritative. A different local
+        # model must never be selected implicitly when the requested one is absent.
+        return self.config.model
 
     def active_embedding_model(self, models: list[str] | None = None) -> str:
-        models = models if models is not None else self._model_names()
-        return self._resolve_model(self.config.embed_model, EMBED_MODEL_PREFERENCES, models)
+        return self.config.embed_model
 
     def health(self) -> dict[str, Any]:
         try:
