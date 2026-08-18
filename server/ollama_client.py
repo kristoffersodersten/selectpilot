@@ -70,6 +70,7 @@ class OllamaConfig:
     base_url: str
     model: str
     embed_model: str
+    num_ctx: int
     timeout_seconds: float
 
 
@@ -77,28 +78,41 @@ class OllamaError(RuntimeError):
     pass
 
 
+def _positive_int(value: str | int, name: str) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError) as exc:
+        raise OllamaError(f"{name} must be a positive integer") from exc
+    if parsed <= 0:
+        raise OllamaError(f"{name} must be a positive integer")
+    return parsed
+
+
 class OllamaClient:
     def __init__(self, config: OllamaConfig | None = None):
         if config is None:
             default_generation_model = "gemma4:e2b-it-qat"
             default_embed_model = "nomic-embed-text-v2-moe:latest"
+            default_num_ctx = 16_384
             runtime_profile = os.environ.get("CHROMEAI_RUNTIME_PROFILE", "auto")
 
-            try:
-                from runtime_profiles import get_runtime_profile, recommend_runtime_profile
+            from runtime_profiles import get_runtime_profile, recommend_runtime_profile
 
-                recommendation = recommend_runtime_profile()
-                resolved_profile = recommendation["recommended_profile"] if runtime_profile == "auto" else runtime_profile
-                profile = get_runtime_profile(resolved_profile)
-                default_generation_model = profile.generation_model
-                default_embed_model = profile.embedding_model
-            except Exception:
-                pass
+            recommendation = recommend_runtime_profile()
+            resolved_profile = recommendation["recommended_profile"] if runtime_profile == "auto" else runtime_profile
+            profile = get_runtime_profile(resolved_profile)
+            default_generation_model = profile.generation_model
+            default_embed_model = profile.embedding_model
+            default_num_ctx = profile.num_ctx
 
             config = OllamaConfig(
                 base_url=_normalize_base_url(os.environ.get("CHROMEAI_OLLAMA_BASE_URL", "http://127.0.0.1:11434")),
                 model=os.environ.get("CHROMEAI_OLLAMA_MODEL", default_generation_model),
                 embed_model=os.environ.get("CHROMEAI_OLLAMA_EMBED_MODEL", default_embed_model),
+                num_ctx=_positive_int(
+                    os.environ.get("CHROMEAI_OLLAMA_NUM_CTX", default_num_ctx),
+                    "CHROMEAI_OLLAMA_NUM_CTX",
+                ),
                 timeout_seconds=float(os.environ.get("CHROMEAI_OLLAMA_TIMEOUT_SECONDS", "30")),
         )
         self.config = config
@@ -216,6 +230,12 @@ class OllamaClient:
     def active_embedding_model(self, models: list[str] | None = None) -> str:
         return self.config.embed_model
 
+    def _generation_options(self, temperature: float) -> dict[str, Any]:
+        return {
+            "temperature": temperature,
+            "num_ctx": self.config.num_ctx,
+        }
+
     def health(self) -> dict[str, Any]:
         try:
             all_models = self._model_names()
@@ -226,6 +246,7 @@ class OllamaClient:
                 "base_url": self.config.base_url,
                 "requested_model": self.config.model,
                 "requested_embed_model": self.config.embed_model,
+                "num_ctx": self.config.num_ctx,
                 "active_model": self.config.model,
                 "active_embed_model": self.config.embed_model,
                 "timeout_seconds": self.config.timeout_seconds,
@@ -249,6 +270,7 @@ class OllamaClient:
             "base_url": self.config.base_url,
             "requested_model": self.config.model,
             "requested_embed_model": self.config.embed_model,
+            "num_ctx": self.config.num_ctx,
             "active_model": active_model,
             "active_embed_model": active_embed_model,
             "timeout_seconds": self.config.timeout_seconds,
@@ -304,7 +326,7 @@ class OllamaClient:
             "system": "You write precise summaries for selected text in a browser side panel.",
             "stream": False,
             "format": schema,
-            "options": {"temperature": 0.2},
+            "options": self._generation_options(0.2),
         }
         response = self._request_json("/api/generate", payload)
         raw_response = str(response.get("response", "")).strip()
@@ -367,7 +389,7 @@ class OllamaClient:
             "system": "You are a practical browser copilot that rewrites and structures selected text locally.",
             "stream": False,
             "format": schema,
-            "options": {"temperature": 0.2},
+            "options": self._generation_options(0.2),
         }
         response = self._request_json("/api/generate", payload)
         raw_response = str(response.get("response", "")).strip()
@@ -475,7 +497,7 @@ class OllamaClient:
             "system": "You generate clean structured extraction results for highlighted browser text.",
             "stream": False,
             "format": preset.schema,
-            "options": {"temperature": 0.1},
+            "options": self._generation_options(0.1),
         }
         response = self._request_json("/api/generate", payload)
         raw_response = str(response.get("response", "")).strip()

@@ -25,6 +25,7 @@
     <key>CHROMEAI_OLLAMA_BASE_URL</key><string>__OLLAMA_BASE_URL__</string>
     <key>CHROMEAI_OLLAMA_MODEL</key><string>__OLLAMA_MODEL__</string>
     <key>CHROMEAI_OLLAMA_EMBED_MODEL</key><string>__OLLAMA_EMBED_MODEL__</string>
+    <key>CHROMEAI_OLLAMA_NUM_CTX</key><string>__OLLAMA_NUM_CTX__</string>
     <key>CHROMEAI_BINARY_HASH</key><string>__BINARY_HASH__</string>
   </dict>
 </dict>

@@ -104,6 +104,10 @@ Automatic selection uses the smallest effective local profile:
 - Balanced: `gemma4:e4b-it-qat` for Apple Silicon with 16 GB or more
 - Advanced: explicit opt-in only; it is never selected automatically
 
+The same profiles set the Ollama context window explicitly: 16K for Fast and
+32K for Balanced or manual Advanced. Set a positive
+`CHROMEAI_OLLAMA_NUM_CTX` value only when an explicit local override is needed.
+
 An explicit `CHROMEAI_OLLAMA_MODEL` override remains authoritative. If that
 model is unavailable locally, SelectPilot reports the missing model instead of
 silently substituting another model.
