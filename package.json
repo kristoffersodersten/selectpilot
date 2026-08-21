@@ -10,7 +10,7 @@
   },
   "description": "Privacy-first local execution layer for selected text, powered by Ollama.",
   "scripts": {
-    "setup:local": "pnpm install && pnpm build && bash ./scripts/bootstrap-macos-local.sh --profile fast",
+    "setup:local": "pnpm install && pnpm build && bash ./scripts/bootstrap-macos-local.sh --profile auto",
     "bootstrap:local": "bash ./scripts/bootstrap-macos-local.sh",
     "benchmark:local": "bash ./scripts/benchmark-local-runtime.sh",
     "spec:compile": "node ./scripts/spec-compiler.mjs",

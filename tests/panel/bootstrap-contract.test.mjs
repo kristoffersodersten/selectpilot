@@ -3,6 +3,7 @@
 
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 function bootstrapPlan(profile) {
@@ -29,4 +30,9 @@ test('bootstrap plan exposes exact fail-closed Balanced runtime contract without
   assert.equal(plan.embedding_model, 'nomic-embed-text-v2-moe:latest');
   assert.equal(plan.num_ctx, 32_768);
   assert.equal(plan.reason, 'Explicit profile selected by operator.');
+});
+
+test('one-command setup preserves hardware-aware automatic profile selection', () => {
+  const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
+  assert.match(packageJson.scripts['setup:local'], /bootstrap-macos-local\.sh --profile auto$/);
 });
