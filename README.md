@@ -83,6 +83,8 @@ Ollama (local models)
 - No external inference endpoints on core path
 - Privacy boundary is observable and testable
 
+Runtime authority and candidate-lane promotion rules are defined in [`docs/AI_RUNTIME_LANE_MATRIX.md`](docs/AI_RUNTIME_LANE_MATRIX.md).
+
 ---
 
 ## Privacy Model
