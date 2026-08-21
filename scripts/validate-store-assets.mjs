@@ -42,7 +42,7 @@ export async function validateStoreAssets(root = projectRoot) {
   return [...REQUIRED_IMAGES.keys()];
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   await validateStoreAssets();
   console.log(`Validated ${REQUIRED_IMAGES.size} Chrome Web Store images.`);
 }

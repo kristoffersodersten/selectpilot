@@ -92,7 +92,11 @@ export async function packageChromeStore(root = projectRoot) {
     await utimes(destination, fixedDate, fixedDate);
   }
 
-  const zip = spawnSync('zip', ['-X', '-q', zipPath, ...files], { cwd: stageRoot, encoding: 'utf8' });
+  const zip = spawnSync('zip', ['-X', '-q', zipPath, ...files], {
+    cwd: stageRoot,
+    encoding: 'utf8',
+    env: { ...process.env, TZ: 'UTC' },
+  });
   if (zip.error || zip.status !== 0) throw new Error(`zip failed: ${zip.error?.message || zip.stderr || zip.status}`);
 
   const report = {
@@ -107,7 +111,7 @@ export async function packageChromeStore(root = projectRoot) {
   return report;
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const report = await packageChromeStore();
   console.log(`${report.artifact} ${report.sha256}`);
 }

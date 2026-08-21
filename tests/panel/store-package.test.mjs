@@ -2,6 +2,7 @@
 // spec_ref: "testing_strategy.integration_tests"
 
 import assert from 'node:assert/strict';
+import { execFileSync, spawnSync } from 'node:child_process';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -35,4 +36,19 @@ test('store packaging fails closed while entitlement verification is unsigned', 
     assertReleaseSafe(files, root),
     /production entitlement signature verification is not configured/
   );
+});
+
+test('relative CLI paths execute validation and fail-closed packaging', () => {
+  const validation = execFileSync(process.execPath, ['./scripts/validate-store-assets.mjs'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  assert.match(validation, /Validated 6 Chrome Web Store images/);
+
+  const packaging = spawnSync(process.execPath, ['./scripts/package-chrome-store.mjs'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  assert.equal(packaging.status, 1);
+  assert.match(packaging.stderr, /production entitlement signature verification is not configured/);
 });
