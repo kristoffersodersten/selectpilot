@@ -52,6 +52,9 @@ jobs:
       - name: Lint manifest
         run: pnpm lint:manifest
 
+      - name: Lint shell contracts
+        run: shellcheck scripts/*.sh
+
       - name: Sync manifest version
         run: pnpm sync:manifest-version
 
