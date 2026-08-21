@@ -1,3 +1,6 @@
+// module_name: tests_panel_store-package_test_mjs
+// spec_ref: "testing_strategy.integration_tests"
+
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';

@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// module_name: scripts_package-chrome-store_mjs
+// spec_ref: "reporting"
 
 import { createHash } from 'node:crypto';
 import { cp, mkdir, readFile, readdir, rm, stat, utimes, writeFile } from 'node:fs/promises';

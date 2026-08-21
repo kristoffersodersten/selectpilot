@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// module_name: scripts_validate-store-assets_mjs
+// spec_ref: "reporting"
 
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -15,6 +17,7 @@ export const REQUIRED_IMAGES = new Map([
   ['assets/marketing/selectpilot-marquee.png', [1400, 560]],
 ]);
 
+// @spec_ref reporting
 export function readPngDimensions(buffer) {
   const signature = buffer.subarray(0, 8).toString('hex');
   if (signature !== '89504e470d0a1a0a' || buffer.subarray(12, 16).toString('ascii') !== 'IHDR') {
