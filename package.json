@@ -23,6 +23,7 @@
     "runtime:validate-policy": "node ./scripts/runtime-policy-validator.mjs",
     "runtime:rollback": "node ./scripts/runtime-rollback.mjs",
     "runtime:show-policy": "node ./scripts/runtime-show-policy.mjs",
+    "verify:admission": "node ./scripts/verify-code-admission.mjs",
     "sync:manifest-version": "node ./scripts/sync-manifest-version.mjs",
     "build": "pnpm sync:manifest-version && node ./scripts/generate-extraction-presets.mjs && tsc -p tsconfig.json && node ./scripts/build-extension.mjs",
     "lint": "node ./scripts/generate-extraction-presets.mjs --check && eslint --max-warnings=0 .",

@@ -43,6 +43,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Lint
         run: pnpm lint
 
@@ -63,3 +66,37 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: Verify privacy boundary
+        run: pnpm test:privacy
+
+      - name: Verify unpacked extension E2E
+        run: pnpm test:e2e
+
+      - name: Compile fail-closed benchmark evidence
+        run: pnpm bench:frontier
+
+      - name: Compile runtime policy
+        run: pnpm runtime:compile-policy
+
+      - name: Validate runtime policy
+        run: pnpm runtime:validate-policy
+
+      - name: Verify deterministic stress contracts
+        run: node scripts/stress-runner.mjs
+
+      - name: Verify exact-SHA code admission evidence
+        run: pnpm verify:admission
+        env:
+          SELECTPILOT_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          SELECTPILOT_WORKFLOW_SHA: ${{ github.sha }}
+          SELECTPILOT_REF: ${{ github.ref }}
+
+      - name: Upload exact-SHA code admission evidence
+        if: matrix.node-version == '22.x'
+        uses: actions/upload-artifact@v4
+        with:
+          name: selectpilot-code-admission-${{ github.sha }}
+          path: reports/code_admission_evidence.json
+          if-no-files-found: error
+          retention-days: 30

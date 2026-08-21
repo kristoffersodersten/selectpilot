@@ -5,5 +5,6 @@ package-lock.json
 npm-debug.log*
 test-results/
 playwright-report/
+reports/code_admission_evidence.json
 /usr/local/var/log/chromeai/
 /usr/local/var/run/chromeai/
