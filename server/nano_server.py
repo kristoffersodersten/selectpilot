@@ -460,6 +460,8 @@ def _runtime_policy_select(
         return None
 
     policy_version = str(policy.get("policy_version") or "") or None
+    promotion_evidence = policy.get("promotion_evidence") if isinstance(policy.get("promotion_evidence"), dict) else {}
+    promotion_history = policy.get("promotion_history") if isinstance(policy.get("promotion_history"), list) else []
     defaults = policy.get("defaults") if isinstance(policy.get("defaults"), list) else []
     quarantined = set()
     for item in policy.get("quarantined_models") or []:
@@ -519,13 +521,20 @@ def _runtime_policy_select(
 
     chosen = matches[0]
     preferred = str(chosen.get("preferred_model_id") or "").strip()
+    verified_preferred_promotion = bool(promotion_evidence.get("runtime_verified")) and any(
+        isinstance(item, dict)
+        and str(item.get("task_family") or "") == task_family
+        and str(item.get("hardware_profile") or "") == hardware_profile
+        and str(item.get("new_model_id") or "") == preferred
+        for item in promotion_history
+    )
     if preferred and _model_available(preferred) and _hardware_allows(preferred) and preferred not in quarantined and not _is_quarantined(preferred):
         return {
             "model_id": preferred,
             "selection_path": "runtime_policy_preferred",
             "selection_reason": str(chosen.get("selection_reason") or "runtime_policy_preferred_model_if_available_and_not_quarantined"),
             "policy_version": policy_version,
-            "promotion_applied": True,
+            "promotion_applied": verified_preferred_promotion,
         }
 
     for fallback in chosen.get("fallback_model_ids") or []:
@@ -542,7 +551,7 @@ def _runtime_policy_select(
                 "selection_path": "runtime_policy_fallback",
                 "selection_reason": "runtime_policy_fallback_models_in_order",
                 "policy_version": policy_version,
-                "promotion_applied": True,
+                "promotion_applied": False,
             }
 
     return None

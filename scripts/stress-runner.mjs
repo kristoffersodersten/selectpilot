@@ -428,7 +428,13 @@ async function runSingleTest(test, monolith, bindings, runtimePolicy, runtimeReg
     const installedModelIds = (runtimeRegistry.models || [])
       .filter((model) => model.installation_state === 'installed')
       .map((model) => model.model_id);
-    const availableModelIds = expectedRuntimeMismatchAllowed ? [] : installedModelIds;
+    const matchingPolicyTuple = (runtimePolicy.defaults || []).find((entry) =>
+      entry.task_family === taskAnalysis.task_family
+      && entry.output_mode === taskAnalysis.output_mode
+      && entry.hardware_profile === taskAnalysis.hardware_profile);
+    const availableModelIds = expectedRuntimeMismatchAllowed
+      ? installedModelIds.filter((modelId) => modelId !== matchingPolicyTuple?.preferred_model_id)
+      : installedModelIds;
 
     const selected = bindings.selectRuntimeModel(
       {

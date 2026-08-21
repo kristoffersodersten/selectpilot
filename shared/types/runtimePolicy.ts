@@ -32,6 +32,10 @@ export type RuntimePolicyHistory = {
 export type RuntimeModelPolicy = {
   policy_version: string;
   generated_at_unix_ms: number;
+  promotion_evidence?: {
+    runtime_verified: boolean;
+    status: string;
+  };
   source_reports: string[];
   global_guards: {
     determinism_min: number;

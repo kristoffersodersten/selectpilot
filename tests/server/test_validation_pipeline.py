@@ -17,6 +17,7 @@ from nano_server import (  # noqa: E402
     build_runtime_meta_event,
     compile_intent_to_ir,
     ValidationError,
+    _runtime_policy_select,
     _resolve_trace_id,
     enforce_contract_fields,
     get_operation_contract,
@@ -34,6 +35,44 @@ from nano_server import (  # noqa: E402
 
 
 class ValidationPipelineTests(unittest.TestCase):
+    def test_runtime_policy_does_not_claim_unverified_promotion(self) -> None:
+        policy = {
+            "policy_version": "test-policy",
+            "promotion_evidence": {"runtime_verified": False, "status": "simulation_only_no_promotion"},
+            "promotion_history": [],
+            "quarantined_models": [],
+            "defaults": [{
+                "task_family": "extract",
+                "output_mode": "strict_json",
+                "hardware_profile": "medium",
+                "preferred_model_id": "model:preferred",
+                "fallback_model_ids": ["model:fallback"],
+                "selection_reason": "baseline_registry_no_runtime_promotion",
+            }],
+        }
+        registry = {
+            "models": [
+                {"model_id": "model:preferred", "min_hardware_profile": "low"},
+                {"model_id": "model:fallback", "min_hardware_profile": "low"},
+            ],
+        }
+        task = {"task_type": "extract", "output_structure": "strict_json", "hardware_profile": "medium"}
+
+        with patch("nano_server._load_json_file", side_effect=[policy, registry]), patch(
+            "nano_server._is_quarantined", return_value=False
+        ):
+            preferred = _runtime_policy_select(task_analysis=task, available_model_ids=["model:preferred"])
+        self.assertIsNotNone(preferred)
+        self.assertFalse(preferred["promotion_applied"])
+
+        with patch("nano_server._load_json_file", side_effect=[policy, registry]), patch(
+            "nano_server._is_quarantined", return_value=False
+        ):
+            fallback = _runtime_policy_select(task_analysis=task, available_model_ids=["model:fallback"])
+        self.assertIsNotNone(fallback)
+        self.assertEqual(fallback["selection_path"], "runtime_policy_fallback")
+        self.assertFalse(fallback["promotion_applied"])
+
     def test_summarize_payload_requires_non_empty_text(self) -> None:
         with self.assertRaises(ValidationError) as ctx:
             validate_summarize_payload({"text": "   "})

@@ -21,6 +21,13 @@ export function selectRuntimeModel(
   const registryById = new Map(registry.models.map((m) => [m.model_id, m]));
   const quarantined = new Set((policy.quarantined_models || []).map((q) => q.model_id));
 
+  const isVerifiedPromotion = (modelId: string) =>
+    policy.promotion_evidence?.runtime_verified === true
+    && (policy.promotion_history || []).some((entry) =>
+      entry.task_family === input.taskFamily
+      && entry.hardware_profile === input.hardwareProfile
+      && entry.new_model_id === modelId);
+
   const isSelectable = (modelId: string, allowQuarantined = false) => {
     if (!available.has(modelId)) return false;
     if (!registryById.has(modelId)) return false;
@@ -52,30 +59,19 @@ export function selectRuntimeModel(
       selection_path: 'runtime_policy_preferred',
       selection_reason: tuple.selection_reason,
       policy_version: policy.policy_version,
-      promotion_applied: true,
+      promotion_applied: isVerifiedPromotion(tuple.preferred_model_id),
     };
   }
 
   const fallback = (tuple.fallback_model_ids || []).find((id) => isSelectable(id));
-  if (!fallback) {
-    if (input.availableModelIds.length === 0) {
-      return {
-        selected_model_id: tuple.preferred_model_id,
-        selection_path: 'runtime_policy_fallback',
-        selection_reason: 'runtime_policy_fallback_no_models_available_simulated_degraded_mode',
-        policy_version: policy.policy_version,
-        promotion_applied: false,
-      };
-    }
-    return null;
-  }
+  if (!fallback) return null;
 
   return {
     selected_model_id: fallback,
     selection_path: 'runtime_policy_fallback',
     selection_reason: 'runtime_policy_fallback_models_in_order',
     policy_version: policy.policy_version,
-    promotion_applied: true,
+    promotion_applied: false,
   };
 }
 // module_name: runtime_model_selector
