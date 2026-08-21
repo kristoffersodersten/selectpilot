@@ -28,6 +28,8 @@
     "build": "pnpm sync:manifest-version && node ./scripts/generate-extraction-presets.mjs && tsc -p tsconfig.json && node ./scripts/build-extension.mjs",
     "lint": "node ./scripts/generate-extraction-presets.mjs --check && eslint --max-warnings=0 .",
     "lint:manifest": "node ./scripts/lint-manifest.mjs",
+    "validate:store": "node ./scripts/validate-store-assets.mjs",
+    "package:store": "pnpm build && pnpm lint:manifest && node ./scripts/package-chrome-store.mjs",
     "test:e2e": "playwright test --config tests/e2e/playwright.config.mjs",
     "test": "tsc -p tsconfig.json && node --test tests/panel/*.test.mjs && python3 -m unittest discover -s tests/server -p 'test_*.py'",
     "test:privacy": "node --test tests/panel/network-boundary.test.mjs && python3 -m unittest tests/server/test_privacy_proof.py",

@@ -6,5 +6,6 @@ npm-debug.log*
 test-results/
 playwright-report/
 reports/code_admission_evidence.json
+dist/
 /usr/local/var/log/chromeai/
 /usr/local/var/run/chromeai/

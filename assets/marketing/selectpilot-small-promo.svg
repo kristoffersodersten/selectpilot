@@ -1,0 +1,28 @@
+<svg width="440" height="280" viewBox="0 0 440 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="440" height="280" rx="28" fill="#EAF0F5"/>
+  <rect x="18" y="18" width="404" height="244" rx="24" fill="#FDFDFE" stroke="#D9E2EC" stroke-width="2"/>
+
+  <rect x="42" y="42" width="54" height="54" rx="18" fill="#FFFFFF" stroke="#D7DEE9" stroke-width="2.5"/>
+  <path d="M56 60V54C56 52.8954 56.8954 52 58 52H66" stroke="#0F172A" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M82 60V54C82 52.8954 81.1046 52 80 52H72" stroke="#0F172A" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M56 78V84C56 85.1046 56.8954 86 58 86H66" stroke="#0F172A" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M82 78V84C82 85.1046 81.1046 86 80 86H72" stroke="#0F172A" stroke-width="4.5" stroke-linecap="round"/>
+  <rect x="66" y="63" width="6" height="12" rx="3" fill="#0F172A"/>
+
+  <text x="112" y="65" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="24" font-weight="600">SelectPilot</text>
+  <text x="112" y="90" fill="#64748B" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="11" font-weight="600" letter-spacing="0.8">LOCAL TRANSFORMATION LAYER</text>
+
+  <text x="42" y="136" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="28" font-weight="600">Selected text</text>
+  <text x="42" y="168" fill="#0F172A" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="28" font-weight="600">to structured output</text>
+
+  <rect x="42" y="192" width="118" height="34" rx="12" fill="#0F172A"/>
+  <text x="66" y="214" fill="#F8FAFC" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="14" font-weight="600">Local-only</text>
+
+  <rect x="240" y="74" width="152" height="132" rx="20" fill="#FBFBFC" stroke="#E3E8EF"/>
+  <text x="258" y="99" fill="#64748B" font-family="SF Pro Display, Avenir Next, Helvetica Neue, sans-serif" font-size="10" font-weight="700" letter-spacing="1">RESULT</text>
+  <text x="258" y="126" fill="#334155" font-family="SF Mono, Menlo, monospace" font-size="11">{</text>
+  <text x="274" y="126" fill="#334155" font-family="SF Mono, Menlo, monospace" font-size="11">"summary": "Action brief",</text>
+  <text x="274" y="146" fill="#334155" font-family="SF Mono, Menlo, monospace" font-size="11">"actions": ["Ship MVP"],</text>
+  <text x="274" y="166" fill="#334155" font-family="SF Mono, Menlo, monospace" font-size="11">"risk": "Scope drift"</text>
+  <text x="258" y="190" fill="#334155" font-family="SF Pro Text, Avenir Next, Helvetica Neue, sans-serif" font-size="11" font-weight="600">Privacy proof visible in-panel</text>
+</svg>
