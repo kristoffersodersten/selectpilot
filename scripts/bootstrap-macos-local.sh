@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROFILE="auto"
 SKIP_OLLAMA_INSTALL="0"
 SKIP_MODEL_PULL="0"
+PLAN_ONLY="0"
 BRIDGE_HEALTH_URL="http://127.0.0.1:8083/health"
 
 STATUS_OLLAMA_INSTALL="pending"
@@ -27,17 +28,16 @@ while [[ $# -gt 0 ]]; do
       SKIP_MODEL_PULL="1"
       shift
       ;;
+    --plan)
+      PLAN_ONLY="1"
+      shift
+      ;;
     *)
       echo "Unknown argument: $1" >&2
       exit 1
       ;;
   esac
 done
-
-if [[ "$(uname -s)" != "Darwin" ]]; then
-  echo "This bootstrapper currently supports macOS only." >&2
-  exit 1
-fi
 
 read_profile_json() {
   python3 - "$PROFILE" "$ROOT" <<'PY'
@@ -55,11 +55,12 @@ recommendation = recommend_runtime_profile()
 selected = recommendation["recommended_profile"] if profile == "auto" else profile
 runtime_profile = get_runtime_profile(selected)
 commands = build_bootstrap_commands(runtime_profile.key, root)
+reason = recommendation["reason"] if profile == "auto" else "Explicit profile selected by operator."
 
 print(json.dumps({
     "selected_profile": runtime_profile.key,
     "label": runtime_profile.label,
-    "reason": recommendation["reason"],
+    "reason": reason,
     "generation_model": runtime_profile.generation_model,
     "embedding_model": runtime_profile.embedding_model,
     "num_ctx": runtime_profile.num_ctx,
@@ -80,6 +81,16 @@ for key in ("selected_profile", "generation_model", "embedding_model", "num_ctx"
 PY
 )"
 eval "$PROFILE_VARS"
+
+if [[ "$PLAN_ONLY" == "1" ]]; then
+  printf '%s\n' "$PROFILE_JSON"
+  exit 0
+fi
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  echo "This bootstrapper currently supports macOS only." >&2
+  exit 1
+fi
 
 if [[ "$SKIP_OLLAMA_INSTALL" != "1" ]] && ! command -v ollama >/dev/null 2>&1; then
   if command -v brew >/dev/null 2>&1; then
@@ -118,17 +129,17 @@ if [[ "$STATUS_OLLAMA_RUNNING" != "ok" ]]; then
 fi
 
 if [[ "$SKIP_MODEL_PULL" != "1" ]]; then
-  echo "Pulling generation model: $GEN_MODEL"
-  ollama pull "$GEN_MODEL"
-  echo "Pulling embedding model: $EMBED_MODEL"
-  ollama pull "$EMBED_MODEL"
+  echo "Pulling generation model: $GENERATION_MODEL"
+  ollama pull "$GENERATION_MODEL"
+  echo "Pulling embedding model: $EMBEDDING_MODEL"
+  ollama pull "$EMBEDDING_MODEL"
   STATUS_MODEL_PULL="ok"
 else
   STATUS_MODEL_PULL="skipped"
 fi
 
-CHROMEAI_OLLAMA_MODEL="$GEN_MODEL" \
-CHROMEAI_OLLAMA_EMBED_MODEL="$EMBED_MODEL" \
+CHROMEAI_OLLAMA_MODEL="$GENERATION_MODEL" \
+CHROMEAI_OLLAMA_EMBED_MODEL="$EMBEDDING_MODEL" \
 CHROMEAI_OLLAMA_NUM_CTX="$NUM_CTX" \
 "$ROOT/scripts/install-macos-local.sh"
 STATUS_LAUNCHAGENT="ok"
@@ -166,8 +177,8 @@ SelectPilot bootstrap complete.
 
 Profile: $SELECTED_PROFILE
 Reason: $REASON
-Generation model: $GEN_MODEL
-Embedding model: $EMBED_MODEL
+Generation model: $GENERATION_MODEL
+Embedding model: $EMBEDDING_MODEL
 Context window: $NUM_CTX
 
 Next recommended command:
