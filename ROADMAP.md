@@ -37,8 +37,8 @@
 
 ### 5) Nginx/hosts-topologi bör vara osynlig
 
-- **Status:** ✅ I huvudsak löst i huvudflödet (direkt mot `127.0.0.1:8083`; nginx markerat som legacy).
-- **Åtgärd kvar:** behåll detta som policy i dokumentation och scripts.
+- **Status:** ✅ Implementerat i huvudflödet (direkt mot `127.0.0.1:8083`).
+- **Implementerat:** den oanvända legacy-nginx-konfigurationen är borttagen så att ingen separat proxy- eller dynamisk CORS-yta kan aktiveras av misstag.
 
 ### 6) README saknar tydligt 5-minutersflöde högst upp
 

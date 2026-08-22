@@ -43,7 +43,7 @@ The user may explicitly export a result to another application or service. That 
 
 ## Experimental Capabilities
 
-Audio transcription and vision OCR are experimental and are not included in the core selected-text privacy claim unless their exact runtime path has been separately verified and disclosed.
+Audio transcription and vision OCR are not shipped capabilities. They require separate real local-runtime and privacy qualification before they can be exposed.
 
 ## User Control
 

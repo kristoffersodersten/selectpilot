@@ -5,8 +5,6 @@ import { apiRequest } from './request.js';
 
 export type SummarizePayload = { text: string; url?: string; title?: string; metadata?: Record<string, unknown> };
 export type ExtractPayload = { text: string; preset?: string; url?: string; title?: string; metadata?: Record<string, unknown> };
-export type TranscribePayload = { audioUrl?: string; mediaId?: string; metadata?: Record<string, unknown> };
-export type VisionPayload = { imageBase64?: string; videoFrame?: string; url?: string; metadata?: Record<string, unknown> };
 export type AgentPayload = { prompt: string; context?: Record<string, unknown> };
 export type EmbedPayload = { text: string };
 export type IntentCompilePayload = {
@@ -81,14 +79,6 @@ export async function extract(payload: ExtractPayload) {
     endpoints.extract,
     { body: payload }
   );
-}
-
-export async function transcribe(payload: TranscribePayload) {
-  return apiRequest<{ text: string; confidence: number }>(endpoints.transcribe, { body: payload });
-}
-
-export async function vision(payload: VisionPayload) {
-  return apiRequest<{ text: string; tags?: string[] }>(endpoints.vision, { body: payload });
 }
 
 export async function embed(payload: EmbedPayload) {

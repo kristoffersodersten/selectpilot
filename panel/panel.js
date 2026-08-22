@@ -1463,30 +1463,6 @@ function bindActions() {
     });
     syncOrderButtonEl?.addEventListener('click', wrap(() => doSyncOrderToken()));
     orderIdInputEl?.addEventListener('input', () => syncControlAvailability());
-    $('#btn-transcribe')?.addEventListener('click', () => wrap(async () => {
-        const res = await request('panel:transcribe');
-        renderOutput({
-            title: 'Transcription',
-            markdown: res.text || '',
-            eyebrow: 'Advanced',
-            meta: 'Experimental audio path.',
-            exportBase: 'selectpilot-transcript',
-        });
-        renderExports({ markdown: res.text || '', basename: 'selectpilot-transcript' });
-        setStatus('Done');
-    })());
-    $('#btn-vision')?.addEventListener('click', () => wrap(async () => {
-        const res = await request('panel:vision');
-        renderOutput({
-            title: 'Vision',
-            markdown: res.text || '',
-            eyebrow: 'Advanced',
-            meta: 'Experimental OCR / image signature path.',
-            exportBase: 'selectpilot-vision',
-        });
-        renderExports({ markdown: res.text || '', basename: 'selectpilot-vision' });
-        setStatus('Done');
-    })());
     extractPresetEl?.addEventListener('change', () => syncPresetHelp());
     runtimeStateEl?.addEventListener('click', (event) => {
         const target = event.target;

@@ -42,7 +42,7 @@ Important requirements and limits:
 - Ollama and the SelectPilot local bridge are required.
 - Initial setup may download a model after explicit user consent.
 - Production checkout and signed entitlement issuance must be operational before paid access is advertised as available.
-- Experimental audio and vision surfaces are not part of the core selected-text claim.
+- Audio transcription and vision OCR are not shipped capabilities.
 
 ## Privacy Tab Mapping
 

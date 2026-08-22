@@ -43,8 +43,6 @@ ALLOWED_BRIDGE_ENDPOINT_PATHS = [
     "/extract",
     "/agent",
     "/embed",
-    "/transcribe",
-    "/vision",
     "/license/verify",
 ]
 
@@ -87,18 +85,6 @@ OPERATION_CONTRACTS: dict[str, OperationContract] = {
         endpoint="/embed",
         template="embed.v1",
         allowed_fields=("text", "session_id"),
-    ),
-    "/transcribe": OperationContract(
-        name="transcribe",
-        endpoint="/transcribe",
-        template="transcribe.v1",
-        allowed_fields=("audioUrl", "mediaId", "session_id"),
-    ),
-    "/vision": OperationContract(
-        name="vision",
-        endpoint="/vision",
-        template="vision.v1",
-        allowed_fields=("imageBase64", "videoFrame", "session_id"),
     ),
     "/license/verify": OperationContract(
         name="license_verify",
@@ -1230,19 +1216,6 @@ def build_privacy_proof(health: dict | None = None, port: int = DEFAULT_PORT) ->
     }
 
 
-def transcribe(payload: dict) -> dict:
-    source = payload.get("audioUrl") or payload.get("mediaId") or "audio"
-    text = f"Transcribed from {source}"
-    return {"text": text, "confidence": 0.95}
-
-
-def vision(payload: dict) -> dict:
-    blob = payload.get("imageBase64") or payload.get("videoFrame") or ""
-    digest = hashlib.sha256(blob.encode("utf-8")).hexdigest() if blob else ""
-    text = f"Image signature {digest[:16]}" if digest else "No image provided"
-    return {"text": text, "tags": ["ocr", "frame"] if blob else []}
-
-
 def embed(payload: dict) -> dict:
     text = payload.get("text", "")
     try:
@@ -1623,10 +1596,6 @@ class Handler(BaseHTTPRequestHandler):
                         "reason": ((compiled.get("model_selection") or {}).get("reason") if isinstance(compiled.get("model_selection"), dict) else ""),
                     },
                 )
-            elif path == '/transcribe':
-                resp = transcribe(payload)
-            elif path == '/vision':
-                resp = vision(payload)
             elif path == '/embed':
                 resp = embed(payload)
             elif path == '/agent':

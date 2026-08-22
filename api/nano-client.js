@@ -8,12 +8,6 @@ export async function summarize(payload) {
 export async function extract(payload) {
     return apiRequest(endpoints.extract, { body: payload });
 }
-export async function transcribe(payload) {
-    return apiRequest(endpoints.transcribe, { body: payload });
-}
-export async function vision(payload) {
-    return apiRequest(endpoints.vision, { body: payload });
-}
 export async function embed(payload) {
     return apiRequest(endpoints.embed, { body: payload });
 }

@@ -58,8 +58,8 @@ The following is the core security guarantee of SelectPilot. See `ZERO_LEAKAGE.m
 
 ## Known limitations
 
-- `Transcribe` and `Vision OCR` are prototype utilities and are **not** covered by the core privacy boundary claim.
-- Billing code exists in the repo as a prototype and is not part of the local selected-text flow.
+- Audio transcription and vision OCR are not shipped capabilities. They require separate real local-runtime and privacy qualification before any product surface may expose them.
+- The separately operated local entitlement authority is not part of the selected-text inference flow.
 - The local bridge (`127.0.0.1:8083`) is accessible to any process on the machine. This is an inherent trade-off of local inter-process communication.
 - SelectPilot does not provide a formal security certification - the privacy boundary is implemented in code and should be treated as a clear product constraint.
 
@@ -76,7 +76,7 @@ Out of scope:
 
 - Theoretical vulnerabilities with no realistic exploitation path.
 - Issues in Ollama itself - report those to the [Ollama project](https://github.com/ollama/ollama).
-- Vulnerabilities in prototype surfaces (`Transcribe`, `Vision OCR`, billing) that are clearly marked as out of scope above.
+- Unshipped experimental source material that is unreachable from the packaged product.
 
 ## Disclosure policy
 

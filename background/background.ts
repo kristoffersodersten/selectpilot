@@ -1,6 +1,6 @@
 // module_name: background_background_ts
 // spec_ref: "execution_layer"
-import { compileIntent, extract, summarize, transcribe, vision } from '../api/nano-client.js';
+import { compileIntent, extract, summarize } from '../api/nano-client.js';
 import { runPipeline } from '../agent/agent-pipeline.js';
 import { log, error } from '../utils/logger.js';
 import { requireFeature, getLicenseTier, attachLicenseToken, refreshLicense } from './tier-service.js';
@@ -239,23 +239,6 @@ async function handleFirstRunExtract(): Promise<any> {
   });
 }
 
-async function handleTranscribe(): Promise<any> {
-  const { allowed } = await requireFeature('audio_transcription');
-  if (!allowed) throw new Error('Feature blocked: upgrade tier for audio transcription');
-  const context = await collectContext();
-  if (!context.media?.audio) throw new Error('No audio element detected on page');
-  return transcribe({ audioUrl: context.media.audio, metadata: context.metadata });
-}
-
-async function handleVision(): Promise<any> {
-  const { allowed } = await requireFeature('image_ocr');
-  if (!allowed) throw new Error('Feature blocked: upgrade tier for vision OCR');
-  const context = await collectContext();
-  const image = context.media?.videoFrame || context.media?.image;
-  if (!image) throw new Error('No image or video frame available');
-  return vision({ imageBase64: image, url: context.url, metadata: context.metadata });
-}
-
 async function handleAgent(prompt: string): Promise<any> {
   const { allowed } = await requireFeature('basic_local_agent');
   if (!allowed) throw new Error('Flow tier required for ask/rewrite transforms');
@@ -309,20 +292,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         sendResponse(await handleSummarize());
         return;
       }
-      if (msg.type === 'panel:transcribe') {
-        sendResponse(await handleTranscribe());
-        return;
-      }
       if (msg.type === 'panel:extract') {
         sendResponse(await handleExtract(msg.preset));
         return;
       }
       if (msg.type === 'panel:extract_demo') {
         sendResponse(await handleFirstRunExtract());
-        return;
-      }
-      if (msg.type === 'panel:vision') {
-        sendResponse(await handleVision());
         return;
       }
       if (msg.type === 'panel:agent') {
