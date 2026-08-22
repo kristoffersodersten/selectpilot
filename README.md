@@ -202,6 +202,17 @@ Current CI enforces:
 - typecheck (`pnpm typecheck`)
 - build (`pnpm build`)
 - baseline tests (`pnpm test`)
+- Chrome Web Store asset dimensions (`pnpm validate:store`)
+
+## Chrome Web Store Release
+
+Store listing copy, privacy language, and the release checklist live in:
+
+- [`docs/CHROME_WEB_STORE_SUBMISSION.md`](docs/CHROME_WEB_STORE_SUBMISSION.md)
+- [`docs/CHROME_WEB_STORE_RELEASE_CHECKLIST.md`](docs/CHROME_WEB_STORE_RELEASE_CHECKLIST.md)
+- [`docs/PRIVACY_POLICY.md`](docs/PRIVACY_POLICY.md)
+
+`pnpm package:store` builds and audits the upload ZIP. It intentionally fails closed until production entitlement signature verification is configured; no unsigned commercial package is release-eligible.
 
 ## Compute Distribution
 

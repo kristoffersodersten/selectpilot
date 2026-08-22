@@ -64,6 +64,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Validate Chrome Web Store assets
+        run: pnpm validate:store
+
       - name: Smoke direct server entrypoint
         run: python3 server/nano_server.py --help
 

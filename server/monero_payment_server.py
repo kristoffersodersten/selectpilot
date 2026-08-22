@@ -23,6 +23,7 @@ from threading import Lock, Thread
 
 import requests
 from flask import Flask, jsonify, request
+from entitlement_signer import EntitlementSigner, SigningError
 
 app = Flask(__name__)
 
@@ -33,6 +34,7 @@ ADMIN_SECRET = os.environ.get("CHROMEAI_ADMIN_SECRET", "CHANGE_ME")
 CONFIRMATIONS_REQUIRED = int(os.environ.get("CHROMEAI_MONERO_CONFIRMATIONS", "10"))
 POLL_INTERVAL_SECONDS = int(os.environ.get("CHROMEAI_MONERO_POLL_SECONDS", "20"))
 ORDER_EXPIRY_MS = int(os.environ.get("CHROMEAI_MONERO_ORDER_EXPIRY_MS", str(30 * 60 * 1000)))
+ENTITLEMENT_SIGNER = EntitlementSigner.from_environment()
 
 db_lock = Lock()
 
@@ -236,13 +238,18 @@ def verify_license():
     if not record or record.get("revoked"):
         return jsonify({"error": "invalid"}), 401
 
-    return jsonify(
-        {
-            "tier": record["tier"],
-            "issuedAt": record["issuedAt"],
-            "expiresAt": record.get("expiresAt"),
-        }
-    )
+    entitlement = {
+        "token": token,
+        "tier": record["tier"],
+        "features": record.get("features") or [],
+        "issuedAt": record["issuedAt"],
+        "expiresAt": record.get("expiresAt"),
+    }
+    try:
+        return jsonify(ENTITLEMENT_SIGNER.sign(entitlement))
+    except SigningError as exc:
+        app.logger.error("Entitlement signing unavailable: %s", exc)
+        return jsonify({"error": str(exc)}), 503
 
 
 # ---- ADMIN REVOKE ----
