@@ -67,6 +67,8 @@ tail -n 80 ~/Library/Logs/SelectPilot/nano.log
 curl -sSf http://127.0.0.1:8083/health
 ```
 
+Browser requests to the bridge are accepted only from a Chrome extension origin. Release operators should set `SELECTPILOT_EXTENSION_ORIGIN=chrome-extension://<store-extension-id>` to pin the exact installed identity; ordinary local command-line health checks omit `Origin` and remain available.
+
 ---
 
 ## Architecture

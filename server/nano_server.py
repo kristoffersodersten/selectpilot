@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import socket
 import threading
 import time
@@ -27,6 +28,8 @@ from runtime_profiles import build_bootstrap_commands, list_runtime_profiles, re
 
 DEFAULT_PORT = 8083
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
+MAX_REQUEST_BYTES = 2 * 1024 * 1024
+CHROME_EXTENSION_ORIGIN = re.compile(r"^chrome-extension://[a-p]{32}$")
 
 ALLOWED_BRIDGE_ENDPOINT_PATHS = [
     "/health",
@@ -119,6 +122,16 @@ class ValidationError(RuntimeError):
         self.message = message
         self.status = status
         self.details = details or {}
+
+
+def allowed_extension_origin(origin: str | None) -> str | None:
+    candidate = str(origin or "").strip()
+    if not candidate:
+        return None
+    configured = os.environ.get("SELECTPILOT_EXTENSION_ORIGIN", "").strip()
+    if configured:
+        return candidate if candidate == configured and CHROME_EXTENSION_ORIGIN.fullmatch(candidate) else None
+    return candidate if CHROME_EXTENSION_ORIGIN.fullmatch(candidate) else None
 
 
 def _expect_dict(value: object, *, field: str = "payload") -> dict:
@@ -1334,9 +1347,19 @@ class Handler(BaseHTTPRequestHandler):
 
     def _set_headers(self):
         self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
+        origin = allowed_extension_origin(self.headers.get("Origin"))
+        if origin:
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Vary", "Origin")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, Last-Event-ID, x-selectpilot-trace-id, x-trace-id")
+
+    def _origin_allowed(self) -> bool:
+        origin = self.headers.get("Origin")
+        if not origin or allowed_extension_origin(origin):
+            return True
+        self._write_error(403, "origin_not_allowed", "Browser origin is not authorized for the local bridge")
+        return False
 
     def _write_json(self, status: int, payload: dict):
         self.send_response(status)
@@ -1357,9 +1380,13 @@ class Handler(BaseHTTPRequestHandler):
         self._write_json(status, payload)
 
     def do_OPTIONS(self):
+        if not self._origin_allowed():
+            return
         self._write_json(204, {})
 
     def do_GET(self):
+        if not self._origin_allowed():
+            return
         parsed = urlparse(self.path)
         path = parsed.path.rstrip('/')
 
@@ -1399,7 +1426,10 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/event-stream")
             self.send_header("Cache-Control", "no-cache")
             self.send_header("Connection", "keep-alive")
-            self.send_header("Access-Control-Allow-Origin", "*")
+            origin = allowed_extension_origin(self.headers.get("Origin"))
+            if origin:
+                self.send_header("Access-Control-Allow-Origin", origin)
+                self.send_header("Vary", "Origin")
             self.end_headers()
 
             RUNTIME_META.increment_streams()
@@ -1440,7 +1470,16 @@ class Handler(BaseHTTPRequestHandler):
         self._write_json(404, {"error": "not_found"})
 
     def do_POST(self):
-        length = int(self.headers.get('Content-Length', '0'))
+        if not self._origin_allowed():
+            return
+        try:
+            length = int(self.headers.get('Content-Length', '0'))
+        except ValueError:
+            self._write_error(400, "invalid_content_length", "Content-Length must be an integer")
+            return
+        if length < 0 or length > MAX_REQUEST_BYTES:
+            self._write_error(413, "request_too_large", f"Request body exceeds {MAX_REQUEST_BYTES} bytes")
+            return
         body = self.rfile.read(length) if length else b'{}'
         try:
             payload = json.loads(body.decode('utf-8'))

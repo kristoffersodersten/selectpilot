@@ -31,10 +31,25 @@ from nano_server import (  # noqa: E402
     validate_extract_response,
     validate_summarize_payload,
     validate_summarize_response,
+    allowed_extension_origin,
 )
 
 
 class ValidationPipelineTests(unittest.TestCase):
+    def test_cors_accepts_only_chrome_extension_origins(self) -> None:
+        extension_origin = "chrome-extension://abcdefghijklmnopabcdefghijklmnop"
+        self.assertEqual(allowed_extension_origin(extension_origin), extension_origin)
+        self.assertIsNone(allowed_extension_origin("https://malicious.example"))
+        self.assertIsNone(allowed_extension_origin("null"))
+        self.assertIsNone(allowed_extension_origin(None))
+
+    def test_configured_extension_origin_is_exact(self) -> None:
+        allowed = "chrome-extension://abcdefghijklmnopabcdefghijklmnop"
+        other = "chrome-extension://ponmlkjihgfedcbaponmlkjihgfedcba"
+        with patch.dict("os.environ", {"SELECTPILOT_EXTENSION_ORIGIN": allowed}):
+            self.assertEqual(allowed_extension_origin(allowed), allowed)
+            self.assertIsNone(allowed_extension_origin(other))
+
     def test_runtime_policy_does_not_claim_unverified_promotion(self) -> None:
         policy = {
             "policy_version": "test-policy",
