@@ -16,11 +16,6 @@ export function setText(el: HTMLElement | null, text: string): void {
 }
 
 // @spec_ref frontend_state_contract
-export function setHTML(el: HTMLElement | null, html: string): void {
-  if (el) el.innerHTML = html;
-}
-
-// @spec_ref frontend_state_contract
 export function button(el: HTMLElement | null, disabled: boolean): void {
   if (el instanceof HTMLButtonElement) {
     el.disabled = disabled;

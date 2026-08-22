@@ -67,6 +67,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Verify committed JavaScript matches TypeScript sources
+        run: git diff --exit-code -- '*.js'
+
       - name: Validate Chrome Web Store assets
         run: pnpm validate:store
 

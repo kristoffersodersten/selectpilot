@@ -5,7 +5,10 @@ import { error, log, warn } from '../utils/logger.js';
 import { loadLicense, loadToken, saveLicense } from '../licensing/license-storage.js';
 const OFFLINE_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 const REFRESH_INTERVAL_MS = 10 * 60 * 1000;
-const PUBLIC_KEY_HEX = '';
+const ENTITLEMENT_PUBLIC_KEYS = {
+    __SELECTPILOT_ENTITLEMENT_KEY_ID__: '__SELECTPILOT_ENTITLEMENT_PUBLIC_KEY_HEX__',
+};
+const SIGNATURE_ALGORITHM = 'Ed25519';
 let cachedFeatureMap = null;
 function nowMs() {
     return Date.now();
@@ -50,11 +53,12 @@ function canonicalizeEntitlement(payload) {
         expiresAt: payload.expiresAt ?? null,
     });
 }
-async function verifySignature(payload, signature) {
-    if (!PUBLIC_KEY_HEX)
+export async function verifyEntitlementSignature(payload, signature, kid, publicKeys = ENTITLEMENT_PUBLIC_KEYS) {
+    const publicKeyHex = publicKeys[kid];
+    if (!publicKeyHex || !signature || !kid)
         return false;
     try {
-        const key = await crypto.subtle.importKey('raw', bytesToArrayBuffer(hexToBytes(PUBLIC_KEY_HEX)), { name: 'Ed25519' }, false, ['verify']);
+        const key = await crypto.subtle.importKey('raw', bytesToArrayBuffer(hexToBytes(publicKeyHex)), { name: 'Ed25519' }, false, ['verify']);
         const valid = await crypto.subtle.verify('Ed25519', key, bytesToArrayBuffer(base64ToBytes(signature)), new TextEncoder().encode(canonicalizeEntitlement(payload)));
         return Boolean(valid);
     }
@@ -83,7 +87,23 @@ async function isFeatureAllowedByTier(feature, tier) {
 }
 function isWithinOfflineGrace(record) {
     const baseline = record.cachedAt || record.issuedAt;
-    return nowMs() <= (baseline + OFFLINE_GRACE_MS);
+    return (!record.expiresAt || nowMs() < record.expiresAt)
+        && nowMs() <= (baseline + OFFLINE_GRACE_MS);
+}
+async function isVerifiedCachedEntitlement(record, token) {
+    if (record.token !== token
+        || record.alg !== SIGNATURE_ALGORITHM
+        || !record.signature
+        || !record.kid
+        || !isWithinOfflineGrace(record))
+        return false;
+    return verifyEntitlementSignature({
+        token: record.token,
+        tier: record.tier,
+        features: record.features,
+        issuedAt: record.issuedAt,
+        expiresAt: record.expiresAt ?? null,
+    }, record.signature, record.kid);
 }
 async function readCachedEntitlement() {
     const cached = await loadLicense();
@@ -108,44 +128,37 @@ async function writeCachedEntitlement(record) {
     });
 }
 async function normalizeRemoteResponse(token, response) {
-    if (response.entitlement) {
-        const entitlement = response.entitlement;
-        if (entitlement.token !== token) {
-            warn('entitlement', 'token mismatch in signed response');
-            return null;
-        }
-        if (response.signature) {
-            if (!PUBLIC_KEY_HEX) {
-                warn('entitlement', 'signature returned but PUBLIC_KEY_HEX is not configured; accepting as unsigned MVP');
-            }
-            else {
-                const valid = await verifySignature(entitlement, response.signature);
-                if (!valid)
-                    return null;
-            }
-        }
-        return {
-            token: entitlement.token,
-            tier: entitlement.tier,
-            features: entitlement.features,
-            issuedAt: entitlement.issuedAt,
-            expiresAt: entitlement.expiresAt ?? undefined,
-            cachedAt: nowMs(),
-            signature: response.signature,
-            alg: response.alg,
-            kid: response.kid,
-        };
+    const entitlement = response.entitlement;
+    if (!entitlement
+        || entitlement.token !== token
+        || !['essential', 'plus', 'pro'].includes(entitlement.tier)
+        || !Number.isInteger(entitlement.issuedAt)
+        || (entitlement.expiresAt != null && !Number.isInteger(entitlement.expiresAt))) {
+        warn('entitlement', 'missing or token-mismatched signed entitlement');
+        return null;
     }
-    if (response.tier && response.issuedAt) {
-        return {
-            token,
-            tier: response.tier,
-            issuedAt: response.issuedAt,
-            expiresAt: response.expiresAt,
-            cachedAt: nowMs(),
-        };
+    if (response.alg !== SIGNATURE_ALGORITHM || !response.signature || !response.kid) {
+        warn('entitlement', 'unsigned or unsupported entitlement response');
+        return null;
     }
-    return null;
+    if (entitlement.expiresAt != null && entitlement.expiresAt <= nowMs()) {
+        warn('entitlement', 'expired entitlement response');
+        return null;
+    }
+    const valid = await verifyEntitlementSignature(entitlement, response.signature, response.kid);
+    if (!valid)
+        return null;
+    return {
+        token: entitlement.token,
+        tier: entitlement.tier,
+        features: entitlement.features,
+        issuedAt: entitlement.issuedAt,
+        expiresAt: entitlement.expiresAt ?? undefined,
+        cachedAt: nowMs(),
+        signature: response.signature,
+        alg: response.alg,
+        kid: response.kid,
+    };
 }
 async function remoteVerify(token) {
     try {
@@ -168,17 +181,17 @@ async function remoteVerify(token) {
     }
 }
 export async function setEntitlementToken(token) {
-    const existing = await loadLicense();
+    const normalizedToken = token.trim();
+    if (!normalizedToken)
+        throw new Error('entitlement_token_required');
+    const resetAt = nowMs();
     await saveLicense({
-        token,
-        tier: existing?.tier || 'essential',
-        issuedAt: existing?.issuedAt || nowMs(),
-        expiresAt: existing?.expiresAt,
-        features: existing?.features,
-        cachedAt: existing?.cachedAt,
-        signature: existing?.signature,
-        alg: existing?.alg,
-        kid: existing?.kid,
+        token: normalizedToken,
+        tier: 'essential',
+        issuedAt: resetAt,
+        expiresAt: resetAt,
+        features: [],
+        cachedAt: 0,
     });
 }
 export async function refreshEntitlement(force = false) {
@@ -188,7 +201,7 @@ export async function refreshEntitlement(force = false) {
         return null;
     const shouldAttemptRemote = force
         || !cached
-        || !isWithinOfflineGrace(cached)
+        || !(await isVerifiedCachedEntitlement(cached, token))
         || nowMs() - (cached.cachedAt || cached.issuedAt) > REFRESH_INTERVAL_MS;
     if (!shouldAttemptRemote && cached) {
         log('entitlement', 'using cached entitlement within offline grace');
@@ -210,7 +223,7 @@ export async function refreshEntitlement(force = false) {
         await writeCachedEntitlement(remote);
         return normalizeEntitlement(remote);
     }
-    if (cached && isWithinOfflineGrace(cached)) {
+    if (cached && await isVerifiedCachedEntitlement(cached, token)) {
         log('entitlement', 'remote unavailable; using cached entitlement within grace window');
         return cached;
     }
