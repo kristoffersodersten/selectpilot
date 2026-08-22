@@ -123,7 +123,7 @@ The repository configuration is authoritative for price and entitlement mapping:
 
 Essential and Plus do not retain a knowledge history. Pro stateful features must remain local, visible and user-controlled: retained data can be inspected, exported and deleted. A feature is available only when the signed entitlement and `pricing/tier-feature-map.json` both permit it; there is no silent downgrade or fallback.
 
-Prices and Paddle product identifiers live in `pricing/pricing-global.json` and `pricing/paddle-products.json`. Their presence is configuration evidence, not proof that production checkout or entitlement issuance is operational.
+Displayed tier prices live in `pricing/pricing-global.json`. Checkout is not embedded in the extension: paid tokens come from the separately operated local entitlement authority, and Store packaging excludes inactive remote-checkout code and product placeholders.
 
 ### Team / self-hosted
 

@@ -7,14 +7,6 @@ import {
   setEntitlementToken,
 } from './entitlement-service.js';
 
-export type PricingConfig = {
-  trial: { enabled: boolean; duration_days: number; access: 'pro' | 'plus' | 'essential' };
-  tiers: Record<'essential' | 'plus' | 'pro', number>;
-  offline_grace_days: number;
-  products?: Record<string, string>;
-  vendor_id?: number;
-};
-
 export type FeatureMap = Record<'essential' | 'plus' | 'pro', string[]>;
 
 async function loadJSON<T>(path: string): Promise<T> {
@@ -23,16 +15,7 @@ async function loadJSON<T>(path: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-let cachedPricing: PricingConfig | null = null;
 let cachedFeatures: FeatureMap | null = null;
-
-export async function getPricing(): Promise<PricingConfig> {
-  if (cachedPricing) return cachedPricing;
-  const pricing = await loadJSON<Omit<PricingConfig, 'products'>>('pricing/pricing-global.json');
-  const productsPayload = await loadJSON<{ products: Record<string, string>; vendor_id?: number }>('pricing/paddle-products.json');
-  cachedPricing = { ...pricing, products: productsPayload.products, vendor_id: productsPayload.vendor_id };
-  return cachedPricing;
-}
 
 export async function getFeatures(): Promise<FeatureMap> {
   if (cachedFeatures) return cachedFeatures;

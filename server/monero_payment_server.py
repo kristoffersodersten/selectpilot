@@ -30,7 +30,7 @@ app = Flask(__name__)
 # ---- CONFIG ----
 RPC_URL = os.environ.get("CHROMEAI_MONERO_RPC_URL", "http://127.0.0.1:18083/json_rpc")
 DB_FILE = Path(os.environ.get("CHROMEAI_MONERO_DB_FILE", "monero-billing-db.json"))
-ADMIN_SECRET = os.environ.get("CHROMEAI_ADMIN_SECRET", "CHANGE_ME")
+ADMIN_SECRET = os.environ.get("CHROMEAI_ADMIN_SECRET", "")
 CONFIRMATIONS_REQUIRED = int(os.environ.get("CHROMEAI_MONERO_CONFIRMATIONS", "10"))
 POLL_INTERVAL_SECONDS = int(os.environ.get("CHROMEAI_MONERO_POLL_SECONDS", "20"))
 ORDER_EXPIRY_MS = int(os.environ.get("CHROMEAI_MONERO_ORDER_EXPIRY_MS", str(30 * 60 * 1000)))
@@ -255,6 +255,8 @@ def verify_license():
 # ---- ADMIN REVOKE ----
 @app.post("/admin/revoke")
 def revoke():
+    if not ADMIN_SECRET:
+        return jsonify({"error": "admin_revoke_not_configured"}), 503
     if request.headers.get("x-admin-secret") != ADMIN_SECRET:
         return jsonify({"error": "forbidden"}), 403
 

@@ -25,6 +25,9 @@ test('runtime inventory excludes source, tests, reports, and transient files', a
   assert.ok(files.includes('background/background.js'));
   assert.ok(files.includes('content/content-script.bundle.js'));
   assert.ok(files.includes('assets/icon128.png'));
+  assert.ok(files.includes('pricing/tier-feature-map.json'));
+  assert.ok(!files.some((file) => file.startsWith('billing/')));
+  assert.ok(!files.includes('pricing/paddle-products.json'));
   assert.ok(!files.some((file) => file.startsWith('assets/marketing/')));
   assert.ok(files.every((file) => !file.endsWith('.ts')));
   assert.ok(files.every((file) => !/(^|\/)(tests|reports|node_modules)(\/|$)/.test(file)));

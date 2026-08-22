@@ -11,7 +11,7 @@ import { validateStoreAssets } from './validate-store-assets.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const fixedDate = new Date('2026-01-01T00:00:00Z');
-const runtimeRoots = ['agent', 'api', 'background', 'billing', 'content', 'licensing', 'panel', 'popup', 'pricing', 'shared', 'utils'];
+const runtimeRoots = ['agent', 'api', 'background', 'content', 'licensing', 'panel', 'popup', 'shared', 'utils'];
 const runtimeAssets = [
   'assets/icon16.png',
   'assets/icon32.png',
@@ -19,6 +19,7 @@ const runtimeAssets = [
   'assets/icon128.png',
   'assets/icon256.png',
   'assets/icon512.png',
+  'pricing/tier-feature-map.json',
 ];
 const allowedExtensions = new Set(['.css', '.html', '.js', '.json', '.png', '.svg']);
 const forbiddenPath = /(^|\/)(?:\.env|tests?|reports?|logs?|node_modules|test-results|playwright-report)(\/|$)|\.(?:map|log|pem|key)$/i;
@@ -54,6 +55,9 @@ export async function assertReleaseSafe(files, root = projectRoot) {
   const entitlement = await readFile(path.join(root, 'background/entitlement-service.js'), 'utf8');
   if (entitlement.includes('__SELECTPILOT_ENTITLEMENT_PUBLIC_KEY_HEX__') || entitlement.includes('__SELECTPILOT_ENTITLEMENT_KEY_ID__')) {
     throw new Error('Store package blocked: production entitlement signature verification is not configured (SOD-837).');
+  }
+  if (files.some((file) => file.startsWith('billing/') || file === 'pricing/paddle-products.json')) {
+    throw new Error('Store package blocked: inactive remote checkout code or product placeholders entered runtime inventory.');
   }
 
   for (const relative of files) {
