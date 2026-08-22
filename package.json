@@ -33,6 +33,7 @@
     "test:e2e": "playwright test --config tests/e2e/playwright.config.mjs",
     "test": "tsc -p tsconfig.json && node --test tests/panel/*.test.mjs && python3 -m unittest discover -s tests/server -p 'test_*.py'",
     "test:privacy": "node --test tests/panel/network-boundary.test.mjs && python3 -m unittest tests/server/test_privacy_proof.py",
+    "test:billing": "python3 -m unittest tests/server/test_billing_security.py tests/server/test_entitlement_signer.py && python3 -c \"import sys; sys.path.insert(0, 'server'); import monero_payment_server\"",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "validate:server": "python3 server/nano_server.py --run-dir /tmp/chromeai-run --log-dir /tmp/chromeai-log"
   },

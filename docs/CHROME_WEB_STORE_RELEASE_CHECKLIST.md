@@ -24,6 +24,8 @@ Production packaging requires `SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_JSON` as a JS
 
 Never place the private key, its contents, or a production signature fixture in Git, CI logs, Linear, test data, or the extension package. Signer provisioning and activation remain an authorized secrets operation.
 
+The separately operated local billing authority installs its pinned runtime with `python3 -m pip install --requirement requirements-billing.txt`. Its wallet RPC is loopback-only, entitlement/order state is written with owner-only permissions, administrative revocation requires a configured secret of at least 32 characters, and generated order IDs contain 128 bits of random material.
+
 ## Product Truth
 
 - [ ] The listing describes one purpose: selected text to structured local output.

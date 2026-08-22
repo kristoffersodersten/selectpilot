@@ -23,12 +23,13 @@ from threading import Lock, Thread
 
 import requests
 from flask import Flask, jsonify, request
+from billing_security import admin_secret_matches, new_order_id, save_private_json, validated_wallet_rpc_url
 from entitlement_signer import EntitlementSigner, SigningError
 
 app = Flask(__name__)
 
 # ---- CONFIG ----
-RPC_URL = os.environ.get("CHROMEAI_MONERO_RPC_URL", "http://127.0.0.1:18083/json_rpc")
+RPC_URL = validated_wallet_rpc_url(os.environ.get("CHROMEAI_MONERO_RPC_URL", "http://127.0.0.1:18083/json_rpc"))
 DB_FILE = Path(os.environ.get("CHROMEAI_MONERO_DB_FILE", "monero-billing-db.json"))
 ADMIN_SECRET = os.environ.get("CHROMEAI_ADMIN_SECRET", "")
 CONFIRMATIONS_REQUIRED = int(os.environ.get("CHROMEAI_MONERO_CONFIRMATIONS", "10"))
@@ -51,9 +52,7 @@ def load_db():
 
 
 def save_db(db):
-    tmp = DB_FILE.with_suffix(".tmp")
-    tmp.write_text(json.dumps(db, indent=2), encoding="utf-8")
-    tmp.replace(DB_FILE)
+    save_private_json(DB_FILE, db)
 
 
 # ---- RPC ----
@@ -99,7 +98,7 @@ def create_order():
     if tier not in {"essential", "plus", "pro"}:
         return jsonify({"error": "invalid_tier"}), 400
 
-    order_id = body.get("order_id") or ("SP-" + secrets.token_hex(4))
+    order_id = body.get("order_id") or new_order_id()
 
     res = rpc(
         "create_address",
@@ -257,7 +256,7 @@ def verify_license():
 def revoke():
     if not ADMIN_SECRET:
         return jsonify({"error": "admin_revoke_not_configured"}), 503
-    if request.headers.get("x-admin-secret") != ADMIN_SECRET:
+    if not admin_secret_matches(ADMIN_SECRET, request.headers.get("x-admin-secret")):
         return jsonify({"error": "forbidden"}), 403
 
     body = request.get_json(silent=True) or {}
