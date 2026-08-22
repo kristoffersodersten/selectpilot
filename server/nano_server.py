@@ -1308,14 +1308,22 @@ def license_verify(payload: dict) -> dict:
     except (URLError, TimeoutError, json.JSONDecodeError) as exc:
         raise ValidationError("entitlement_verifier_unavailable", "Local entitlement verifier is unavailable", status=503) from exc
 
-    issued_at = result.get("issuedAt") if isinstance(result, dict) else None
-    expires_at = result.get("expiresAt") if isinstance(result, dict) else None
+    entitlement = result.get("entitlement") if isinstance(result, dict) else None
+    issued_at = entitlement.get("issuedAt") if isinstance(entitlement, dict) else None
+    expires_at = entitlement.get("expiresAt") if isinstance(entitlement, dict) else None
     if (
         not isinstance(result, dict)
-        or result.get("tier") not in {"essential", "plus", "pro"}
+        or not isinstance(entitlement, dict)
+        or entitlement.get("token") != token
+        or entitlement.get("tier") not in {"essential", "plus", "pro"}
         or not isinstance(issued_at, int)
         or isinstance(issued_at, bool)
         or (expires_at is not None and (not isinstance(expires_at, int) or isinstance(expires_at, bool)))
+        or result.get("alg") != "Ed25519"
+        or not isinstance(result.get("kid"), str)
+        or not result.get("kid")
+        or not isinstance(result.get("signature"), str)
+        or not result.get("signature")
     ):
         raise ValidationError("invalid_entitlement_response", "Local entitlement verifier returned an invalid contract", status=503)
     return result

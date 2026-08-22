@@ -17,6 +17,13 @@ Last updated: 2026-08-21
 
 `pnpm package:store` must fail while production entitlement verification is absent. Never bypass that failure with a development key or an unsigned entitlement.
 
+Production packaging requires `SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_JSON` as a JSON key ring whose values are raw 32-byte Ed25519 public keys encoded as 64 hexadecimal characters. The matching issuer uses only:
+
+- `SELECTPILOT_ENTITLEMENT_SIGNING_KEY_FILE`: an absolute path to private key material outside the repository;
+- `SELECTPILOT_ENTITLEMENT_SIGNING_KEY_ID`: the exact rotation ID present in the public key ring.
+
+Never place the private key, its contents, or a production signature fixture in Git, CI logs, Linear, test data, or the extension package. Signer provisioning and activation remain an authorized secrets operation.
+
 ## Product Truth
 
 - [ ] The listing describes one purpose: selected text to structured local output.

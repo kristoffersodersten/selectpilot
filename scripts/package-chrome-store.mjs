@@ -52,7 +52,7 @@ export async function collectRuntimeFiles(root = projectRoot) {
 
 export async function assertReleaseSafe(files, root = projectRoot) {
   const entitlement = await readFile(path.join(root, 'background/entitlement-service.js'), 'utf8');
-  if (/const PUBLIC_KEY_HEX = ['"]{2}/.test(entitlement) || entitlement.includes('accepting as unsigned MVP')) {
+  if (entitlement.includes('__SELECTPILOT_ENTITLEMENT_PUBLIC_KEY_HEX__') || entitlement.includes('__SELECTPILOT_ENTITLEMENT_KEY_ID__')) {
     throw new Error('Store package blocked: production entitlement signature verification is not configured (SOD-837).');
   }
 

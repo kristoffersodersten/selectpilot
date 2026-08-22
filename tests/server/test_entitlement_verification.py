@@ -47,10 +47,13 @@ class EntitlementVerificationTests(unittest.TestCase):
         self.assertEqual(ctx.exception.status, 401)
 
     def test_verified_local_authority_response_is_returned(self) -> None:
-        response = _Response(b'{"tier":"pro","issuedAt":1700000000000,"expiresAt":null}')
+        response = _Response(
+            b'{"entitlement":{"token":"opaque-token","tier":"pro","features":[],"issuedAt":1700000000000,'
+            b'"expiresAt":null},"signature":"c2lnbmF0dXJl","alg":"Ed25519","kid":"rotation-1"}'
+        )
         with patch("nano_server.urlopen", return_value=response):
             result = license_verify({"token": "opaque-token"})
-        self.assertEqual(result["tier"], "pro")
+        self.assertEqual(result["entitlement"]["tier"], "pro")
 
     def test_non_loopback_verifier_configuration_is_rejected(self) -> None:
         with patch.dict(os.environ, {"SELECTPILOT_BILLING_VERIFY_URL": "https://example.com/license/verify"}):
@@ -59,7 +62,10 @@ class EntitlementVerificationTests(unittest.TestCase):
         self.assertEqual(ctx.exception.code, "invalid_entitlement_verifier")
 
     def test_malformed_authority_response_is_rejected(self) -> None:
-        response = _Response(b'{"tier":"pro","issuedAt":"not-a-timestamp"}')
+        response = _Response(
+            b'{"entitlement":{"token":"opaque-token","tier":"pro","issuedAt":"not-a-timestamp"},'
+            b'"signature":"bad","alg":"Ed25519","kid":"rotation-1"}'
+        )
         with patch("nano_server.urlopen", return_value=response):
             with self.assertRaises(ValidationError) as ctx:
                 license_verify({"token": "opaque-token"})

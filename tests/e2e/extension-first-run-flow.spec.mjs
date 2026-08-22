@@ -1,16 +1,34 @@
 // module_name: extension_privacy_integration
 // spec_ref: "privacy_and_debug_policy"
 import { test, expect, chromium } from '@playwright/test';
+import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { collectRuntimeFiles } from '../../scripts/package-chrome-store.mjs';
 
 test('real extension preserves privacy from selected text through rendered output', async () => {
   const executablePath = process.env.SELECTPILOT_CHROME_EXECUTABLE || chromium.executablePath();
+  const keyId = 'e2e-ephemeral';
+  const keyPair = await crypto.subtle.generateKey('Ed25519', true, ['sign', 'verify']);
+  const publicKeyHex = Buffer.from(await crypto.subtle.exportKey('raw', keyPair.publicKey)).toString('hex');
+  const extensionRoot = test.info().outputPath('extension');
+  for (const relative of await collectRuntimeFiles(process.cwd())) {
+    const destination = path.join(extensionRoot, relative);
+    await mkdir(path.dirname(destination), { recursive: true });
+    await cp(path.join(process.cwd(), relative), destination);
+  }
+  const entitlementScript = path.join(extensionRoot, 'background/entitlement-service.js');
+  const entitlementSource = await readFile(entitlementScript, 'utf8');
+  await writeFile(entitlementScript, entitlementSource.replace(
+    /const ENTITLEMENT_PUBLIC_KEYS = \{[\s\S]*?\n\};/,
+    `const ENTITLEMENT_PUBLIC_KEYS = ${JSON.stringify({ [keyId]: publicKeyHex })};`,
+  ));
 
   const context = await chromium.launchPersistentContext(test.info().outputPath('extension-user-data'), {
     executablePath,
     headless: process.env.SELECTPILOT_HEADED !== '1',
     args: [
-      `--disable-extensions-except=${process.cwd()}`,
-      `--load-extension=${process.cwd()}`,
+      `--disable-extensions-except=${extensionRoot}`,
+      `--load-extension=${extensionRoot}`,
       '--disable-web-security',
       '--disable-background-networking',
       '--disable-component-update',
@@ -74,6 +92,18 @@ test('real extension preserves privacy from selected text through rendered outpu
     if (path === '/runtime-meta/health') {
       return fulfill({ ok: false, stream_enabled: false, active_streams: 0, event_version: '1' });
     }
+    if (path === '/license/verify') {
+      const token = request.postDataJSON().token;
+      const now = Date.now();
+      const entitlement = {
+        token, tier: 'essential', features: ['structured_extraction'], issuedAt: now,
+        expiresAt: now + 86_400_000,
+      };
+      const signature = Buffer.from(await crypto.subtle.sign(
+        'Ed25519', keyPair.privateKey, new TextEncoder().encode(JSON.stringify(entitlement)),
+      )).toString('base64');
+      return fulfill({ entitlement, signature, alg: 'Ed25519', kid: keyId });
+    }
     if (path === '/extract') {
       extractRequests.push(request.postDataJSON());
       return fulfill({
@@ -107,14 +137,10 @@ test('real extension preserves privacy from selected text through rendered outpu
     expect(lockedResponse.error).toBe('Paid license required for deterministic extraction');
     expect(extractRequests).toEqual([]);
 
-    await panelPage.evaluate(async () => {
-      const storage = await import(globalThis.chrome.runtime.getURL('licensing/license-storage.js'));
-      const now = Date.now();
-      await storage.saveLicense({
-        token: 'sp_e2e_paid_token', tier: 'essential', issuedAt: now,
-        expiresAt: now + 86_400_000, cachedAt: now,
-      });
-    });
+    const attached = await panelPage.evaluate(() => globalThis.chrome.runtime.sendMessage({
+      type: 'license:attach_token', token: 'sp_e2e_paid_token',
+    }));
+    expect(attached).toMatchObject({ token: 'sp_e2e_paid_token', tier: 'essential' });
     await panelPage.reload();
 
     await expect(panelPage.locator('#btn-first-run-example')).toBeVisible();
