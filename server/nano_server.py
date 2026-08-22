@@ -6,8 +6,6 @@
 # @spec_ref failure_isolation
 # @spec_ref latency_budget
 import argparse
-import base64
-import hmac
 import hashlib
 import json
 import os
@@ -20,6 +18,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from datetime import datetime, timezone
 from urllib.parse import urlparse, parse_qs
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from ollama_client import OllamaClient, OllamaError
 from extraction_presets import get_extraction_preset
@@ -1276,94 +1276,49 @@ def benchmark_runtime() -> dict:
 
 
 def license_verify(payload: dict) -> dict:
-    token = payload.get("token", "")
-    tier = "pro" if "pro" in token else "plus" if "plus" in token else "essential"
-    token_basis = str(token or "")
-    token_hash = hashlib.sha256(token_basis.encode("utf-8")).hexdigest()
-    now = 1_700_000_000_000 + int(token_hash[:8], 16)
-    features_by_tier = {
-        "essential": [
-            "selection_clipping",
-            "markdown_export",
-            "clipboard_export",
-            "side_panel_ui",
-            "structured_extraction",
-            "canonical_metadata",
-            "local_processing",
-        ],
-        "plus": [
-            "selection_clipping",
-            "markdown_export",
-            "clipboard_export",
-            "side_panel_ui",
-            "structured_extraction",
-            "canonical_metadata",
-            "local_processing",
-            "text_summarization",
-            "basic_local_agent",
-            "export_obsidian",
-            "export_notion",
-            "export_mem_ai",
-            "export_apple_notes",
-            "format_adapters",
-            "one_click_export",
-            "batch_clipping",
-            "structured_summaries",
-        ],
-        "pro": [
-            "selection_clipping",
-            "markdown_export",
-            "clipboard_export",
-            "side_panel_ui",
-            "structured_extraction",
-            "canonical_metadata",
-            "local_processing",
-            "text_summarization",
-            "basic_local_agent",
-            "export_obsidian",
-            "export_notion",
-            "export_mem_ai",
-            "export_apple_notes",
-            "format_adapters",
-            "one_click_export",
-            "batch_clipping",
-            "structured_summaries",
-            "audio_transcription",
-            "video_frame_ocr",
-            "image_ocr",
-            "multimodal_clipper",
-            "local_embeddings",
-            "advanced_agent_reasoning",
-            "project_memory",
-            "knowledge_graph",
-            "offline_search",
-            "auto_history_indexing",
-        ],
-    }
-    entitlement = {
-        "token": token,
-        "tier": tier,
-        "features": features_by_tier.get(tier, []),
-        "issuedAt": now,
-        "expiresAt": now + 30 * 24 * 60 * 60 * 1000,
-    }
+    token = str(payload.get("token") or "").strip()
+    if not token:
+        raise ValidationError("missing_token", "Entitlement token is required")
 
-    # Minimal signed payload support for MVP environments.
-    # In production, replace with Ed25519 signing and public-key verification in client.
-    signing_secret = os.environ.get("CHROMEAI_ENTITLEMENT_SIGNING_SECRET", "")
-    canonical = json.dumps(entitlement, separators=(",", ":"), ensure_ascii=False)
-    signature = ""
-    if signing_secret:
-        digest = hmac.new(signing_secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256).digest()
-        signature = base64.b64encode(digest).decode("ascii")
+    verifier_url = os.environ.get(
+        "SELECTPILOT_BILLING_VERIFY_URL",
+        "http://127.0.0.1:8090/license/verify",
+    )
+    parsed = urlparse(verifier_url)
+    if parsed.scheme != "http" or parsed.hostname not in LOCAL_HOSTS or parsed.path != "/license/verify":
+        raise ValidationError(
+            "invalid_entitlement_verifier",
+            "Entitlement verifier must be the explicit local HTTP license endpoint",
+            status=503,
+        )
 
-    response = {
-        "entitlement": entitlement,
-        "signature": signature,
-        "alg": "HMAC-SHA256" if signing_secret else "none",
-        "kid": "local-dev",
-    }
-    return response
+    request = Request(
+        verifier_url,
+        data=json.dumps({"token": token}, separators=(",", ":")).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=2.0) as response:
+            result = json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        if exc.code == 401:
+            raise ValidationError("invalid_entitlement", "Entitlement token is invalid", status=401) from exc
+        raise ValidationError("entitlement_verifier_error", "Local entitlement verifier rejected the request", status=503) from exc
+    except (URLError, TimeoutError, json.JSONDecodeError) as exc:
+        raise ValidationError("entitlement_verifier_unavailable", "Local entitlement verifier is unavailable", status=503) from exc
+
+    issued_at = result.get("issuedAt") if isinstance(result, dict) else None
+    expires_at = result.get("expiresAt") if isinstance(result, dict) else None
+    if (
+        not isinstance(result, dict)
+        or result.get("tier") not in {"essential", "plus", "pro"}
+        or not isinstance(issued_at, int)
+        or isinstance(issued_at, bool)
+        or (expires_at is not None and (not isinstance(expires_at, int) or isinstance(expires_at, bool)))
+    ):
+        raise ValidationError("invalid_entitlement_response", "Local entitlement verifier returned an invalid contract", status=503)
+    return result
 
 
 class Handler(BaseHTTPRequestHandler):

@@ -223,17 +223,17 @@ async function remoteVerify(token: string): Promise<RemoteVerifyResult> {
 }
 
 export async function setEntitlementToken(token: string): Promise<void> {
-  const existing = await loadLicense();
+  const normalizedToken = token.trim();
+  if (!normalizedToken) throw new Error('entitlement_token_required');
+
+  const resetAt = nowMs();
   await saveLicense({
-    token,
-    tier: existing?.tier || 'essential',
-    issuedAt: existing?.issuedAt || nowMs(),
-    expiresAt: existing?.expiresAt,
-    features: existing?.features,
-    cachedAt: existing?.cachedAt,
-    signature: existing?.signature,
-    alg: existing?.alg,
-    kid: existing?.kid,
+    token: normalizedToken,
+    tier: 'essential',
+    issuedAt: resetAt,
+    expiresAt: resetAt,
+    features: [],
+    cachedAt: 0,
   });
 }
 
