@@ -248,7 +248,7 @@ def verify_license():
         return jsonify(ENTITLEMENT_SIGNER.sign(entitlement))
     except SigningError as exc:
         app.logger.error("Entitlement signing unavailable: %s", exc)
-        return jsonify({"error": str(exc)}), 503
+        return jsonify({"error": "entitlement_signing_unavailable"}), 503
 
 
 # ---- ADMIN REVOKE ----

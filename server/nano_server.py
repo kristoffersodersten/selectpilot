@@ -124,14 +124,14 @@ class ValidationError(RuntimeError):
         self.details = details or {}
 
 
-def allowed_extension_origin(origin: str | None) -> str | None:
+def extension_origin_allowed(origin: str | None) -> bool:
     candidate = str(origin or "").strip()
     if not candidate:
-        return None
+        return False
     configured = os.environ.get("SELECTPILOT_EXTENSION_ORIGIN", "").strip()
     if configured:
-        return candidate if candidate == configured and CHROME_EXTENSION_ORIGIN.fullmatch(candidate) else None
-    return candidate if CHROME_EXTENSION_ORIGIN.fullmatch(candidate) else None
+        return bool(candidate == configured and CHROME_EXTENSION_ORIGIN.fullmatch(configured))
+    return bool(CHROME_EXTENSION_ORIGIN.fullmatch(candidate))
 
 
 def _expect_dict(value: object, *, field: str = "payload") -> dict:
@@ -1347,16 +1347,12 @@ class Handler(BaseHTTPRequestHandler):
 
     def _set_headers(self):
         self.send_header("Content-Type", "application/json")
-        origin = allowed_extension_origin(self.headers.get("Origin"))
-        if origin:
-            self.send_header("Access-Control-Allow-Origin", origin)
-            self.send_header("Vary", "Origin")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, Last-Event-ID, x-selectpilot-trace-id, x-trace-id")
 
     def _origin_allowed(self) -> bool:
         origin = self.headers.get("Origin")
-        if not origin or allowed_extension_origin(origin):
+        if not origin or extension_origin_allowed(origin):
             return True
         self._write_error(403, "origin_not_allowed", "Browser origin is not authorized for the local bridge")
         return False
@@ -1426,10 +1422,6 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/event-stream")
             self.send_header("Cache-Control", "no-cache")
             self.send_header("Connection", "keep-alive")
-            origin = allowed_extension_origin(self.headers.get("Origin"))
-            if origin:
-                self.send_header("Access-Control-Allow-Origin", origin)
-                self.send_header("Vary", "Origin")
             self.end_headers()
 
             RUNTIME_META.increment_streams()

@@ -46,11 +46,11 @@ class BridgeOriginTests(unittest.TestCase):
         self.assertNotIn("Access-Control-Allow-Origin", headers)
         self.assertEqual(json.loads(body)["error"]["code"], "origin_not_allowed")
 
-    def test_echoes_valid_extension_origin(self) -> None:
+    def test_accepts_valid_extension_origin_without_dynamic_cors_header(self) -> None:
         origin = "chrome-extension://abcdefghijklmnopabcdefghijklmnop"
         status, headers, _body = self.request("OPTIONS", "/extract", headers={"Origin": origin})
         self.assertEqual(status, 204)
-        self.assertEqual(headers.get("Access-Control-Allow-Origin"), origin)
+        self.assertNotIn("Access-Control-Allow-Origin", headers)
 
     def test_rejects_oversized_request_before_reading_body(self) -> None:
         status, _headers, body = self.request(
