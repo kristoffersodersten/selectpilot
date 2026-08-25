@@ -1,3 +1,5 @@
+// module_name: public_checkout
+// spec_ref: "validation_layer"
 (() => {
   const state = document.querySelector('#checkout-state');
   const config = window.SELECTPILOT_CONFIG;

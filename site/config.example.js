@@ -1,3 +1,5 @@
+// module_name: public_site_configuration_example
+// spec_ref: "reporting"
 window.SELECTPILOT_CONFIG = {
   paddleEnvironment: "sandbox",
   paddleClientToken: "test_replace_me",

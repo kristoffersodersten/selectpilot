@@ -1,4 +1,4 @@
-"""Calm, explicit local runtime provisioning for macOS."""
+"""module_name: installation_manager; spec_ref: "provisioning_layer"."""
 from __future__ import annotations
 
 import json

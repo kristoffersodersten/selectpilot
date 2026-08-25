@@ -1,3 +1,5 @@
+// module_name: public_site_configuration
+// spec_ref: "reporting"
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 

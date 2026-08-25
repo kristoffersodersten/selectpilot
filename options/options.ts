@@ -1,3 +1,5 @@
+// module_name: extension_settings
+// spec_ref: "runtime_profiles"
 export {};
 
 type Settings = {

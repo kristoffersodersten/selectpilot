@@ -1,4 +1,4 @@
-"""Installation state and consent contract tests."""
+"""module_name: installation_manager_tests; spec_ref: "testing_strategy.integration_tests"."""
 from __future__ import annotations
 
 import sys
