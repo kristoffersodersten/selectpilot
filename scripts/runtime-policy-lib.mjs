@@ -250,8 +250,10 @@ export function buildRuntimeRegistryFromPolicy(policy, registrySource, rejectedC
         model_id: model.model_id,
         ollama_name: model.ollama_name,
         supported_operation_families: model.supported_operation_families || ['extract', 'summarize', 'agent'],
+        preferred_task_families: model.preferred_task_families || [],
         min_hardware_profile: model.min_hardware_profile || 'low',
         installation_state: model.installation_state || 'installed',
+        baseline_approved: model.baseline_approved === true,
         runtime_status: runtimeStatus,
         reliability_score: model.reliability_score ?? null,
         policy_refs: [`runtime/model_policy.json#${model.model_id}`],
@@ -266,13 +268,19 @@ function pickOutputMode(taskFamily) {
   return 'freeform';
 }
 
-function modelTaskSupport(modelId) {
-  return {
-    extract: true,
-    summarize: true,
-    agent: true,
-    [modelId]: true,
-  };
+function modelTaskSupport(model) {
+  const supported = Array.isArray(model.supported_operation_families)
+    ? model.supported_operation_families
+    : ['extract', 'summarize', 'agent'];
+  return new Set(supported);
+}
+
+// @spec_ref prompt_determinism
+export function replaceCompileAuditEvent(existingEvents, compileEvent) {
+  return [
+    ...(existingEvents || []).filter((event) => event.event_type !== 'compile_policy'),
+    compileEvent,
+  ];
 }
 
 function confidenceFromDecision(decision, determinismRate) {
@@ -427,12 +435,18 @@ export async function compileRuntimePolicy() {
 
       const runtimeCandidates = (registrySource.models || [])
         .filter((m) => !m.quarantined)
+        .filter((m) => m.baseline_approved === true)
         .filter((m) => compatibleWithHardware(m.min_hardware_profile || 'low', hardwareProfile))
-        .filter((m) => modelTaskSupport(m.model_id)[taskFamily])
+        .filter((m) => modelTaskSupport(m).has(taskFamily))
+        .sort((a, b) => {
+          const aPreferred = (a.preferred_task_families || []).includes(taskFamily) ? 0 : 1;
+          const bPreferred = (b.preferred_task_families || []).includes(taskFamily) ? 0 : 1;
+          return aPreferred - bPreferred;
+        })
         .map((m) => m.model_id);
 
       const preferredInCandidates = preferred && runtimeCandidates.includes(preferred) ? preferred : runtimeCandidates[0] || null;
-      const fallbackIds = runtimeCandidates.filter((id) => id !== preferredInCandidates).slice(0, 3);
+      const fallbackIds = [];
 
       if (preferredInCandidates) {
         defaults.push({
@@ -504,17 +518,14 @@ export async function compileRuntimePolicy() {
     generated_at_unix_ms: generatedAt,
     policy_version: policy.policy_version,
     source_reports: policy.source_reports,
-    events: [
-      ...(existingAudit.events || []),
-      {
+    events: replaceCompileAuditEvent(existingAudit.events, {
         event_type: 'compile_policy',
         generated_at_unix_ms: generatedAt,
         promoted_count: eligible.length,
         rejected_count: gatingResults.filter((r) => !r.eligible).length,
         runtime_evidence_verified: runtimeEvidenceVerified,
         policy_version: policy.policy_version,
-      },
-    ],
+      }),
     gating_results: gatingResults.map((r) => ({
       candidate_model: r.candidate_model,
       eligible: r.eligible,

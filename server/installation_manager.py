@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 from urllib.request import Request, urlopen
 
-from runtime_profiles import get_runtime_profile, recommend_runtime_profile
+from runtime_profiles import get_runtime_profile, recommend_runtime_profile, required_generation_models
 
 OLLAMA_DOWNLOAD_URL = "https://ollama.com/download/Ollama-darwin.zip"
 OLLAMA_TEAM_ID = "3MU9H2V9Y9"
@@ -156,16 +156,22 @@ class InstallationManager:
         try:
             recommendation = recommend_runtime_profile()
             profile = get_runtime_profile(recommendation["recommended_profile"])
-            self._update(profile=profile.key)
+            generation_models = required_generation_models(profile)
+            self._update(profile=profile.key, model_bundle=[model for model, _ in generation_models])
             ollama = self._install_ollama()
             self._update(label="Starting local processing", progress=42)
             subprocess.run(["/usr/bin/open", str(ollama.parents[2]), "--args", "hidden"], check=True)
             self._wait_for_ollama()
             self._update(label="Optimizing for this Mac", progress=48)
-            self._pull_model(profile.generation_model, 48, 82)
-            self._pull_model(profile.embedding_model, 82, 94)
+            model_span = 40 / max(1, len(generation_models))
+            for index, (model, _) in enumerate(generation_models):
+                start = round(48 + index * model_span)
+                end = round(48 + (index + 1) * model_span)
+                self._pull_model(model, start, end)
+            self._pull_model(profile.embedding_model, 88, 94)
             self._update(label="Final checks", progress=96)
-            self._warm_model(profile.generation_model, profile.num_ctx)
+            for model, num_ctx in reversed(generation_models):
+                self._warm_model(model, num_ctx)
             time.sleep(0.2)
             self._update(state="ready", label="Go", progress=100)
         except Exception as error:
