@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import io
+import json
 import os
 import stat
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 SERVER_DIR = ROOT / "server"
@@ -16,6 +19,7 @@ if str(SERVER_DIR) not in sys.path:
 
 from billing_security import (  # noqa: E402
     admin_secret_matches,
+    call_wallet_rpc,
     new_order_id,
     save_private_json,
     validated_wallet_rpc_url,
@@ -23,6 +27,26 @@ from billing_security import (  # noqa: E402
 
 
 class BillingSecurityTests(unittest.TestCase):
+    def test_wallet_rpc_uses_loopback_standard_library_request(self) -> None:
+        response = io.BytesIO(
+            json.dumps({"jsonrpc": "2.0", "id": "0", "result": {"height": 42}}).encode()
+        )
+
+        with patch("billing_security.urlopen", return_value=response) as request_mock:
+            self.assertEqual(
+                call_wallet_rpc("http://127.0.0.1:18083/json_rpc", "get_height"),
+                {"height": 42},
+            )
+
+        sent_request = request_mock.call_args.args[0]
+        self.assertEqual(sent_request.method, "POST")
+        self.assertEqual(sent_request.full_url, "http://127.0.0.1:18083/json_rpc")
+        self.assertEqual(
+            json.loads(sent_request.data),
+            {"jsonrpc": "2.0", "id": "0", "method": "get_height", "params": {}},
+        )
+        self.assertEqual(request_mock.call_args.kwargs["timeout"], 10)
+
     def test_wallet_rpc_is_loopback_only(self) -> None:
         self.assertEqual(
             validated_wallet_rpc_url("http://127.0.0.1:18083/json_rpc"),

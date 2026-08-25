@@ -21,9 +21,14 @@ import time
 from pathlib import Path
 from threading import Lock, Thread
 
-import requests
 from flask import Flask, jsonify, request
-from billing_security import admin_secret_matches, new_order_id, save_private_json, validated_wallet_rpc_url
+from billing_security import (
+    admin_secret_matches,
+    call_wallet_rpc,
+    new_order_id,
+    save_private_json,
+    validated_wallet_rpc_url,
+)
 from entitlement_signer import EntitlementSigner, SigningError
 
 app = Flask(__name__)
@@ -57,21 +62,7 @@ def save_db(db):
 
 # ---- RPC ----
 def rpc(method, params=None):
-    r = requests.post(
-        RPC_URL,
-        json={
-            "jsonrpc": "2.0",
-            "id": "0",
-            "method": method,
-            "params": params or {},
-        },
-        timeout=10,
-    )
-    r.raise_for_status()
-    payload = r.json()
-    if "error" in payload:
-        raise RuntimeError(f"Monero RPC error: {payload['error']}")
-    return payload["result"]
+    return call_wallet_rpc(RPC_URL, method, params)
 
 
 def xmr_to_atomic(xmr_amount: float) -> int:
