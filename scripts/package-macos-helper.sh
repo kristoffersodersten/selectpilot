@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-ROOT="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
+ROOT="$(CDPATH='' cd -- "$(dirname "$0")/.." && pwd)"
 STAGE="$ROOT/dist/macos-helper/payload"
 OUTPUT="$ROOT/dist/macos-helper/SelectPilot-Installer-unsigned.pkg"
 SIGNED="$ROOT/dist/macos-helper/SelectPilot-Installer.pkg"
