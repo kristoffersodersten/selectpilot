@@ -8,6 +8,7 @@ import os
 import secrets
 from pathlib import Path
 from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 
 
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
@@ -18,6 +19,29 @@ def validated_wallet_rpc_url(value: str) -> str:
     if parsed.scheme != "http" or parsed.hostname not in LOCAL_HOSTS or parsed.path != "/json_rpc":
         raise RuntimeError("wallet_rpc_must_be_explicit_loopback_http")
     return value
+
+
+def call_wallet_rpc(url: str, method: str, params: dict | None = None) -> dict:
+    endpoint = validated_wallet_rpc_url(url)
+    body = json.dumps(
+        {
+            "jsonrpc": "2.0",
+            "id": "0",
+            "method": method,
+            "params": params or {},
+        }
+    ).encode("utf-8")
+    rpc_request = Request(
+        endpoint,
+        data=body,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urlopen(rpc_request, timeout=10) as response:
+        payload = json.load(response)
+    if "error" in payload:
+        raise RuntimeError(f"Monero RPC error: {payload['error']}")
+    return payload["result"]
 
 
 def new_order_id() -> str:
