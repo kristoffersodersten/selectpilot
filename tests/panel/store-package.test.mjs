@@ -58,9 +58,17 @@ test('relative CLI paths execute validation and deterministic packaging', () => 
 test('store release rejects remotely hosted executable code', async () => {
   const releaseRoot = await mkdtemp(path.join(tmpdir(), 'selectpilot-remote-code-'));
   await mkdir(path.join(releaseRoot, 'background'), { recursive: true });
+  await mkdir(path.join(releaseRoot, 'pricing'), { recursive: true });
   await writeFile(
     path.join(releaseRoot, 'background/entitlement-service.js'),
     'const PUBLIC_KEY_HEX = "01";'
+  );
+  await writeFile(
+    path.join(releaseRoot, 'pricing/entitlement-public-keys.json'),
+    JSON.stringify({
+      schema_version: 1,
+      keys: [{ kid: 'test', alg: 'Ed25519', public_key_hex: '01'.repeat(32), status: 'active' }],
+    })
   );
   await writeFile(
     path.join(releaseRoot, 'remote.js'),
