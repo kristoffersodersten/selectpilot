@@ -5,6 +5,8 @@
 # @spec_ref model_switch_hysteresis
 # @spec_ref failure_isolation
 # @spec_ref latency_budget
+from __future__ import annotations
+
 import argparse
 import hashlib
 import json
