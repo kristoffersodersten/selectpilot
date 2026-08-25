@@ -4,7 +4,16 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TEMPLATE="$ROOT/launchd/com.chromeai.nano.plist"
 DEST="${HOME}/Library/LaunchAgents/com.chromeai.nano.plist"
-HASH="$(shasum -a 256 "$ROOT/server/nano_server.py" | awk '{print $1}')"
+APP_DIR="${CHROMEAI_APP_DIR:-${HOME}/Library/Application Support/SelectPilot}"
+INSTALL_DIR="$APP_DIR/server"
+SOURCE_BINARY="$ROOT/server/nano_server.py"
+INSTALLED_BINARY="$INSTALL_DIR/nano_server.py"
+RUNTIME_MODULES=(
+  nano_server.py
+  ollama_client.py
+  extraction_presets.py
+  runtime_profiles.py
+)
 OLLAMA_BASE_URL="${CHROMEAI_OLLAMA_BASE_URL:-http://127.0.0.1:11434}"
 OLLAMA_MODEL="${CHROMEAI_OLLAMA_MODEL:-gemma4:e2b-it-qat}"
 OLLAMA_FAST_MODEL="${CHROMEAI_OLLAMA_FAST_MODEL:-$OLLAMA_MODEL}"
@@ -15,12 +24,32 @@ MAX_INPUT_CHARS="${CHROMEAI_MAX_INPUT_CHARS:-16000}"
 OLLAMA_SEED="${CHROMEAI_OLLAMA_SEED:-42}"
 RUN_DIR="${CHROMEAI_RUN_DIR:-${HOME}/Library/Application Support/SelectPilot/run}"
 LOG_DIR="${CHROMEAI_LOG_DIR:-${HOME}/Library/Logs/SelectPilot}"
+PYTHON_BIN="${CHROMEAI_PYTHON_BIN:-$(command -v python3)}"
 
-mkdir -p "${HOME}/Library/LaunchAgents"
+if ! "$PYTHON_BIN" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)'; then
+  echo "SelectPilot requires Python 3.10 or newer; found $($PYTHON_BIN --version 2>&1)." >&2
+  exit 1
+fi
+
+mkdir -p "${HOME}/Library/LaunchAgents" "$INSTALL_DIR" "$APP_DIR/presets" "$APP_DIR/runtime"
 mkdir -p "$RUN_DIR" "$LOG_DIR"
 
+# LaunchAgents cannot reliably read repositories located in macOS privacy-
+# protected folders such as Documents. Install an immutable runtime copy in
+# Application Support and bind the integrity contract to that exact copy.
+for module in "${RUNTIME_MODULES[@]}"; do
+  install -m 0555 "$ROOT/server/$module" "$INSTALL_DIR/$module"
+done
+install -m 0444 "$ROOT/presets/extraction-presets.json" "$APP_DIR/presets/extraction-presets.json"
+for policy in model_policy.json model_registry.runtime.json promotion_audit.json; do
+  install -m 0444 "$ROOT/runtime/$policy" "$APP_DIR/runtime/$policy"
+done
+HASH="$(shasum -a 256 "$INSTALLED_BINARY" | awk '{print $1}')"
+
 sed \
-  -e "s|__PROJECT_ROOT__|$ROOT|g" \
+  -e "s|__PYTHON_BIN__|$PYTHON_BIN|g" \
+  -e "s|__INSTALL_DIR__|$INSTALL_DIR|g" \
+  -e "s|__INSTALLED_BINARY__|$INSTALLED_BINARY|g" \
   -e "s|__RUN_DIR__|$RUN_DIR|g" \
   -e "s|__LOG_DIR__|$LOG_DIR|g" \
   -e "s|__BINARY_HASH__|$HASH|g" \
@@ -40,6 +69,8 @@ launchctl load "$DEST"
 cat <<EOF
 Installed LaunchAgent:
   $DEST
+Installed runtime:
+  $INSTALLED_BINARY
 
 Next steps:
   1. Load the unpacked extension from:

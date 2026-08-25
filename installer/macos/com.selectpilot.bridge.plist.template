@@ -3,7 +3,7 @@
 <plist version="1.0"><dict>
   <key>Label</key><string>com.selectpilot.bridge</string>
   <key>ProgramArguments</key><array>
-    <string>/usr/bin/python3</string><string>__PROJECT_ROOT__/server/nano_server.py</string>
+    <string>__PYTHON_BIN__</string><string>__PROJECT_ROOT__/server/nano_server.py</string>
     <string>--port</string><string>8083</string>
     <string>--run-dir</string><string>__RUN_DIR__</string>
     <string>--log-dir</string><string>__LOG_DIR__</string>

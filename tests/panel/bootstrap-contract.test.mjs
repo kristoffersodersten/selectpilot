@@ -46,3 +46,42 @@ test('one-command setup preserves hardware-aware automatic profile selection', (
   const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
   assert.match(packageJson.scripts['setup:local'], /bootstrap-macos-local\.sh --profile auto$/);
 });
+
+test('bootstrap waits for the launchd bridge to become reachable', () => {
+  const bootstrap = readFileSync('./scripts/bootstrap-macos-local.sh', 'utf8');
+
+  assert.match(bootstrap, /for _attempt in \$\(seq 1 15\)/);
+  assert.match(bootstrap, /curl -sSf "\$BRIDGE_HEALTH_URL"/);
+  assert.match(bootstrap, /sleep 1/);
+});
+
+test('macOS service installs outside the source checkout before launchd execution', () => {
+  const installer = readFileSync('./scripts/install-macos-local.sh', 'utf8');
+  const launchAgent = readFileSync('./launchd/com.chromeai.nano.plist', 'utf8');
+
+  assert.match(installer, /Application Support\/SelectPilot/);
+  assert.match(installer, /RUNTIME_MODULES=\(/);
+  assert.match(installer, /ollama_client\.py/);
+  assert.match(installer, /extraction_presets\.py/);
+  assert.match(installer, /runtime_profiles\.py/);
+  assert.match(installer, /presets\/extraction-presets\.json/);
+  assert.match(installer, /model_policy\.json/);
+  assert.match(installer, /model_registry\.runtime\.json/);
+  assert.match(installer, /sys\.version_info >= \(3, 10\)/);
+  assert.match(launchAgent, /__PYTHON_BIN__/);
+  assert.doesNotMatch(launchAgent, /\/usr\/bin\/python3/);
+  assert.match(installer, /install -m 0555 "\$ROOT\/server\/\$module" "\$INSTALL_DIR\/\$module"/);
+  assert.match(launchAgent, /__INSTALLED_BINARY__/);
+  assert.match(launchAgent, /__INSTALL_DIR__/);
+  assert.doesNotMatch(launchAgent, /__PROJECT_ROOT__/);
+});
+
+test('production macOS package also binds launchd to Python 3.10 or newer', () => {
+  const postinstall = readFileSync('./installer/macos/scripts/postinstall', 'utf8');
+  const launchAgent = readFileSync('./installer/macos/com.selectpilot.bridge.plist.template', 'utf8');
+
+  assert.match(postinstall, /sys\.version_info >= \(3, 10\)/);
+  assert.match(postinstall, /s\|__PYTHON_BIN__\|\$PYTHON_BIN\|g/);
+  assert.match(launchAgent, /__PYTHON_BIN__/);
+  assert.doesNotMatch(launchAgent, /\/usr\/bin\/python3/);
+});

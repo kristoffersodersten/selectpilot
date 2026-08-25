@@ -5,18 +5,18 @@
   <key>Label</key><string>com.chromeai.nano</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/usr/bin/python3</string>
-    <string>__PROJECT_ROOT__/server/nano_server.py</string>
+    <string>__PYTHON_BIN__</string>
+    <string>__INSTALLED_BINARY__</string>
     <string>--port</string><string>8083</string>
     <string>--run-dir</string><string>__RUN_DIR__</string>
     <string>--log-dir</string><string>__LOG_DIR__</string>
-    <string>--binary-path</string><string>__PROJECT_ROOT__/server/nano_server.py</string>
+    <string>--binary-path</string><string>__INSTALLED_BINARY__</string>
   </array>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
   <key>StandardOutPath</key><string>__LOG_DIR__/nano.log</string>
   <key>StandardErrorPath</key><string>__LOG_DIR__/nano.err</string>
-  <key>WorkingDirectory</key><string>__PROJECT_ROOT__</string>
+  <key>WorkingDirectory</key><string>__INSTALL_DIR__</string>
   <key>EnvironmentVariables</key>
   <dict>
     <key>CHROMEAI_PORT_INFO</key><string>__RUN_DIR__/port.info</string>

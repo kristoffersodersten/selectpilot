@@ -205,7 +205,14 @@ CHROMEAI_OLLAMA_SEED=42 \
 "$ROOT/scripts/install-macos-local.sh"
 STATUS_LAUNCHAGENT="ok"
 
-HEALTH_JSON="$(curl -sSf "$BRIDGE_HEALTH_URL" || true)"
+HEALTH_JSON=""
+for _attempt in $(seq 1 15); do
+  HEALTH_JSON="$(curl -sSf "$BRIDGE_HEALTH_URL" 2>/dev/null || true)"
+  if [[ -n "$HEALTH_JSON" ]]; then
+    break
+  fi
+  sleep 1
+done
 if python3 - "$HEALTH_JSON" <<'PY'
 import json
 import sys
