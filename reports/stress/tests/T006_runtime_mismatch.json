@@ -4,13 +4,14 @@
   "phase": "trauma_simulation",
   "input_profile": "normal_request",
   "expected": {
-    "fallback_triggered": true,
-    "runtime_profile": "downgraded",
-    "no_silent_failure": true
+    "execution_blocked": true,
+    "model_substitution": false,
+    "failure_mode": "explicit"
   },
   "declared_fail_conditions": [
     "crash",
-    "no_fallback",
+    "execution_continued",
+    "implicit_fallback",
     "silent_model_switch"
   ],
   "expected_runtime_mismatch_allowed": true,
@@ -63,24 +64,24 @@
     }
   },
   "runtime_selection": {
-    "selected_model_id": "qwen2.5:0.5b",
-    "selection_path": "runtime_policy_fallback",
-    "selection_reason": "runtime_policy_fallback_no_models_available_simulated_degraded_mode",
-    "policy_version": "runtime-policy-bbc138feed76",
+    "selected_model_id": null,
+    "selection_path": "explicit_model_unavailable",
+    "selection_reason": "required_model_missing_fail_closed",
+    "policy_version": "runtime-policy-8226a11e6ae3",
     "promotion_applied": false
   },
-  "active_model": "qwen2.5:0.5b",
+  "active_model": null,
   "external_calls": 0,
   "observed_behavior": {
     "runtime_selection": {
-      "selected_model_id": "qwen2.5:0.5b",
-      "selection_path": "runtime_policy_fallback",
-      "selection_reason": "runtime_policy_fallback_no_models_available_simulated_degraded_mode",
-      "policy_version": "runtime-policy-bbc138feed76",
+      "selected_model_id": null,
+      "selection_path": "explicit_model_unavailable",
+      "selection_reason": "required_model_missing_fail_closed",
+      "policy_version": "runtime-policy-8226a11e6ae3",
       "promotion_applied": false
     },
-    "pipeline_trace_a": "sp_eed3e21ecb6df3ca",
-    "pipeline_trace_b": "sp_eed3e21ecb6df3ca",
+    "pipeline_trace_a": "sp_bd48c6988b95bae3",
+    "pipeline_trace_b": "sp_bd48c6988b95bae3",
     "deterministic_repeat_stable": true,
     "state_reset_checks": {
       "ephemeral_state_cleared": true,
@@ -156,8 +157,8 @@
           "prompt_version": "deterministic.prompts.v3"
         }
       },
-      "runtime_selection": "runtime_policy_fallback",
-      "active_model": "qwen2.5:0.5b",
+      "runtime_selection": "explicit_model_unavailable",
+      "active_model": null,
       "memory_reads": [
         "runtime/model_policy.json",
         "runtime/model_registry.runtime.json"
@@ -165,9 +166,7 @@
       "memory_writes": [
         "runtime/live_feedback.jsonl"
       ],
-      "fallback_events": [
-        "fallback_or_baseline_path_activated"
-      ],
+      "fallback_events": [],
       "violation_events": [],
       "latency_profile": {
         "budget_ms": 2000
@@ -229,7 +228,7 @@
     "memory_integrity": "warning",
     "contract_obedience": "pass",
     "ambiguity_handling": "warning",
-    "resource_efficiency": "warning",
+    "resource_efficiency": "fail",
     "privacy_boundary_integrity": "pass",
     "runtime_adaptivity": "warning",
     "recovery_capacity": "warning",
@@ -241,13 +240,13 @@
     "memory_integrity": 0.92,
     "contract_obedience": 0.98,
     "ambiguity_handling": 0.9,
-    "resource_efficiency": 0.9,
+    "resource_efficiency": 0.75,
     "privacy_boundary_integrity": 1,
-    "runtime_adaptivity": 0.9,
-    "recovery_capacity": 0.92,
+    "runtime_adaptivity": 0.84,
+    "recovery_capacity": 0.82,
     "output_consistency": 0.95,
     "retrieval_precision": 0.78,
-    "overall_score": 0.922
+    "overall_score": 0.908
   },
   "pass": true
 }
