@@ -17,13 +17,13 @@ AGENT_PATH="$AGENT_DIR/com.selectpilot.bridge.plist"
 HASH="$(shasum -a 256 "$SOURCE_ROOT/server/nano_server.py" | awk '{print $1}')"
 PYTHON_BIN=""
 for candidate in /opt/homebrew/bin/python3 /usr/local/bin/python3 /Library/Frameworks/Python.framework/Versions/Current/bin/python3 /usr/bin/python3; do
-  if [ -x "$candidate" ] && "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)'; then
+  if [ -x "$candidate" ] && "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 1)'; then
     PYTHON_BIN="$candidate"
     break
   fi
 done
 if [ -z "$PYTHON_BIN" ]; then
-  echo "SelectPilot requires Python 3.10 or newer." >&2
+  echo "SelectPilot requires Python 3.9 or newer." >&2
   exit 1
 fi
 

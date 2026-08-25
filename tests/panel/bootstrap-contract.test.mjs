@@ -67,7 +67,7 @@ test('macOS service installs outside the source checkout before launchd executio
   assert.match(installer, /presets\/extraction-presets\.json/);
   assert.match(installer, /model_policy\.json/);
   assert.match(installer, /model_registry\.runtime\.json/);
-  assert.match(installer, /sys\.version_info >= \(3, 10\)/);
+  assert.match(installer, /sys\.version_info >= \(3, 9\)/);
   assert.match(launchAgent, /__PYTHON_BIN__/);
   assert.doesNotMatch(launchAgent, /\/usr\/bin\/python3/);
   assert.match(installer, /install -m 0555 "\$ROOT\/server\/\$module" "\$INSTALL_DIR\/\$module"/);
@@ -76,11 +76,11 @@ test('macOS service installs outside the source checkout before launchd executio
   assert.doesNotMatch(launchAgent, /__PROJECT_ROOT__/);
 });
 
-test('production macOS package also binds launchd to Python 3.10 or newer', () => {
+test('production macOS package also binds launchd to Python 3.9 or newer', () => {
   const postinstall = readFileSync('./installer/macos/scripts/postinstall', 'utf8');
   const launchAgent = readFileSync('./installer/macos/com.selectpilot.bridge.plist.template', 'utf8');
 
-  assert.match(postinstall, /sys\.version_info >= \(3, 10\)/);
+  assert.match(postinstall, /sys\.version_info >= \(3, 9\)/);
   assert.match(postinstall, /s\|__PYTHON_BIN__\|\$PYTHON_BIN\|g/);
   assert.match(launchAgent, /__PYTHON_BIN__/);
   assert.doesNotMatch(launchAgent, /\/usr\/bin\/python3/);

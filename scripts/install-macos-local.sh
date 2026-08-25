@@ -25,8 +25,8 @@ RUN_DIR="${CHROMEAI_RUN_DIR:-${HOME}/Library/Application Support/SelectPilot/run
 LOG_DIR="${CHROMEAI_LOG_DIR:-${HOME}/Library/Logs/SelectPilot}"
 PYTHON_BIN="${CHROMEAI_PYTHON_BIN:-$(command -v python3)}"
 
-if ! "$PYTHON_BIN" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)'; then
-  echo "SelectPilot requires Python 3.10 or newer; found $($PYTHON_BIN --version 2>&1)." >&2
+if ! "$PYTHON_BIN" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 1)'; then
+  echo "SelectPilot requires Python 3.9 or newer; found $($PYTHON_BIN --version 2>&1)." >&2
   exit 1
 fi
 
