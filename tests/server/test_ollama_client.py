@@ -22,6 +22,7 @@ class StubOllamaClient(OllamaClient):
             embed_model="nomic-embed-text-v2-moe:latest",
             timeout_seconds=1,
             num_ctx=16384,
+            seed=42,
         ))
         self.response = response
         self.last_payload = None
@@ -49,6 +50,8 @@ class OllamaClientContractTests(unittest.TestCase):
         })
         client.summarize("content")
         self.assertEqual(client.last_payload["options"]["num_ctx"], 16384)
+        self.assertEqual(client.last_payload["options"]["seed"], 42)
+        self.assertEqual(client.last_payload["options"]["temperature"], 0.0)
 
     def test_summarize_rejects_non_schema_output(self) -> None:
         client = StubOllamaClient({"response": "not json"})

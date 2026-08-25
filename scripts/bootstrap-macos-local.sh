@@ -11,6 +11,7 @@ BRIDGE_HEALTH_URL="http://127.0.0.1:8083/health"
 STATUS_OLLAMA_INSTALL="pending"
 STATUS_OLLAMA_RUNNING="pending"
 STATUS_MODEL_PULL="pending"
+STATUS_MODEL_WARMUP="pending"
 STATUS_LAUNCHAGENT="pending"
 STATUS_BRIDGE_HEALTH="pending"
 
@@ -138,9 +139,42 @@ else
   STATUS_MODEL_PULL="skipped"
 fi
 
+echo "Preparing generation model: $GENERATION_MODEL"
+python3 - "$GENERATION_MODEL" "$NUM_CTX" <<'PY'
+import json
+import sys
+from urllib.request import Request, urlopen
+
+model = sys.argv[1]
+num_ctx = int(sys.argv[2])
+request = Request(
+    "http://127.0.0.1:11434/api/generate",
+    data=json.dumps({
+        "model": model,
+        "prompt": "Return only: ready",
+        "stream": False,
+        "keep_alive": "10m",
+        "options": {
+            "temperature": 0,
+            "seed": 42,
+            "num_ctx": num_ctx,
+            "num_predict": 8,
+        },
+    }).encode("utf-8"),
+    headers={"Content-Type": "application/json"},
+    method="POST",
+)
+with urlopen(request, timeout=600) as response:
+    result = json.load(response)
+if result.get("done") is not True:
+    raise SystemExit("Generation model did not finish preparing.")
+PY
+STATUS_MODEL_WARMUP="ok"
+
 CHROMEAI_OLLAMA_MODEL="$GENERATION_MODEL" \
 CHROMEAI_OLLAMA_EMBED_MODEL="$EMBEDDING_MODEL" \
 CHROMEAI_OLLAMA_NUM_CTX="$NUM_CTX" \
+CHROMEAI_OLLAMA_SEED=42 \
 "$ROOT/scripts/install-macos-local.sh"
 STATUS_LAUNCHAGENT="ok"
 
@@ -187,6 +221,7 @@ Next recommended command:
 Bootstrap report:
   Ollama install:  $STATUS_OLLAMA_INSTALL
   Ollama running:  $STATUS_OLLAMA_RUNNING
+  Model prepared:  $STATUS_MODEL_WARMUP
   Model pull:      $STATUS_MODEL_PULL
   LaunchAgent:     $STATUS_LAUNCHAGENT
   Bridge health:   $STATUS_BRIDGE_HEALTH

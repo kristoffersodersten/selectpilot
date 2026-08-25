@@ -59,6 +59,8 @@ The separately operated local billing authority installs its pinned runtime with
 - [ ] The extension cannot read the active tab URL before either user gesture.
 - [ ] Missing Ollama produces one calm, actionable installation path.
 - [ ] Consent-gated model provisioning succeeds on supported hardware.
+- [ ] Installation prewarms the selected generation model before reporting Ready.
+- [ ] Two identical warm requests produce identical canonical JSON with the fixed production seed.
 - [ ] First selected-text extraction reaches a validated result.
 - [ ] JSON, Markdown, and plain-text exports open correctly.
 - [ ] Failure and recovery paths are verified without silent fallback.
