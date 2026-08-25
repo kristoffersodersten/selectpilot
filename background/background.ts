@@ -27,6 +27,21 @@ type MemoryEntry = {
 const MEMORY_ENABLED_KEY = 'selectpilot_memory_enabled_v1';
 const MEMORY_LEDGER_KEY = 'selectpilot_memory_ledger_v1';
 
+async function openForActiveTab(): Promise<void> {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id || tab.windowId === undefined) throw new Error('active_tab_unavailable');
+  await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    files: ['content/content-script.bundle.js'],
+  });
+  await chrome.sidePanel.setOptions({ tabId: tab.id, path: 'panel/panel.html', enabled: true });
+  await chrome.sidePanel.open({ windowId: tab.windowId });
+}
+
+chrome.commands.onCommand.addListener((command) => {
+  if (command === 'open-selectpilot') void openForActiveTab().catch((cause) => error('shortcut', 'open failed', cause));
+});
+
 async function canUseProjectMemory(): Promise<boolean> {
   const { allowed } = await requireFeature('project_memory');
   return allowed;
@@ -156,6 +171,7 @@ async function collectContext(): Promise<AgentContext> {
   const documentText = (doc as any)?.documentText?.text || '';
   const url = (selection as any)?.text?.url || (doc as any)?.documentText?.url || tab.url;
   const title = (selection as any)?.text?.title || (doc as any)?.documentText?.title || tab.title;
+  const pageColor = (selection as any)?.text?.pageColor || (doc as any)?.documentText?.pageColor;
 
   return {
     url: url || undefined,
@@ -170,7 +186,8 @@ async function collectContext(): Promise<AgentContext> {
     metadata: {
       audioDuration: (audio as any)?.audio?.duration,
       videoDuration: (video as any)?.video?.duration,
-      capturedAt: Date.now()
+      capturedAt: Date.now(),
+      pageColor,
     }
   };
 }
@@ -270,6 +287,7 @@ async function handleSelectionPreview(): Promise<any> {
     title: context.title || '',
     url: context.url || '',
     hasSelection: Boolean(context.selection && context.selection.trim()),
+    pageColor: typeof context.metadata?.pageColor === 'string' ? context.metadata.pageColor : '',
   };
 }
 

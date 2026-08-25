@@ -48,18 +48,30 @@ class EntitlementVerificationTests(unittest.TestCase):
 
     def test_verified_local_authority_response_is_returned(self) -> None:
         response = _Response(
-            b'{"entitlement":{"token":"opaque-token","tier":"pro","features":[],"issuedAt":1700000000000,'
-            b'"expiresAt":null},"signature":"c2lnbmF0dXJl","alg":"Ed25519","kid":"rotation-1"}'
+            b'{"entitlement":{"token":"opaque-token","tier":"pro","features":["extract"],'
+            b'"issuedAt":1700000000000,"expiresAt":null},"signature":"c2ln",'
+            b'"alg":"Ed25519","kid":"prod-1"}'
         )
         with patch("nano_server.urlopen", return_value=response):
             result = license_verify({"token": "opaque-token"})
         self.assertEqual(result["entitlement"]["tier"], "pro")
 
-    def test_non_loopback_verifier_configuration_is_rejected(self) -> None:
-        with patch.dict(os.environ, {"SELECTPILOT_BILLING_VERIFY_URL": "https://example.com/license/verify"}):
+    def test_insecure_remote_verifier_configuration_is_rejected(self) -> None:
+        with patch.dict(os.environ, {"SELECTPILOT_ENTITLEMENT_AUTHORITY_URL": "http://example.com"}):
             with self.assertRaises(ValidationError) as ctx:
                 license_verify({"token": "opaque-token"})
         self.assertEqual(ctx.exception.code, "invalid_entitlement_verifier")
+
+    def test_https_authority_is_allowed(self) -> None:
+        response = _Response(
+            b'{"entitlement":{"token":"opaque-token","tier":"plus","features":[],'
+            b'"issuedAt":1700000000000,"expiresAt":null},"signature":"c2ln",'
+            b'"alg":"Ed25519","kid":"prod-1"}'
+        )
+        with patch.dict(os.environ, {"SELECTPILOT_ENTITLEMENT_AUTHORITY_URL": "https://license.selectpilot.app"}):
+            with patch("nano_server.urlopen", return_value=response) as request:
+                license_verify({"token": "opaque-token"})
+        self.assertEqual(request.call_args.args[0].full_url, "https://license.selectpilot.app/v1/entitlements/verify")
 
     def test_malformed_authority_response_is_rejected(self) -> None:
         response = _Response(

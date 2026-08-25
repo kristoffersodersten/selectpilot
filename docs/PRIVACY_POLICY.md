@@ -28,9 +28,9 @@ Essential and Plus are designed without retained knowledge history. Pro features
 
 ## Commerce And Entitlements
 
-Payment processing and entitlement issuance are separate from the core text-processing path. Production providers, endpoints, and data handling must be disclosed here before commerce is activated. Reviewer credentials and private tokens are never part of this public policy.
+Payment processing and entitlement issuance are separate from the core text-processing path. Paddle processes checkout data under its own terms. SelectPilot receives payment state, product choice, and an opaque purchase claim solely to issue and verify access. Selected text and generated output are never sent to Paddle.
 
-SelectPilot must not unlock paid features from an unsigned or unverifiable entitlement. The store release remains blocked until production signature verification is configured.
+SelectPilot does not unlock paid features from an unsigned, expired, revoked, or unverifiable entitlement.
 
 ## Data Sharing
 
@@ -61,7 +61,7 @@ SelectPilot minimizes data movement and validates local execution boundaries. No
 
 ## Public Contact
 
-`TBD before submission`: publish the same support URL here and in the Chrome Web Store listing.
+Support and security contact: `support@selectpilot.app` via `https://selectpilot.app/support.html`.
 
 ## Changes
 

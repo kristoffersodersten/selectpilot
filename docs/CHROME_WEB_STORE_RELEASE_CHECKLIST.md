@@ -15,7 +15,7 @@ Last updated: 2026-08-21
 - [ ] `pnpm package:store`
 - [ ] Package SHA-256 and inventory are preserved with the release evidence.
 
-`pnpm package:store` must fail while production entitlement verification is absent. Never bypass that failure with a development key or an unsigned entitlement.
+`pnpm package:store` must fail if the pinned entitlement keyring is absent, invalid, or remote executable code enters the extension. Never bypass that gate with a development key or unsigned access.
 
 Production packaging requires `SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_JSON` as a JSON key ring whose values are raw 32-byte Ed25519 public keys encoded as 64 hexadecimal characters. The matching issuer uses only:
 
@@ -54,6 +54,9 @@ The separately operated local billing authority installs its pinned runtime with
 ## Manual Runtime Acceptance
 
 - [ ] Fresh Chrome profile installation succeeds.
+- [ ] From the exact package in headed Chrome, select text and invoke both the toolbar action and configured shortcut.
+- [ ] Each user gesture injects the content script on demand and the selected text appears in the panel.
+- [ ] The extension cannot read the active tab URL before either user gesture.
 - [ ] Missing Ollama produces one calm, actionable installation path.
 - [ ] Consent-gated model provisioning succeeds on supported hardware.
 - [ ] First selected-text extraction reaches a validated result.

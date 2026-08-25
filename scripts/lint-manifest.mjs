@@ -46,6 +46,14 @@ if (Array.isArray(manifest.content_scripts)) {
   });
 }
 
+if (manifest.permissions?.includes('tabs')) {
+  errors.push('permissions: tabs är inte tillåten; använd activeTab för det användarinitierade flödet.');
+}
+
+if (manifest.content_scripts?.some((entry) => entry?.matches?.includes('<all_urls>'))) {
+  errors.push('content_scripts: permanent <all_urls>-injektion är inte tillåten; använd activeTab + scripting.');
+}
+
 if (Array.isArray(manifest.web_accessible_resources)) {
   manifest.web_accessible_resources.forEach((entry, index) => {
     validateMatches(entry?.matches, `web_accessible_resources[${index}]`);

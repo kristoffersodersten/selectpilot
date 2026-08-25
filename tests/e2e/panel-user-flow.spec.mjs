@@ -23,16 +23,9 @@ test('sidepanel harness can run extract action and render result', async ({ page
   await page.click('#btn-memory-delete');
   await expect(page.locator('#memory-status')).toContainText('0 retained events');
 
-  await page.fill('#order-id', 'SP-PENDING');
-  await page.click('#btn-sync-order');
-  await expect(page.locator('#status')).toContainText('No payment detected yet');
-
-  await page.fill('#order-id', 'SP-PAID');
-  await page.click('#btn-sync-order');
-  await expect(page.locator('#entitlement-status')).toContainText('Token attached · tier pro');
-
-  await page.click('#btn-sync-order');
-  await expect(page.locator('#status')).toContainText('Order already synced; entitlement refreshed');
+  await page.click('#btn-start-trial');
+  await expect(page.locator('#entitlement-status')).toContainText('pro access');
+  await expect(page.locator('#status')).toContainText('Access ready');
 });
 
 test('unlocked first-run uses the dedicated example route and resolves once', async ({ page }) => {
@@ -40,8 +33,8 @@ test('unlocked first-run uses the dedicated example route and resolves once', as
   await page.goto(`${pathToFileURL(harnessPath)}?firstRun=1`);
 
   await expect(page.locator('#btn-first-run-example')).toHaveCount(0);
-  await page.fill('#order-id', 'SP-PAID');
-  await page.click('#btn-sync-order');
+  await page.fill('#license-token', 'sp_paid_pro_demo');
+  await page.click('#btn-attach-license');
   await expect(page.locator('#btn-first-run-example')).toBeVisible();
   await expect(page.locator('#selection-card')).toContainText('no page content used');
 

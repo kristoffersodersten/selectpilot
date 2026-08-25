@@ -125,7 +125,7 @@ The repository configuration is authoritative for price and entitlement mapping:
 
 Essential and Plus do not retain a knowledge history. Pro stateful features must remain local, visible and user-controlled: retained data can be inspected, exported and deleted. A feature is available only when the signed entitlement and `pricing/tier-feature-map.json` both permit it; there is no silent downgrade or fallback.
 
-Displayed tier prices live in `pricing/pricing-global.json`. Checkout is not embedded in the extension: paid tokens come from the separately operated local entitlement authority, and Store packaging excludes inactive remote-checkout code and product placeholders.
+Displayed prices live in `pricing/pricing-global.json`. The extension opens SelectPilot's HTTPS pricing page; Paddle and its deployment-injected price IDs run only on that public site. Store packaging excludes checkout code and product identifiers from the extension runtime.
 
 ### Team / self-hosted
 
@@ -214,7 +214,7 @@ Store listing copy, privacy language, and the release checklist live in:
 - [`docs/CHROME_WEB_STORE_RELEASE_CHECKLIST.md`](docs/CHROME_WEB_STORE_RELEASE_CHECKLIST.md)
 - [`docs/PRIVACY_POLICY.md`](docs/PRIVACY_POLICY.md)
 
-`pnpm package:store` builds and audits the upload ZIP. It intentionally fails closed until production entitlement signature verification is configured; no unsigned commercial package is release-eligible.
+`pnpm package:store` builds and audits the upload ZIP. It fails closed unless the production entitlement public key is pinned and valid; unsigned or remotely executed commercial logic is never release-eligible.
 
 ## Compute Distribution
 

@@ -10,7 +10,7 @@
   <div class="panel">
     <header class="panel-header">
       <div class="identity">
-        <div class="eyebrow">Privacy-first execution layer</div>
+        <div class="eyebrow">Local text workspace</div>
         <div class="title-row">
           <div class="title">SelectPilot</div>
           <div class="tier" id="tier"></div>
@@ -21,11 +21,8 @@
 
     <section class="truth-strip" aria-label="Environment truth">
       <div class="truth-chip"><span class="truth-label">Execution</span><strong id="truth-execution">Detecting</strong></div>
-      <div class="truth-chip"><span class="truth-label">Model</span><strong id="truth-model">Checking</strong></div>
       <div class="truth-chip"><span class="truth-label">Boundary</span><strong id="truth-boundary">Local-only</strong></div>
       <div class="truth-chip"><span class="truth-label">Privacy</span><strong id="truth-privacy">Verifying</strong><span class="truth-meta" id="truth-privacy-meta">Awaiting proof</span></div>
-      <div class="truth-chip"><span class="truth-label">Profile</span><strong id="truth-profile">Pending</strong></div>
-      <div class="truth-chip"><span class="truth-label">Health</span><strong id="truth-latency">Measuring</strong></div>
     </section>
 
     <section class="runtime-state" id="runtime-state"></section>
@@ -54,19 +51,23 @@
         <button id="btn-memory-delete" type="button">Delete ledger</button>
       </div>
     </section>
-    <section class="memory-shell" aria-label="Billing entitlement sync">
+    <section class="memory-shell" aria-label="SelectPilot access">
       <div class="memory-header">
         <div>
-          <div class="section-kicker">Billing</div>
-          <h2>Attach paid token</h2>
+          <div class="section-kicker">Access</div>
+          <h2>Keep your flow available</h2>
         </div>
-        <button class="ghost-button" id="btn-sync-order" type="button">Sync order</button>
+        <button class="ghost-button" id="btn-start-trial" type="button">Start 7-day trial</button>
       </div>
       <section class="memory-export-config">
-        <label for="order-id">Order ID</label>
-        <input id="order-id" type="text" placeholder="SP-xxxx" />
+        <label for="license-token">License key</label>
+        <input id="license-token" type="password" autocomplete="off" placeholder="sp_live_..." />
       </section>
-      <p class="memory-copy" id="entitlement-status">No entitlement token attached yet.</p>
+      <div class="memory-actions">
+        <button id="btn-attach-license" type="button">Activate</button>
+        <button class="ghost-button" id="btn-view-plans" type="button">View plans</button>
+      </div>
+      <p class="memory-copy" id="entitlement-status">No active access yet.</p>
     </section>
     <section class="selection-shell" id="selection-shell">
       <div class="section-kicker">Selection</div>
@@ -128,10 +129,6 @@
     const selection = firstRunMode ? '' : 'Ship the update before Friday and inform the team.';
     let memoryEnabled = false;
     const memoryLedger = [];
-    const mockOrders = {
-      'SP-PAID': { paid: true, token: 'sp_paid_token_demo', confirmations: 12, confirmations_required: 10 },
-      'SP-PENDING': { paid: false, confirmations: 2, confirmations_required: 10 },
-    };
     let entitlement = null;
 
     function pushMemory(action) {
@@ -241,7 +238,14 @@
           return { markdown: 'ok', json: {} };
         },
       },
+      tabs: {
+        async create() {},
+      },
       storage: {
+        sync: {
+          async get() { return {}; },
+          async set() {},
+        },
         local: {
           _store: {},
           async get(key) {
@@ -262,15 +266,8 @@
     globalThis.fetch = async (url, init = {}) => {
       const href = String(url);
       globalThis.__fetchLog.push({ href, method: init?.method || 'GET' });
-      if (href.includes('127.0.0.1:8090/order/')) {
-        const orderId = href.split('/order/')[1] || '';
-        const order = mockOrders[decodeURIComponent(orderId)];
-        if (!order) {
-          return { ok: false, status: 404, json: async () => ({ error: 'not_found' }) };
-        }
-        return { ok: true, status: 200, json: async () => ({ order_id: orderId, ...order }) };
-      }
       const ok = (payload) => ({ ok: true, status: 200, json: async () => payload });
+      if (href.includes('/license/trial')) return ok({ token: 'sp_trial_pro_demo' });
       if (href.includes('/profiles')) {
         return ok({
           profiles: [

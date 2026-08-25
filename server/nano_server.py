@@ -25,6 +25,7 @@ from urllib.request import Request, urlopen
 from ollama_client import OllamaClient, OllamaError
 from extraction_presets import get_extraction_preset
 from runtime_profiles import build_bootstrap_commands, list_runtime_profiles, recommend_runtime_profile
+from installation_manager import INSTALLATION
 
 DEFAULT_PORT = 8083
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
@@ -44,6 +45,10 @@ ALLOWED_BRIDGE_ENDPOINT_PATHS = [
     "/agent",
     "/embed",
     "/license/verify",
+    "/license/trial",
+    "/license/claim",
+    "/installation/status",
+    "/installation/start",
 ]
 
 
@@ -92,11 +97,29 @@ OPERATION_CONTRACTS: dict[str, OperationContract] = {
         template="license_verify.v1",
         allowed_fields=("token",),
     ),
+    "/license/trial": OperationContract(
+        name="license_trial",
+        endpoint="/license/trial",
+        template="license_trial.v1",
+        allowed_fields=("installation_id",),
+    ),
+    "/license/claim": OperationContract(
+        name="license_claim",
+        endpoint="/license/claim",
+        template="license_claim.v1",
+        allowed_fields=("claim_id",),
+    ),
     "/benchmark": OperationContract(
         name="benchmark",
         endpoint="/benchmark",
         template="benchmark.v1",
         allowed_fields=(),
+    ),
+    "/installation/start": OperationContract(
+        name="installation_start",
+        endpoint="/installation/start",
+        template="installation_start.v1",
+        allowed_fields=("consent",),
     ),
 }
 
@@ -1261,26 +1284,29 @@ def benchmark_runtime() -> dict:
     }
 
 
-def license_verify(payload: dict) -> dict:
-    token = str(payload.get("token") or "").strip()
-    if not token:
-        raise ValidationError("missing_token", "Entitlement token is required")
-
-    verifier_url = os.environ.get(
-        "SELECTPILOT_BILLING_VERIFY_URL",
-        "http://127.0.0.1:8090/license/verify",
-    )
-    parsed = urlparse(verifier_url)
-    if parsed.scheme != "http" or parsed.hostname not in LOCAL_HOSTS or parsed.path != "/license/verify":
+def _entitlement_authority_url(path: str) -> str:
+    base_url = os.environ.get(
+        "SELECTPILOT_ENTITLEMENT_AUTHORITY_URL",
+        "http://127.0.0.1:8090",
+    ).rstrip("/")
+    parsed = urlparse(base_url)
+    is_local_http = parsed.scheme == "http" and parsed.hostname in LOCAL_HOSTS
+    is_remote_https = parsed.scheme == "https" and bool(parsed.hostname)
+    if not (is_local_http or is_remote_https) or parsed.path not in {"", "/"} or parsed.query or parsed.fragment or parsed.username:
         raise ValidationError(
             "invalid_entitlement_verifier",
-            "Entitlement verifier must be the explicit local HTTP license endpoint",
+            "Entitlement authority must use HTTPS or an explicit local loopback endpoint",
             status=503,
         )
+    return f"{base_url}{path}"
+
+
+def _entitlement_request(path: str, payload: dict) -> dict:
+    verifier_url = _entitlement_authority_url(path)
 
     request = Request(
         verifier_url,
-        data=json.dumps({"token": token}, separators=(",", ":")).encode("utf-8"),
+        data=json.dumps(payload, separators=(",", ":")).encode("utf-8"),
         headers={"Content-Type": "application/json"},
         method="POST",
     )
@@ -1290,9 +1316,18 @@ def license_verify(payload: dict) -> dict:
     except HTTPError as exc:
         if exc.code == 401:
             raise ValidationError("invalid_entitlement", "Entitlement token is invalid", status=401) from exc
-        raise ValidationError("entitlement_verifier_error", "Local entitlement verifier rejected the request", status=503) from exc
+        raise ValidationError("entitlement_verifier_error", "Entitlement authority rejected the request", status=503) from exc
     except (URLError, TimeoutError, json.JSONDecodeError) as exc:
-        raise ValidationError("entitlement_verifier_unavailable", "Local entitlement verifier is unavailable", status=503) from exc
+        raise ValidationError("entitlement_verifier_unavailable", "Entitlement authority is unavailable", status=503) from exc
+    if not isinstance(result, dict):
+        raise ValidationError("invalid_entitlement_response", "Entitlement authority returned an invalid contract", status=503)
+    return result
+
+def license_verify(payload: dict) -> dict:
+    token = str(payload.get("token") or "").strip()
+    if not token:
+        raise ValidationError("missing_token", "Entitlement token is required")
+    result = _entitlement_request("/v1/entitlements/verify", {"token": token})
 
     entitlement = result.get("entitlement") if isinstance(result, dict) else None
     issued_at = entitlement.get("issuedAt") if isinstance(entitlement, dict) else None
@@ -1302,6 +1337,7 @@ def license_verify(payload: dict) -> dict:
         or not isinstance(entitlement, dict)
         or entitlement.get("token") != token
         or entitlement.get("tier") not in {"essential", "plus", "pro"}
+        or not isinstance(entitlement.get("features"), list)
         or not isinstance(issued_at, int)
         or isinstance(issued_at, bool)
         or (expires_at is not None and (not isinstance(expires_at, int) or isinstance(expires_at, bool)))
@@ -1311,8 +1347,22 @@ def license_verify(payload: dict) -> dict:
         or not isinstance(result.get("signature"), str)
         or not result.get("signature")
     ):
-        raise ValidationError("invalid_entitlement_response", "Local entitlement verifier returned an invalid contract", status=503)
+        raise ValidationError("invalid_entitlement_response", "Entitlement authority returned an invalid contract", status=503)
     return result
+
+
+def license_trial(payload: dict) -> dict:
+    installation_id = str(payload.get("installation_id") or "").strip()
+    if not installation_id:
+        raise ValidationError("missing_installation_id", "Installation identity is required")
+    return _entitlement_request("/v1/trials/start", {"installation_id": installation_id})
+
+
+def license_claim(payload: dict) -> dict:
+    claim_id = str(payload.get("claim_id") or "").strip()
+    if not claim_id:
+        raise ValidationError("missing_claim_id", "Purchase claim is required")
+    return _entitlement_request("/v1/claims/redeem", {"claim_id": claim_id})
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -1372,6 +1422,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == '/profiles':
             self._write_json(200, runtime_profiles())
+            return
+        if path == '/installation/status':
+            self._write_json(200, INSTALLATION.status())
             return
         if path == '/runtime-meta/health':
             self._write_json(200, {
@@ -1622,8 +1675,19 @@ class Handler(BaseHTTPRequestHandler):
                 runtime_model_id = str(resp.get("model") or "") if isinstance(resp, dict) else None
             elif path == '/license/verify':
                 resp = license_verify(payload)
+            elif path == '/license/trial':
+                resp = license_trial(payload)
+            elif path == '/license/claim':
+                resp = license_claim(payload)
             elif path == '/benchmark':
                 resp = benchmark_runtime()
+            elif path == '/installation/start':
+                try:
+                    resp = INSTALLATION.start(payload.get("consent") is True)
+                except ValueError as exc:
+                    raise ValidationError("installation_consent_required", "Installation requires your approval") from exc
+                except RuntimeError as exc:
+                    raise ValidationError("installation_unavailable", "Installation is not available on this device", status=422) from exc
 
             emit_runtime_meta(
                 event_type="STEP_COMPLETED",
@@ -1830,7 +1894,7 @@ def main():
     expected = args.binary_hash or os.environ.get('CHROMEAI_BINARY_HASH')
     verify_binary(binary_path, expected)
 
-    auto_pull = os.environ.get('CHROMEAI_AUTO_PULL_MODELS', '1').strip().lower() not in {'0', 'false', 'no'}
+    auto_pull = os.environ.get('CHROMEAI_AUTO_PULL_MODELS', '0').strip().lower() not in {'0', 'false', 'no'}
     if auto_pull:
         ensure_runtime_models()
 
