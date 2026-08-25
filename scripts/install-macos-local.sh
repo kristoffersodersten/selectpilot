@@ -6,7 +6,6 @@ TEMPLATE="$ROOT/launchd/com.chromeai.nano.plist"
 DEST="${HOME}/Library/LaunchAgents/com.chromeai.nano.plist"
 APP_DIR="${CHROMEAI_APP_DIR:-${HOME}/Library/Application Support/SelectPilot}"
 INSTALL_DIR="$APP_DIR/server"
-SOURCE_BINARY="$ROOT/server/nano_server.py"
 INSTALLED_BINARY="$INSTALL_DIR/nano_server.py"
 RUNTIME_MODULES=(
   nano_server.py
