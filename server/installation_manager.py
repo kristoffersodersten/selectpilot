@@ -126,6 +126,32 @@ class InstallationManager:
                 if event.get("error"):
                     raise RuntimeError("model_download_failed")
 
+    def _warm_model(self, model: str, num_ctx: int) -> None:
+        seed = int(os.environ.get("CHROMEAI_OLLAMA_SEED", "42"))
+        if seed < 0:
+            raise RuntimeError("model_warmup_failed")
+        request = Request(
+            "http://127.0.0.1:11434/api/generate",
+            data=json.dumps({
+                "model": model,
+                "prompt": "Return only: ready",
+                "stream": False,
+                "keep_alive": "10m",
+                "options": {
+                    "temperature": 0,
+                    "seed": seed,
+                    "num_ctx": num_ctx,
+                    "num_predict": 8,
+                },
+            }).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urlopen(request, timeout=600) as response:
+            result = json.load(response)
+        if result.get("done") is not True:
+            raise RuntimeError("model_warmup_failed")
+
     def _run(self) -> None:
         try:
             recommendation = recommend_runtime_profile()
@@ -139,11 +165,12 @@ class InstallationManager:
             self._pull_model(profile.generation_model, 48, 82)
             self._pull_model(profile.embedding_model, 82, 94)
             self._update(label="Final checks", progress=96)
+            self._warm_model(profile.generation_model, profile.num_ctx)
             time.sleep(0.2)
             self._update(state="ready", label="Go", progress=100)
         except Exception as error:
             code = str(error) if str(error) in {
-                "ollama_start_timeout", "model_download_failed", "macos_required"
+                "ollama_start_timeout", "model_download_failed", "model_warmup_failed", "macos_required"
             } else "installation_failed"
             self._update(
                 state="action_required",

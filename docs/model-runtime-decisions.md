@@ -6,8 +6,11 @@
 - Balanced / Apple Silicon with 16 GB or more: `gemma4:e4b-it-qat`, `num_ctx=32768`.
 - Advanced: manual opt-in only, `qwen2.5:7b`, `num_ctx=32768`.
 - Embeddings: `nomic-embed-text-v2-moe:latest`.
+- Structured generation: `temperature=0` and `seed=42` for every production profile.
 
 Explicit environment overrides remain authoritative and must fail visibly when invalid or unavailable. SelectPilot never substitutes a different installed model, downloads a model without consent, or routes generation to a cloud model.
+
+Installation prewarms the selected generation model with the same context window and deterministic sampling options used at runtime. A failed prewarm is an explicit installation failure; SelectPilot does not report the runtime as ready and does not silently choose another model. `CHROMEAI_OLLAMA_SEED` may override the seed for controlled verification, but invalid or negative values fail closed.
 
 ## Deferred decisions
 

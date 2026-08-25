@@ -9,6 +9,7 @@ OLLAMA_BASE_URL="${CHROMEAI_OLLAMA_BASE_URL:-http://127.0.0.1:11434}"
 OLLAMA_MODEL="${CHROMEAI_OLLAMA_MODEL:-gemma4:e2b-it-qat}"
 OLLAMA_EMBED_MODEL="${CHROMEAI_OLLAMA_EMBED_MODEL:-nomic-embed-text-v2-moe:latest}"
 OLLAMA_NUM_CTX="${CHROMEAI_OLLAMA_NUM_CTX:-16384}"
+OLLAMA_SEED="${CHROMEAI_OLLAMA_SEED:-42}"
 RUN_DIR="${CHROMEAI_RUN_DIR:-${HOME}/Library/Application Support/SelectPilot/run}"
 LOG_DIR="${CHROMEAI_LOG_DIR:-${HOME}/Library/Logs/SelectPilot}"
 
@@ -24,6 +25,7 @@ sed \
   -e "s|__OLLAMA_MODEL__|$OLLAMA_MODEL|g" \
   -e "s|__OLLAMA_EMBED_MODEL__|$OLLAMA_EMBED_MODEL|g" \
   -e "s|__OLLAMA_NUM_CTX__|$OLLAMA_NUM_CTX|g" \
+  -e "s|__OLLAMA_SEED__|$OLLAMA_SEED|g" \
   "$TEMPLATE" > "$DEST"
 
 launchctl unload "$DEST" 2>/dev/null || true
@@ -40,7 +42,8 @@ Next steps:
   3. Current Ollama model: $OLLAMA_MODEL
   4. Local bridge URL: http://127.0.0.1:8083
   5. Ollama context window: $OLLAMA_NUM_CTX
-  6. Run dir: $RUN_DIR
-  7. Log dir: $LOG_DIR
-  8. Run 'pnpm benchmark:local' to validate latency on this machine.
+  6. Deterministic seed: $OLLAMA_SEED
+  7. Run dir: $RUN_DIR
+  8. Log dir: $LOG_DIR
+  9. Run 'pnpm benchmark:local' to validate latency on this machine.
 EOF

@@ -37,6 +37,7 @@ sed \
   -e "s|__OLLAMA_MODEL__|$OLLAMA_MODEL|g" \
   -e "s|__OLLAMA_EMBED_MODEL__|$OLLAMA_EMBED_MODEL|g" \
   -e "s|__OLLAMA_NUM_CTX__|$OLLAMA_NUM_CTX|g" \
+  -e "s|__OLLAMA_SEED__|42|g" \
   -e "s|__ENTITLEMENT_AUTHORITY_URL__|https://license.selectpilot.app|g" \
   "$SOURCE_ROOT/launchd/com.selectpilot.bridge.plist.template" > "$AGENT_PATH"
 chown "$CONSOLE_USER" "$AGENT_PATH"

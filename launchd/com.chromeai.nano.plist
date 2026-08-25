@@ -26,6 +26,7 @@
     <key>CHROMEAI_OLLAMA_MODEL</key><string>__OLLAMA_MODEL__</string>
     <key>CHROMEAI_OLLAMA_EMBED_MODEL</key><string>__OLLAMA_EMBED_MODEL__</string>
     <key>CHROMEAI_OLLAMA_NUM_CTX</key><string>__OLLAMA_NUM_CTX__</string>
+    <key>CHROMEAI_OLLAMA_SEED</key><string>__OLLAMA_SEED__</string>
     <key>CHROMEAI_BINARY_HASH</key><string>__BINARY_HASH__</string>
     <key>CHROMEAI_AUTO_PULL_MODELS</key><string>0</string>
   </dict>

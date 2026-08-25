@@ -98,6 +98,7 @@ class OllamaConfig:
     embed_model: str
     timeout_seconds: float
     num_ctx: int
+    seed: int
 
 
 class OllamaError(RuntimeError):
@@ -111,6 +112,16 @@ def _positive_int(value: Any, name: str) -> int:
         raise OllamaError(f"{name} must be a positive integer") from exc
     if parsed <= 0:
         raise OllamaError(f"{name} must be a positive integer")
+    return parsed
+
+
+def _nonnegative_int(value: Any, name: str) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError) as exc:
+        raise OllamaError(f"{name} must be a non-negative integer") from exc
+    if parsed < 0:
+        raise OllamaError(f"{name} must be a non-negative integer")
     return parsed
 
 
@@ -137,7 +148,8 @@ class OllamaClient:
                 embed_model=os.environ.get("CHROMEAI_OLLAMA_EMBED_MODEL", default_embed_model),
                 timeout_seconds=float(os.environ.get("CHROMEAI_OLLAMA_TIMEOUT_SECONDS", "30")),
                 num_ctx=_positive_int(os.environ.get("CHROMEAI_OLLAMA_NUM_CTX", default_num_ctx), "CHROMEAI_OLLAMA_NUM_CTX"),
-        )
+                seed=_nonnegative_int(os.environ.get("CHROMEAI_OLLAMA_SEED", "42"), "CHROMEAI_OLLAMA_SEED"),
+            )
         self.config = config
 
     def _model_available_locally(self, requested: str, local_models: list[str]) -> bool:
@@ -233,7 +245,11 @@ class OllamaClient:
         return requested
 
     def _generation_options(self, temperature: float) -> dict[str, Any]:
-        return {"temperature": temperature, "num_ctx": self.config.num_ctx}
+        return {
+            "temperature": temperature,
+            "num_ctx": self.config.num_ctx,
+            "seed": self.config.seed,
+        }
 
     def _require_structured_object(self, raw_response: str, schema: dict[str, Any], operation: str) -> dict[str, Any]:
         content = _parse_jsonish(raw_response)
@@ -303,6 +319,7 @@ class OllamaClient:
                 "active_embed_model": self.config.embed_model,
                 "timeout_seconds": self.config.timeout_seconds,
                 "num_ctx": self.config.num_ctx,
+                "seed": self.config.seed,
                 "reachable": False,
                 "status": "degraded",
                 "error": str(e),
@@ -327,6 +344,7 @@ class OllamaClient:
             "active_embed_model": active_embed_model,
             "timeout_seconds": self.config.timeout_seconds,
             "num_ctx": self.config.num_ctx,
+            "seed": self.config.seed,
         }
         return {
             **base,
@@ -379,7 +397,7 @@ class OllamaClient:
             "system": "You write precise summaries for selected text in a browser side panel.",
             "stream": False,
             "format": schema,
-            "options": self._generation_options(0.2),
+            "options": self._generation_options(0.0),
         }
         response = self._request_json("/api/generate", payload)
         raw_response = str(response.get("response", "")).strip()
@@ -434,7 +452,7 @@ class OllamaClient:
             "system": "You are a practical browser copilot that rewrites and structures selected text locally.",
             "stream": False,
             "format": schema,
-            "options": self._generation_options(0.2),
+            "options": self._generation_options(0.0),
         }
         response = self._request_json("/api/generate", payload)
         raw_response = str(response.get("response", "")).strip()
@@ -533,7 +551,7 @@ class OllamaClient:
             "system": "You generate clean structured extraction results for highlighted browser text.",
             "stream": False,
             "format": preset.schema,
-            "options": self._generation_options(0.1),
+            "options": self._generation_options(0.0),
         }
         response = self._request_json("/api/generate", payload)
         raw_response = str(response.get("response", "")).strip()
