@@ -15,7 +15,7 @@ test('only a matching Ed25519 key ID and exact payload verify', async () => {
   const entitlement = {
     token: 'opaque-token',
     tier: 'pro',
-    features: ['image_ocr'],
+    features: ['project_memory'],
     issuedAt: 1_700_000_000_000,
     expiresAt: 4_000_000_000_000,
   };

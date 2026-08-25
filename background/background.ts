@@ -160,32 +160,18 @@ async function requestFromContent<T>(tabId: number, type: string): Promise<T | n
 async function collectContext(): Promise<AgentContext> {
   const tab = await getActiveTab();
   if (!tab?.id) return {};
-  const [selection, doc, audio, video] = await Promise.all([
-    requestFromContent(tab.id, 'content:get_selection'),
-    requestFromContent(tab.id, 'content:get_document'),
-    requestFromContent(tab.id, 'content:get_audio'),
-    requestFromContent(tab.id, 'content:get_video')
-  ]);
+  const selection = await requestFromContent(tab.id, 'content:get_selection');
 
   const selectionText = (selection as any)?.text?.text || '';
-  const documentText = (doc as any)?.documentText?.text || '';
-  const url = (selection as any)?.text?.url || (doc as any)?.documentText?.url || tab.url;
-  const title = (selection as any)?.text?.title || (doc as any)?.documentText?.title || tab.title;
-  const pageColor = (selection as any)?.text?.pageColor || (doc as any)?.documentText?.pageColor;
+  const url = (selection as any)?.text?.url || tab.url;
+  const title = (selection as any)?.text?.title || tab.title;
+  const pageColor = (selection as any)?.text?.pageColor;
 
   return {
     url: url || undefined,
     title: title || undefined,
     selection: selectionText || undefined,
-    pageText: documentText || undefined,
-    media: {
-      audio: (audio as any)?.audio?.audioUrl,
-      videoFrame: (video as any)?.video?.frame,
-      image: (video as any)?.video?.poster
-    },
     metadata: {
-      audioDuration: (audio as any)?.audio?.duration,
-      videoDuration: (video as any)?.video?.duration,
       capturedAt: Date.now(),
       pageColor,
     }
@@ -196,7 +182,7 @@ async function handleSummarize(): Promise<any> {
   const { allowed } = await requireFeature('text_summarization');
   if (!allowed) throw new Error('Flow tier required for summarize');
   const context = await collectContext();
-  const text = context.selection || context.pageText || context.markdown || '';
+  const text = context.selection || context.markdown || '';
   const payload = { text, url: context.url, title: context.title, metadata: context.metadata };
   const result = await summarize(payload);
   const sourceOrigin = context.url || 'local-context';
@@ -260,7 +246,7 @@ async function handleAgent(prompt: string): Promise<any> {
   const { allowed } = await requireFeature('basic_local_agent');
   if (!allowed) throw new Error('Flow tier required for ask/rewrite transforms');
   const context = await collectContext();
-  const content = context.selection || context.pageText || context.markdown || '';
+  const content = context.selection || context.markdown || '';
   const result = await runPipeline(content, context, prompt);
   const sourceOrigin = context.url || 'local-context';
   await recordMemoryEvent({
@@ -283,7 +269,7 @@ async function handleSelectionPreview(): Promise<any> {
   const context = await collectContext();
   return {
     selection: context.selection || '',
-    pageText: context.pageText || '',
+    pageText: '',
     title: context.title || '',
     url: context.url || '',
     hasSelection: Boolean(context.selection && context.selection.trim()),
@@ -299,7 +285,7 @@ async function handleIntentCompile(intent: string): Promise<any> {
   return compileIntent({
     intent: trimmed,
     has_selection: Boolean(context.selection && context.selection.trim()),
-    has_page_text: Boolean(context.pageText && context.pageText.trim()),
+    has_page_text: false,
   });
 }
 

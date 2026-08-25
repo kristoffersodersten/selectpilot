@@ -121,7 +121,7 @@ The repository configuration is authoritative for price and entitlement mapping:
 | --- | ---: | --- |
 | Essential | $1.99 | Local structured extraction, canonical metadata and manual copy/export |
 | Plus | $5.99 | Essential plus stateless summaries, batch clipping and connector-format exports |
-| Pro | $14.99 | Plus plus multimodal processing and an explicit opt-in local knowledge layer |
+| Pro | $14.99 | Plus plus advanced local reasoning and an explicit opt-in local knowledge layer |
 
 Essential and Plus do not retain a knowledge history. Pro stateful features must remain local, visible and user-controlled: retained data can be inspected, exported and deleted. A feature is available only when the signed entitlement and `pricing/tier-feature-map.json` both permit it; there is no silent downgrade or fallback.
 

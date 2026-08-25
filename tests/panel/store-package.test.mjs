@@ -25,12 +25,14 @@ test('runtime inventory excludes source, tests, reports, and transient files', a
   assert.ok(files.includes('manifest.json'));
   assert.ok(files.includes('background/background.js'));
   assert.ok(files.includes('content/content-script.bundle.js'));
+  assert.ok(!files.some((file) => file.startsWith('content/') && file !== 'content/content-script.bundle.js'));
   assert.ok(files.includes('assets/icon128.png'));
   assert.ok(files.includes('pricing/tier-feature-map.json'));
   assert.ok(files.includes('pricing/entitlement-public-keys.json'));
   assert.ok(!files.some((file) => file.startsWith('billing/')));
   assert.ok(!files.includes('pricing/paddle-products.json'));
   assert.ok(!files.some((file) => file.startsWith('assets/marketing/')));
+  assert.ok(!files.some((file) => /(?:audio|video|image).*(?:extract|ocr|transcri)/i.test(file)));
   assert.ok(files.every((file) => !file.endsWith('.ts')));
   assert.ok(files.every((file) => !/(^|\/)(tests|reports|node_modules)(\/|$)/.test(file)));
 });
@@ -38,6 +40,18 @@ test('runtime inventory excludes source, tests, reports, and transient files', a
 test('store release accepts the pinned production entitlement keyring', async () => {
   const files = await collectRuntimeFiles(root);
   await assert.doesNotReject(assertReleaseSafe(files, root));
+});
+
+test('store runtime captures selected text only', async () => {
+  const bundle = await readFile(path.join(root, 'content/content-script.bundle.js'), 'utf8');
+  const background = await readFile(path.join(root, 'background/background.js'), 'utf8');
+  assert.match(bundle, /content:get_selection/);
+  assert.doesNotMatch(bundle, /content:get_(?:document|audio|video)/);
+  assert.doesNotMatch(bundle, /querySelector\(["'](?:audio|video)["']\)|drawImage\(/);
+  assert.doesNotMatch(background, /content:get_(?:document|audio|video)/);
+
+  const tiers = JSON.parse(await readFile(path.join(root, 'pricing/tier-feature-map.json'), 'utf8'));
+  assert.ok(Object.values(tiers).flat().every((feature) => !/(?:audio|video|image|multimodal)/i.test(feature)));
 });
 
 test('relative CLI paths execute validation and deterministic packaging', () => {

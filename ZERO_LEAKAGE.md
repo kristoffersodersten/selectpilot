@@ -41,7 +41,7 @@ The runtime is also profile-based: the product prefers the smallest viable local
 
 ## Experimental surfaces
 
-- `Transcribe` and `Vision OCR` remain prototype utilities and are not part of the privacy claim.
+- Audio transcription and vision OCR are absent from the shipped runtime and entitlement map.
 - Billing code exists in the repo as a prototype but is not part of the selected-text local copilot flow.
 
 ## How to verify

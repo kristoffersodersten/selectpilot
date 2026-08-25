@@ -987,18 +987,15 @@ function renderSelectionState() {
     else if (selectionPreview.hasSelection) {
         copy.textContent = shorten(selectionPreview.selection, 260);
     }
-    else if (selectionPreview.pageText) {
-        copy.textContent = 'Extract JSON requires highlighted text. Summarize and Ask can still fall back to page context.';
-    }
     else {
         copy.textContent = 'Highlight text on the current page to activate the primary action.';
     }
     const meta = document.createElement('p');
     meta.className = 'selection-copy';
-    const charCount = selectionPreview.hasSelection ? selectionPreview.selection.length : selectionPreview.pageText.length;
+    const charCount = selectionPreview.selection.length;
     meta.textContent = showFirstRunExample
         ? 'Local example · Action Brief · no page content used'
-        : `${selectionPreview.hasSelection ? 'Selection' : 'Page context'} · ${charCount} chars${selectionPreview.url ? ` · ${selectionPreview.url}` : ''}`;
+        : `Selection · ${charCount} chars${selectionPreview.url ? ` · ${selectionPreview.url}` : ''}`;
     selectionCardEl.append(header, title, copy, meta);
     if (showFirstRunExample) {
         const action = document.createElement('button');

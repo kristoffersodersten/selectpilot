@@ -51,7 +51,7 @@ These answers must be rechecked against the exact submitted SHA and the hosted p
 
 ### Data handled for core functionality
 
-- Website content: selected text and active-page context chosen by the user
+- Website content: text explicitly selected by the user, plus the active page title and URL
 - User activity: the user's explicit SelectPilot actions and locally stored feature state
 - Authentication information: local entitlement token and signed entitlement metadata
 
