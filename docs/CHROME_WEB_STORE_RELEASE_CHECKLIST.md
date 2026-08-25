@@ -1,6 +1,6 @@
 # Chrome Web Store Release Checklist
 
-Last updated: 2026-08-21
+Last updated: 2026-08-25
 
 ## Automated Gate
 
@@ -25,6 +25,19 @@ Production packaging requires `SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_JSON` as a JS
 Never place the private key, its contents, or a production signature fixture in Git, CI logs, Linear, test data, or the extension package. Signer provisioning and activation remain an authorized secrets operation.
 
 The separately operated local billing authority installs its pinned runtime with `python3 -m pip install --requirement requirements-billing.txt`. Its wallet RPC is loopback-only, entitlement/order state is written with owner-only permissions, administrative revocation requires a configured secret of at least 32 characters, and generated order IDs contain 128 bits of random material.
+
+## macOS Helper Release Gate
+
+`pnpm package:helper:macos` creates the unsigned CI inspection artifact. It is not a production installer.
+
+The production release requires both of these values from authorized local signing state:
+
+- `SELECTPILOT_INSTALLER_SIGN_IDENTITY`: the exact Developer ID Installer identity;
+- `SELECTPILOT_NOTARY_KEYCHAIN_PROFILE`: a `notarytool` keychain profile created outside the repository.
+
+Run `pnpm release:helper:macos` only on the signing Mac. The command fails before packaging when either authority is absent, signs the exact package, waits for Apple notarization, staples and validates the ticket, checks the package signature, runs Gatekeeper assessment, and prints the final SHA-256. Preserve that digest with the release evidence.
+
+Never upload the unsigned CI artifact or substitute an Apple Development identity.
 
 ## Product Truth
 

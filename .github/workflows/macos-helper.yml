@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   pull_request:
     branches: [main]
-    paths: ["installer/macos/**", "server/**", "scripts/package-macos-helper.sh", ".github/workflows/macos-helper.yml"]
+    paths: ["installer/macos/**", "server/**", "scripts/package-macos-helper.sh", "scripts/release-macos-helper.sh", ".github/workflows/macos-helper.yml"]
 
 permissions:
   contents: read
@@ -21,6 +21,12 @@ jobs:
         run: sh scripts/package-macos-helper.sh
       - name: Inspect package
         run: pkgutil --payload-files dist/macos-helper/SelectPilot-Installer-unsigned.pkg | sort
+      - name: Verify production release remains fail-closed without identities
+        run: |
+          if sh scripts/release-macos-helper.sh; then
+            echo "Production release unexpectedly succeeded without signing authority." >&2
+            exit 1
+          fi
       - uses: actions/upload-artifact@v7
         with:
           name: selectpilot-macos-helper-unsigned-${{ github.sha }}
