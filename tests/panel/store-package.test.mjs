@@ -4,7 +4,8 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import test from 'node:test';
-import { readFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { collectRuntimeFiles, assertReleaseSafe } from '../../scripts/package-chrome-store.mjs';
@@ -26,6 +27,7 @@ test('runtime inventory excludes source, tests, reports, and transient files', a
   assert.ok(files.includes('content/content-script.bundle.js'));
   assert.ok(files.includes('assets/icon128.png'));
   assert.ok(files.includes('pricing/tier-feature-map.json'));
+  assert.ok(files.includes('pricing/entitlement-public-keys.json'));
   assert.ok(!files.some((file) => file.startsWith('billing/')));
   assert.ok(!files.includes('pricing/paddle-products.json'));
   assert.ok(!files.some((file) => file.startsWith('assets/marketing/')));
@@ -33,15 +35,12 @@ test('runtime inventory excludes source, tests, reports, and transient files', a
   assert.ok(files.every((file) => !/(^|\/)(tests|reports|node_modules)(\/|$)/.test(file)));
 });
 
-test('store packaging fails closed while entitlement verification is unsigned', async () => {
+test('store release accepts the pinned production entitlement keyring', async () => {
   const files = await collectRuntimeFiles(root);
-  await assert.rejects(
-    assertReleaseSafe(files, root),
-    /production entitlement signature verification is not configured/
-  );
+  await assert.doesNotReject(assertReleaseSafe(files, root));
 });
 
-test('relative CLI paths execute validation and fail-closed packaging', () => {
+test('relative CLI paths execute validation and deterministic packaging', () => {
   const validation = execFileSync(process.execPath, ['./scripts/validate-store-assets.mjs'], {
     cwd: root,
     encoding: 'utf8',
@@ -52,6 +51,24 @@ test('relative CLI paths execute validation and fail-closed packaging', () => {
     cwd: root,
     encoding: 'utf8',
   });
-  assert.equal(packaging.status, 1);
-  assert.match(packaging.stderr, /production entitlement signature verification is not configured/);
+  assert.equal(packaging.status, 0, packaging.stderr);
+  assert.match(packaging.stdout, /^selectpilot-1\.0\.0\.zip [0-9a-f]{64}\s*$/);
+});
+
+test('store release rejects remotely hosted executable code', async () => {
+  const releaseRoot = await mkdtemp(path.join(tmpdir(), 'selectpilot-remote-code-'));
+  await mkdir(path.join(releaseRoot, 'background'), { recursive: true });
+  await writeFile(
+    path.join(releaseRoot, 'background/entitlement-service.js'),
+    'const PUBLIC_KEY_HEX = "01";'
+  );
+  await writeFile(
+    path.join(releaseRoot, 'remote.js'),
+    'script.src = "https://cdn.example.com/runtime.js";'
+  );
+
+  await assert.rejects(
+    assertReleaseSafe(['remote.js'], releaseRoot),
+    /Remote hosted code/
+  );
 });

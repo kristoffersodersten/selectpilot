@@ -15,14 +15,15 @@ type EntitlementPayload = {
 };
 
 type SignedEntitlementResponse = {
-  entitlement?: EntitlementPayload;
-  signature?: string;
-  alg?: string;
-  kid?: string;
-  token?: string;
-  tier?: EntitlementTier;
-  issuedAt?: number;
-  expiresAt?: number;
+  entitlement: EntitlementPayload;
+  signature: string;
+  alg: 'Ed25519';
+  kid: string;
+};
+
+export type EntitlementKeyring = {
+  schema_version: 1;
+  keys: Array<{ kid: string; alg: 'Ed25519'; public_key_hex: string; status: 'active' | 'retiring' }>;
 };
 
 type RemoteVerifyResult = CachedEntitlement | 'unauthorized' | null;
@@ -41,30 +42,16 @@ export type CachedEntitlement = {
 
 const OFFLINE_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 const REFRESH_INTERVAL_MS = 10 * 60 * 1000;
-const ENTITLEMENT_PUBLIC_KEYS: Readonly<Record<string, string>> = {
-  __SELECTPILOT_ENTITLEMENT_KEY_ID__: '__SELECTPILOT_ENTITLEMENT_PUBLIC_KEY_HEX__',
-};
 const SIGNATURE_ALGORITHM = 'Ed25519';
-
 let cachedFeatureMap: Record<EntitlementTier, string[]> | null = null;
+let cachedKeyring: EntitlementKeyring | null = null;
 
 function nowMs(): number {
   return Date.now();
 }
 
-function normalizeEntitlement(payload: EntitlementPayload): LicenseRecord {
-  return {
-    token: payload.token,
-    tier: payload.tier,
-    issuedAt: payload.issuedAt,
-    expiresAt: payload.expiresAt ?? undefined,
-    features: payload.features,
-    cachedAt: nowMs(),
-  };
-}
-
 function hexToBytes(hex: string): Uint8Array {
-  if (!hex || hex.length % 2 !== 0) throw new Error('invalid public key hex');
+  if (!/^[0-9a-f]{64}$/i.test(hex)) throw new Error('invalid public key hex');
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < bytes.length; i++) {
     bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
@@ -95,18 +82,42 @@ function canonicalizeEntitlement(payload: EntitlementPayload): string {
   });
 }
 
+async function loadKeyring(): Promise<EntitlementKeyring> {
+  if (cachedKeyring) return cachedKeyring;
+  const url = chrome.runtime.getURL('pricing/entitlement-public-keys.json');
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error('entitlement_keyring_unavailable');
+  const value = (await res.json()) as EntitlementKeyring;
+  if (value.schema_version !== 1 || !Array.isArray(value.keys) || value.keys.length === 0) {
+    throw new Error('entitlement_keyring_invalid');
+  }
+  if (value.keys.some((key) => (
+    !key.kid
+    || key.alg !== 'Ed25519'
+    || !/^[0-9a-f]{64}$/i.test(key.public_key_hex)
+    || !['active', 'retiring'].includes(key.status)
+  ))) throw new Error('entitlement_keyring_invalid');
+  cachedKeyring = value;
+  return value;
+}
+
 export async function verifyEntitlementSignature(
   payload: EntitlementPayload,
   signature: string,
   kid: string,
-  publicKeys: Readonly<Record<string, string>> = ENTITLEMENT_PUBLIC_KEYS,
+  publicKeys?: Readonly<Record<string, string>>,
 ): Promise<boolean> {
-  const publicKeyHex = publicKeys[kid];
-  if (!publicKeyHex || !signature || !kid) return false;
+  if (!kid || !signature) return false;
   try {
+    const keyEntry = publicKeys
+      ? { public_key_hex: publicKeys[kid] }
+      : (await loadKeyring()).keys.find((entry) => (
+        entry.kid === kid && entry.alg === SIGNATURE_ALGORITHM && ['active', 'retiring'].includes(entry.status)
+      ));
+    if (!keyEntry?.public_key_hex) return false;
     const key = await crypto.subtle.importKey(
       'raw',
-      bytesToArrayBuffer(hexToBytes(publicKeyHex)),
+      bytesToArrayBuffer(hexToBytes(keyEntry.public_key_hex)),
       { name: 'Ed25519' },
       false,
       ['verify']
@@ -167,11 +178,21 @@ async function isVerifiedCachedEntitlement(record: LicenseRecord, token: string)
 
 async function readCachedEntitlement(): Promise<CachedEntitlement | null> {
   const cached = await loadLicense();
-  if (!cached) return null;
-  return {
-    ...cached,
-    cachedAt: cached.cachedAt || cached.issuedAt,
+  return cached ? validateCachedEntitlement(cached) : null;
+}
+
+async function validateCachedEntitlement(record: LicenseRecord): Promise<CachedEntitlement | null> {
+  if (!record.signature || !record.kid || record.alg !== 'Ed25519') return null;
+  if (record.expiresAt !== undefined && nowMs() >= record.expiresAt) return null;
+  const payload: EntitlementPayload = {
+    token: record.token,
+    tier: record.tier,
+    features: record.features,
+    issuedAt: record.issuedAt,
+    expiresAt: record.expiresAt ?? null,
   };
+  if (!(await verifyEntitlementSignature(payload, record.signature, record.kid))) return null;
+  return { ...record, cachedAt: record.cachedAt || record.issuedAt } as CachedEntitlement;
 }
 
 async function writeCachedEntitlement(record: CachedEntitlement): Promise<void> {
@@ -188,28 +209,40 @@ async function writeCachedEntitlement(record: CachedEntitlement): Promise<void> 
   });
 }
 
-async function normalizeRemoteResponse(token: string, response: SignedEntitlementResponse): Promise<CachedEntitlement | null> {
-  const entitlement = response.entitlement;
+export async function normalizeRemoteResponse(
+  token: string,
+  response: SignedEntitlementResponse,
+  keyring?: EntitlementKeyring
+): Promise<CachedEntitlement | null> {
+  const entitlement = response?.entitlement;
   if (
     !entitlement
     || entitlement.token !== token
     || !['essential', 'plus', 'pro'].includes(entitlement.tier)
     || !Number.isInteger(entitlement.issuedAt)
-    || (entitlement.expiresAt != null && !Number.isInteger(entitlement.expiresAt))
+    || (entitlement.expiresAt !== undefined
+      && entitlement.expiresAt !== null
+      && !Number.isInteger(entitlement.expiresAt))
+    || !Array.isArray(entitlement.features)
+    || entitlement.features.some((feature) => typeof feature !== 'string')
   ) {
-    warn('entitlement', 'missing or token-mismatched signed entitlement');
+    warn('entitlement', 'invalid signed entitlement contract');
     return null;
   }
   if (response.alg !== SIGNATURE_ALGORITHM || !response.signature || !response.kid) {
     warn('entitlement', 'unsigned or unsupported entitlement response');
     return null;
   }
-  if (entitlement.expiresAt != null && entitlement.expiresAt <= nowMs()) {
+  if (entitlement.expiresAt !== undefined && entitlement.expiresAt !== null && nowMs() >= entitlement.expiresAt) {
     warn('entitlement', 'expired entitlement response');
     return null;
   }
-  const valid = await verifyEntitlementSignature(entitlement, response.signature, response.kid);
-  if (!valid) return null;
+  const publicKeys = keyring
+    ? Object.fromEntries(keyring.keys.map((entry) => [entry.kid, entry.public_key_hex]))
+    : undefined;
+  if (!(await verifyEntitlementSignature(entitlement, response.signature, response.kid, publicKeys))) {
+    return null;
+  }
   return {
     token: entitlement.token,
     tier: entitlement.tier,
@@ -260,7 +293,8 @@ export async function setEntitlementToken(token: string): Promise<void> {
 
 export async function refreshEntitlement(force = false): Promise<LicenseRecord | null> {
   const token = await loadToken();
-  const cached = await loadLicense();
+  const stored = await loadLicense();
+  const cached = stored ? await validateCachedEntitlement(stored) : null;
 
   if (!token) return null;
 
@@ -288,7 +322,7 @@ export async function refreshEntitlement(force = false): Promise<LicenseRecord |
 
   if (remote) {
     await writeCachedEntitlement(remote);
-    return normalizeEntitlement(remote);
+    return remote;
   }
 
   if (cached && await isVerifiedCachedEntitlement(cached, token)) {

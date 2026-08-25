@@ -1,0 +1,39 @@
+"""Installation state and consent contract tests."""
+from __future__ import annotations
+
+import sys
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+ROOT = Path(__file__).resolve().parents[2]
+SERVER_DIR = ROOT / "server"
+if str(SERVER_DIR) not in sys.path:
+    sys.path.insert(0, str(SERVER_DIR))
+
+from installation_manager import InstallationManager  # noqa: E402
+
+
+class InstallationManagerTests(unittest.TestCase):
+    def test_consent_is_required(self) -> None:
+        manager = InstallationManager()
+        with self.assertRaisesRegex(ValueError, "installation_consent_required"):
+            manager.start(False)
+
+    def test_non_macos_fails_before_work_starts(self) -> None:
+        manager = InstallationManager()
+        with patch("installation_manager.platform.system", return_value="Linux"):
+            with self.assertRaisesRegex(RuntimeError, "macos_required"):
+                manager.start(True)
+        self.assertEqual(manager.status()["state"], "idle")
+
+    def test_repeated_start_is_single_flight(self) -> None:
+        manager = InstallationManager()
+        manager._state["state"] = "installing"
+        with patch("installation_manager.platform.system", return_value="Darwin"):
+            state = manager.start(True)
+        self.assertEqual(state["state"], "installing")
+
+
+if __name__ == "__main__":
+    unittest.main()

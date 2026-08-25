@@ -6,13 +6,14 @@ This document is the source of truth for SelectPilot's store listing. It does no
 
 ## Release State
 
-`BLOCKED`: production entitlement signatures and public policy/support URLs are not yet configured. Do not upload a package until `pnpm package:store` succeeds without overrides.
+`RELEASE CANDIDATE`: production entitlement verification and public policy/support artifacts are implemented. Upload remains gated on live Paddle configuration, public deployment, independent review, and exact-package verification.
 
 ## Listing Basics
 
 - Product name: `SelectPilot`
 - Category: `Productivity`
 - Primary language: `English`
+- Supported platform at launch: Chrome desktop on macOS 14 or later
 - Store install: free
 - Product access: seven-day trial followed by a paid tier, subject to production checkout and entitlement activation
 
@@ -67,7 +68,6 @@ These answers must be rechecked against the exact submitted SHA and the hosted p
 ### Permission justifications
 
 - `activeTab`: access the current page only after a user action.
-- `tabs`: identify the active content tab for the invoked flow.
 - `storage`: retain local settings, entitlement state, runtime state, and user-controlled local history.
 - `scripting`: recover the current selection when content-script messaging is unavailable.
 - `sidePanel`: provide the primary SelectPilot workspace.
@@ -86,9 +86,9 @@ Run `pnpm validate:store` before uploading any asset.
 
 These values are external release gates and must be publicly reachable before submission:
 
-- Homepage URL: `TBD`
-- Support URL: `TBD`
-- Privacy policy URL: `TBD`
+- Homepage URL: `https://selectpilot.app/`
+- Support URL: `https://selectpilot.app/support.html`
+- Privacy policy URL: `https://selectpilot.app/privacy.html`
 
 The repository copy of the policy is [`docs/PRIVACY_POLICY.md`](./PRIVACY_POLICY.md). A repository file is not a substitute for verifying the final public URL in the Store dashboard.
 

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "keys": [
+    {
+      "kid": "selectpilot-prod-2026-01",
+      "alg": "Ed25519",
+      "public_key_hex": "e9c1429a51ccf7d5eac11c4d22139a85414231d3ad64578e1fdb7f004ed74bd7",
+      "status": "active"
+    }
+  ]
+}

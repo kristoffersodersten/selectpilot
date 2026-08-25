@@ -1,0 +1,45 @@
+name: Deploy public site
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["site/**", "scripts/build-site-config.mjs", ".github/workflows/deploy-site.yml"]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Build configured public site
+        run: node scripts/build-site-config.mjs
+        env:
+          PADDLE_ENVIRONMENT: production
+          PADDLE_CLIENT_TOKEN: ${{ secrets.PADDLE_CLIENT_TOKEN }}
+          PADDLE_PRICE_ESSENTIAL: ${{ vars.PADDLE_PRICE_ESSENTIAL }}
+          PADDLE_PRICE_PLUS: ${{ vars.PADDLE_PRICE_PLUS }}
+          PADDLE_PRICE_PRO: ${{ vars.PADDLE_PRICE_PRO }}
+          ENTITLEMENT_AUTHORITY_URL: ${{ vars.ENTITLEMENT_AUTHORITY_URL }}
+          CHROME_WEB_STORE_URL: ${{ vars.CHROME_WEB_STORE_URL }}
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site-dist
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

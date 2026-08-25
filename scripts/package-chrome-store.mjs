@@ -11,7 +11,7 @@ import { validateStoreAssets } from './validate-store-assets.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const fixedDate = new Date('2026-01-01T00:00:00Z');
-const runtimeRoots = ['agent', 'api', 'background', 'content', 'licensing', 'panel', 'popup', 'shared', 'utils'];
+const runtimeRoots = ['agent', 'api', 'background', 'content', 'licensing', 'options', 'panel', 'popup', 'shared', 'utils'];
 const runtimeAssets = [
   'assets/icon16.png',
   'assets/icon32.png',
@@ -20,12 +20,18 @@ const runtimeAssets = [
   'assets/icon256.png',
   'assets/icon512.png',
   'pricing/tier-feature-map.json',
+  'pricing/entitlement-public-keys.json',
 ];
 const allowedExtensions = new Set(['.css', '.html', '.js', '.json', '.png', '.svg']);
 const forbiddenPath = /(^|\/)(?:\.env|tests?|reports?|logs?|node_modules|test-results|playwright-report)(\/|$)|\.(?:map|log|pem|key)$/i;
 const secretPatterns = [
   /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,
   /(?:api|secret|private)[_-]?key\s*[:=]\s*["'][^"']{12,}["']/i,
+];
+const remoteCodePatterns = [
+  /<script[^>]+src=["']https?:\/\//i,
+  /\.src\s*=\s*["']https?:\/\/[^"']+\.js(?:[?"'])/i,
+  /import\s*\(\s*["']https?:\/\//i,
 ];
 
 async function walk(directory, base = directory) {
@@ -56,6 +62,21 @@ export async function assertReleaseSafe(files, root = projectRoot) {
   if (entitlement.includes('__SELECTPILOT_ENTITLEMENT_PUBLIC_KEY_HEX__') || entitlement.includes('__SELECTPILOT_ENTITLEMENT_KEY_ID__')) {
     throw new Error('Store package blocked: production entitlement signature verification is not configured (SOD-837).');
   }
+  const keyring = JSON.parse(await readFile(path.join(root, 'pricing/entitlement-public-keys.json'), 'utf8'));
+  if (
+    keyring.schema_version !== 1
+    || !Array.isArray(keyring.keys)
+    || !keyring.keys.some((key) => key.status === 'active')
+    || keyring.keys.some((key) => (
+      typeof key.kid !== 'string'
+      || !key.kid
+      || key.alg !== 'Ed25519'
+      || !/^[0-9a-f]{64}$/i.test(key.public_key_hex || '')
+      || !['active', 'retiring'].includes(key.status)
+    ))
+  ) {
+    throw new Error('Store package blocked: production entitlement keyring is invalid.');
+  }
   if (files.some((file) => file.startsWith('billing/') || file === 'pricing/paddle-products.json')) {
     throw new Error('Store package blocked: inactive remote checkout code or product placeholders entered runtime inventory.');
   }
@@ -68,6 +89,9 @@ export async function assertReleaseSafe(files, root = projectRoot) {
       const content = await readFile(absolute, 'utf8');
       for (const pattern of secretPatterns) {
         if (pattern.test(content)) throw new Error(`Potential secret in release file: ${relative}`);
+      }
+      for (const pattern of remoteCodePatterns) {
+        if (pattern.test(content)) throw new Error(`Remote hosted code in release file: ${relative}`);
       }
     }
   }

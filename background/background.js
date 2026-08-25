@@ -9,6 +9,21 @@ import { ApiRequestError } from '../api/request.js';
 import { FIRST_RUN_EXAMPLE } from '../shared/first-run-example.js';
 const MEMORY_ENABLED_KEY = 'selectpilot_memory_enabled_v1';
 const MEMORY_LEDGER_KEY = 'selectpilot_memory_ledger_v1';
+async function openForActiveTab() {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.id || tab.windowId === undefined)
+        throw new Error('active_tab_unavailable');
+    await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['content/content-script.bundle.js'],
+    });
+    await chrome.sidePanel.setOptions({ tabId: tab.id, path: 'panel/panel.html', enabled: true });
+    await chrome.sidePanel.open({ windowId: tab.windowId });
+}
+chrome.commands.onCommand.addListener((command) => {
+    if (command === 'open-selectpilot')
+        void openForActiveTab().catch((cause) => error('shortcut', 'open failed', cause));
+});
 async function canUseProjectMemory() {
     const { allowed } = await requireFeature('project_memory');
     return allowed;
@@ -130,6 +145,7 @@ async function collectContext() {
     const documentText = doc?.documentText?.text || '';
     const url = selection?.text?.url || doc?.documentText?.url || tab.url;
     const title = selection?.text?.title || doc?.documentText?.title || tab.title;
+    const pageColor = selection?.text?.pageColor || doc?.documentText?.pageColor;
     return {
         url: url || undefined,
         title: title || undefined,
@@ -143,7 +159,8 @@ async function collectContext() {
         metadata: {
             audioDuration: audio?.audio?.duration,
             videoDuration: video?.video?.duration,
-            capturedAt: Date.now()
+            capturedAt: Date.now(),
+            pageColor,
         }
     };
 }
@@ -241,6 +258,7 @@ async function handleSelectionPreview() {
         title: context.title || '',
         url: context.url || '',
         hasSelection: Boolean(context.selection && context.selection.trim()),
+        pageColor: typeof context.metadata?.pageColor === 'string' ? context.metadata.pageColor : '',
     };
 }
 async function handleIntentCompile(intent) {

@@ -20,8 +20,10 @@ const memoryShellEl = $('#memory-shell');
 const memoryStatusEl = $('#memory-status');
 const memoryMetaEl = $('#memory-meta');
 const memoryTargetEl = $('#memory-target');
-const orderIdInputEl = $('#order-id');
-const syncOrderButtonEl = $('#btn-sync-order');
+const licenseTokenInputEl = $('#license-token');
+const attachLicenseButtonEl = $('#btn-attach-license');
+const startTrialButtonEl = $('#btn-start-trial');
+const viewPlansButtonEl = $('#btn-view-plans');
 const entitlementStatusEl = $('#entitlement-status');
 const memoryToggleButtonEl = $('#btn-memory-toggle');
 const memoryInspectButtonEl = $('#btn-memory-inspect');
@@ -61,6 +63,8 @@ const runtimeMetaOperationEl = $('#runtime-meta-operation');
 const runtimeMetaStepEl = $('#runtime-meta-step');
 const runtimeMetaTraceEl = $('#runtime-meta-trace');
 const runtimeMetaEventsEl = $('#runtime-meta-events');
+const resultShellEl = $('#result-shell');
+const processingFieldEl = $('#processing-field');
 const actionButtons = Array.from(document.querySelectorAll('.primary-action, .secondary-grid button, .advanced-grid button'));
 const ENTITLEMENT_FRESH_MS = 15 * 60 * 1000;
 const FIRST_RUN_COMPLETED_KEY = 'selectpilot_first_run_completed_v1';
@@ -98,9 +102,19 @@ let memorySnapshot = {
     lastUpdatedAt: null,
 };
 let entitlementSnapshot = null;
+let bridgeAvailable = false;
+let installationSnapshot = {
+    state: 'idle',
+    label: 'Ready to install',
+    progress: 0,
+    profile: null,
+    action_required: null,
+};
+let installationPollTimer = null;
 let firstRunCompleted = false;
 const BENCHMARK_CACHE_KEY = 'selectpilot_runtime_benchmark_v1';
 const RUNTIME_META_MAX_EVENTS = 6;
+const XRAY_ENABLED = new URLSearchParams(location.search).has('xray');
 let runtimeMetaEventSource = null;
 let runtimeMetaReconnectTimer = null;
 let runtimeMetaReconnectDelayMs = 1200;
@@ -118,18 +132,15 @@ const runtimeMetaOverlayState = {
 };
 let intentSuggestions = [];
 let selectedIntentSuggestion = null;
-const FAST_INSTALL_COMMANDS = [
-    'ollama pull gemma4:e2b-it-qat',
-    'ollama pull nomic-embed-text-v2-moe:latest',
-    'CHROMEAI_OLLAMA_MODEL=gemma4:e2b-it-qat CHROMEAI_OLLAMA_NUM_CTX=16384 ./scripts/install-macos-local.sh',
-].join('\n');
-const QUICK_SETUP_COMMANDS = [
-    'pnpm setup:local',
-    'curl http://127.0.0.1:8083/health',
-].join('\n');
 function setStatus(text) {
+    if (resultShellEl?.getAttribute('aria-busy') === 'true')
+        return;
     if (statusEl)
         statusEl.textContent = text;
+}
+function setSilentProcessing(active) {
+    processingFieldEl?.classList.toggle('is-active', active);
+    resultShellEl?.setAttribute('aria-busy', String(active));
 }
 function setStatusBar(text) {
     if (statusBar)
@@ -163,13 +174,6 @@ function shorten(text, max = 220) {
     if (trimmed.length <= max)
         return trimmed;
     return `${trimmed.slice(0, max - 1).trimEnd()}…`;
-}
-function getEfficiencyScore(snapshot) {
-    if (!snapshot)
-        return null;
-    const avgLatency = (snapshot.extract_latency_ms + snapshot.summarize_latency_ms) / 2;
-    const score = Math.round(100 - avgLatency / 40);
-    return Math.max(0, Math.min(100, score));
 }
 function formatPrivacyVerifiedAt(iso) {
     if (!iso)
@@ -544,16 +548,6 @@ function getEffectiveRecommendedProfileKey() {
 function getEffectiveRecommendedProfile() {
     return getRuntimeProfile(getEffectiveRecommendedProfileKey());
 }
-function getEffectiveRecommendationReason() {
-    if (!benchmarkSnapshot)
-        return runtimeProfilesPayload.reason;
-    const benchmarkProfile = getRuntimeProfile(benchmarkSnapshot.recommended_profile).label;
-    const autoProfile = getRuntimeProfile(benchmarkSnapshot.auto_profile || runtimeProfilesPayload.recommended_profile).label;
-    if (benchmarkSnapshot.recommended_profile === (benchmarkSnapshot.auto_profile || runtimeProfilesPayload.recommended_profile)) {
-        return `Benchmark confirms the ${benchmarkProfile} profile for this workload.`;
-    }
-    return `Benchmark overrides the hardware heuristic: use ${benchmarkProfile} for this workload instead of the auto ${autoProfile} profile.`;
-}
 async function loadBenchmarkSnapshot() {
     const cached = await getJSON(BENCHMARK_CACHE_KEY);
     if (!cached || !cached.recommended_profile)
@@ -756,12 +750,12 @@ function renderEntitlementStatus() {
     const tier = entitlementSnapshot?.tier || 'essential';
     const token = entitlementSnapshot?.token;
     if (!token) {
-        entitlementStatusEl.textContent = 'No entitlement token attached yet.';
+        entitlementStatusEl.textContent = 'No active access yet.';
         return;
     }
     const suffix = formatEntitlementUpdatedAt(entitlementSnapshot?.cachedAt);
     const cacheState = getEntitlementCacheState(entitlementSnapshot);
-    entitlementStatusEl.textContent = `Token attached · tier ${tier} (${cacheState}) · ${suffix}`;
+    entitlementStatusEl.textContent = `${tier} access · ${cacheState} · ${suffix}`;
 }
 async function refreshEntitlementStatus() {
     try {
@@ -774,33 +768,40 @@ async function refreshEntitlementStatus() {
     renderSelectionState();
     syncControlAvailability();
 }
-async function doSyncOrderToken() {
-    const orderId = orderIdInputEl?.value.trim() || '';
-    if (!orderId)
-        throw new Error('Order ID is required');
-    setStatus('Checking order status...');
-    const orderRes = await fetch(endpoints.billingOrderStatus(orderId), { cache: 'no-store' });
-    if (!orderRes.ok) {
-        if (orderRes.status === 404)
-            throw new Error('No payment detected for this order ID');
-        throw new Error(`Order lookup failed (${orderRes.status})`);
-    }
-    const order = await orderRes.json();
-    if (!order.paid || !order.token) {
-        const confirmations = order.confirmations || 0;
-        const needed = order.confirmations_required || 0;
-        throw new Error(`No payment detected yet (${confirmations}/${needed} confirmations)`);
-    }
-    if (entitlementSnapshot?.token && entitlementSnapshot.token === order.token) {
-        await request('entitlement:refresh');
-        await refreshEntitlementStatus();
-        setStatus('Order already synced; entitlement refreshed');
-        return;
-    }
-    await request('license:attach_token', { token: order.token });
+async function attachLicenseToken(token = licenseTokenInputEl?.value.trim() || '') {
+    if (!token)
+        throw new Error('Enter your license key');
+    setStatus('Activating access...');
+    await request('license:attach_token', { token });
     await request('entitlement:refresh');
     await refreshEntitlementStatus();
-    setStatus('Token attached and entitlement refreshed');
+    if (licenseTokenInputEl)
+        licenseTokenInputEl.value = '';
+    setStatus('Access ready');
+}
+async function getInstallationId() {
+    const key = 'selectpilot_installation_id';
+    const stored = await chrome.storage.local.get(key);
+    if (typeof stored[key] === 'string' && stored[key])
+        return stored[key];
+    const value = crypto.randomUUID();
+    await chrome.storage.local.set({ [key]: value });
+    return value;
+}
+async function startTrial() {
+    setStatus('Preparing your trial...');
+    const response = await fetch(endpoints.licenseTrial, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ installation_id: await getInstallationId() }),
+        cache: 'no-store',
+    });
+    if (!response.ok)
+        throw new Error('Trial could not be started');
+    const result = await response.json();
+    if (!result.token)
+        throw new Error('Trial response was incomplete');
+    await attachLicenseToken(result.token);
 }
 async function refreshMemoryStatus() {
     try {
@@ -853,10 +854,10 @@ function syncControlAvailability() {
         memoryExportButtonEl.disabled = isBusy || !flowExportSupported || !canExport;
     if (memoryDeleteButtonEl)
         memoryDeleteButtonEl.disabled = memoryActionsLocked || memorySnapshot.entries === 0;
-    if (syncOrderButtonEl) {
-        const hasOrderId = Boolean(orderIdInputEl?.value.trim());
-        syncOrderButtonEl.disabled = isBusy || !hasOrderId;
-    }
+    if (attachLicenseButtonEl)
+        attachLicenseButtonEl.disabled = isBusy || !licenseTokenInputEl?.value.trim();
+    if (startTrialButtonEl)
+        startTrialButtonEl.disabled = isBusy || Boolean(entitlementSnapshot?.token);
     if (intentExecuteButtonEl) {
         const hasIntent = Boolean(intentInputEl?.value.trim());
         intentExecuteButtonEl.disabled = isBusy || !runtimeReady || !selectionReady || !hasIntent;
@@ -884,175 +885,84 @@ function syncPresetHelp() {
     if (extractHelpEl)
         extractHelpEl.textContent = preset.description;
 }
-function buildMetric(label, value) {
-    const metric = document.createElement('div');
-    metric.className = 'runtime-metric';
-    const kicker = document.createElement('span');
-    kicker.className = 'section-kicker';
-    kicker.textContent = label;
-    const strong = document.createElement('strong');
-    strong.textContent = value;
-    metric.append(kicker, strong);
-    return metric;
-}
-function createProfileCard(profile, recommendedKey, copyLabel = 'Copy command') {
-    const card = document.createElement('div');
-    card.className = 'profile-card';
-    if (profile.key === recommendedKey)
-        card.classList.add('is-recommended');
-    const header = document.createElement('div');
-    header.className = 'profile-header';
-    const title = document.createElement('div');
-    title.className = 'profile-title';
-    title.textContent = profile.label;
-    header.append(title);
-    if (profile.key === recommendedKey) {
-        const badge = document.createElement('span');
-        badge.className = 'profile-badge';
-        badge.textContent = 'Recommended';
-        header.append(badge);
-    }
-    const description = document.createElement('p');
-    description.className = 'selection-copy';
-    description.textContent = profile.description;
-    const stack = document.createElement('div');
-    stack.className = 'profile-stack';
-    stack.append(buildMetric('Generation', profile.generation_model), buildMetric('Embedding', profile.embedding_model), buildMetric('Latency', profile.target_latency));
-    const intendedFor = document.createElement('p');
-    intendedFor.className = 'selection-copy';
-    intendedFor.textContent = profile.intended_for;
-    const actions = document.createElement('div');
-    actions.className = 'runtime-actions';
-    const copyButton = document.createElement('button');
-    copyButton.type = 'button';
-    copyButton.textContent = copyLabel;
-    copyButton.addEventListener('click', async () => {
-        await navigator.clipboard.writeText(profile.command);
-        setStatus(`${profile.label} bootstrap command copied`);
-    });
-    actions.append(copyButton);
-    card.append(header, description, stack, intendedFor, actions);
-    return card;
-}
 function renderRuntimeState() {
     clearNode(runtimeStateEl);
     if (!runtimeStateEl)
         return;
     runtimeStateEl.classList.add('is-visible');
-    const profilesGrid = document.createElement('div');
-    profilesGrid.className = 'profile-grid';
-    const effectiveRecommendedProfileKey = getEffectiveRecommendedProfileKey();
-    for (const profile of runtimeProfilesPayload.profiles) {
-        profilesGrid.append(createProfileCard(profile, effectiveRecommendedProfileKey));
-    }
     if (runtimeSnapshot.ok) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'runtime-grid';
-        wrapper.append(buildMetric('Execution', 'Local-only ready'), buildMetric('Provider', 'Ollama on-device'), buildMetric('Ignored remote', `${runtimeSnapshot.ignoredRemoteCount} models`));
-        const copy = document.createElement('p');
-        copy.className = 'runtime-copy';
-        copy.textContent = `Runtime ready. ${runtimeSnapshot.activeModel} is active locally, and the selected-text path stays inside the local bridge.`;
-        const benchmarkBlock = document.createElement('div');
-        benchmarkBlock.className = 'benchmark-block';
-        const benchmarkHeader = document.createElement('div');
-        benchmarkHeader.className = 'profile-header';
-        const benchmarkTitle = document.createElement('div');
-        benchmarkTitle.className = 'profile-title';
-        benchmarkTitle.textContent = 'Profile fit';
-        benchmarkHeader.append(benchmarkTitle);
-        benchmarkBlock.append(benchmarkHeader);
-        const benchmarkCopy = document.createElement('p');
-        benchmarkCopy.className = 'selection-copy';
-        if (benchmarkSnapshot) {
-            benchmarkCopy.textContent = getEffectiveRecommendationReason();
-        }
-        else {
-            benchmarkCopy.textContent = 'Run a local benchmark to confirm that the current runtime matches the smallest viable profile for this machine.';
-        }
-        benchmarkBlock.append(benchmarkCopy);
-        const benchmarkMetrics = document.createElement('div');
-        benchmarkMetrics.className = 'runtime-grid';
-        const efficiencyScore = getEfficiencyScore(benchmarkSnapshot);
-        if (benchmarkSnapshot) {
-            benchmarkMetrics.append(buildMetric('Extract JSON', `${benchmarkSnapshot.extract_latency_ms} ms`), buildMetric('Summarize', `${benchmarkSnapshot.summarize_latency_ms} ms`), buildMetric('Efficiency', `${efficiencyScore}/100`), buildMetric('Recommended', getEffectiveRecommendedProfile().label));
-        }
-        else {
-            benchmarkMetrics.append(buildMetric('Extract JSON', 'Pending'), buildMetric('Summarize', 'Pending'), buildMetric('Efficiency', 'Pending'), buildMetric('Recommended', getEffectiveRecommendedProfile().label));
-        }
-        benchmarkBlock.append(benchmarkMetrics);
-        const benchmarkActions = document.createElement('div');
-        benchmarkActions.className = 'runtime-actions';
-        const benchmarkButton = document.createElement('button');
-        benchmarkButton.type = 'button';
-        benchmarkButton.id = 'btn-run-benchmark';
-        benchmarkButton.textContent = benchmarkSnapshot ? 'Run benchmark again' : 'Run benchmark';
-        benchmarkActions.append(benchmarkButton);
-        benchmarkBlock.append(benchmarkActions);
-        runtimeStateEl.append(wrapper, copy, benchmarkBlock, profilesGrid);
+        runtimeStateEl.classList.remove('is-visible');
         return;
     }
-    const header = document.createElement('div');
-    header.className = 'output-card';
-    header.innerHTML = '<div class="output-eyebrow">Human intervention</div><h3>Local runtime not ready</h3>';
-    const copy = document.createElement('p');
-    copy.className = 'runtime-copy';
-    copy.textContent =
-        'SelectPilot runs only through local Ollama. Follow these three tiny steps and press re-check when done.';
-    const tutorialSteps = document.createElement('div');
-    tutorialSteps.className = 'tutorial-steps';
-    const stepInstall = document.createElement('div');
-    stepInstall.className = 'tutorial-step';
-    stepInstall.innerHTML = '<strong>Step 1</strong><span>Copy and run the one-command setup in Terminal.</span>';
-    const stepLoad = document.createElement('div');
-    stepLoad.className = 'tutorial-step';
-    stepLoad.innerHTML = '<strong>Step 2</strong><span>Open chrome://extensions, enable Developer Mode, then Load unpacked.</span>';
-    const stepVerify = document.createElement('div');
-    stepVerify.className = 'tutorial-step';
-    stepVerify.innerHTML = '<strong>Step 3</strong><span>Highlight any text, click Extract JSON, and confirm output appears.</span>';
-    tutorialSteps.append(stepInstall, stepLoad, stepVerify);
-    const wrapper = document.createElement('div');
-    wrapper.className = 'runtime-grid';
-    const recommended = getEffectiveRecommendedProfile();
-    wrapper.append(buildMetric('Recommended profile', recommended.label), buildMetric('Generation model', recommended.generation_model), buildMetric('Embedding model', recommended.embedding_model));
-    const actions = document.createElement('div');
-    actions.className = 'runtime-actions';
-    const copySetup = document.createElement('button');
-    copySetup.type = 'button';
-    copySetup.textContent = 'Copy one-command setup';
-    copySetup.addEventListener('click', async () => {
-        await navigator.clipboard.writeText(QUICK_SETUP_COMMANDS);
-        setStatus('One-command setup copied');
-    });
-    actions.append(copySetup);
-    const copyAdvancedSetup = document.createElement('button');
-    copyAdvancedSetup.type = 'button';
-    copyAdvancedSetup.textContent = 'Copy manual fallback';
-    copyAdvancedSetup.addEventListener('click', async () => {
-        await navigator.clipboard.writeText(recommended.command || FAST_INSTALL_COMMANDS);
-        setStatus('Fallback setup copied');
-    });
-    actions.append(copyAdvancedSetup);
-    const refresh = document.createElement('button');
-    refresh.type = 'button';
-    refresh.textContent = 'Re-check runtime';
-    refresh.addEventListener('click', () => {
-        void refreshRuntime();
-    });
-    actions.append(refresh);
-    if (runtimeSnapshot.error || runtimeSnapshot.hint) {
-        const note = document.createElement('p');
-        note.className = 'runtime-copy';
-        note.textContent = runtimeSnapshot.error || runtimeSnapshot.hint || '';
-        const reason = document.createElement('p');
-        reason.className = 'runtime-copy';
-        reason.textContent = getEffectiveRecommendationReason();
-        runtimeStateEl.append(header, copy, wrapper, tutorialSteps, actions, reason, profilesGrid, note);
+    if (!bridgeAvailable) {
+        const helper = createCard('Installation', 'One small helper is needed', 'It keeps selected text on this computer and prepares the right local model.');
+        const link = document.createElement('a');
+        link.className = 'primary-action';
+        link.href = 'https://selectpilot.app/downloads/SelectPilot-Installer.pkg';
+        link.target = '_blank';
+        link.rel = 'noreferrer';
+        link.textContent = 'Install local helper';
+        runtimeStateEl.append(helper, link);
         return;
     }
-    const reason = document.createElement('p');
-    reason.className = 'runtime-copy';
-    reason.textContent = getEffectiveRecommendationReason();
-    runtimeStateEl.append(header, copy, wrapper, tutorialSteps, actions, reason, profilesGrid);
+    const installation = createCard('Installation', installationSnapshot.label, 'The right local setup will be chosen automatically for this Mac.');
+    const progress = document.createElement('div');
+    progress.className = 'installation-progress';
+    progress.setAttribute('role', 'progressbar');
+    progress.setAttribute('aria-valuemin', '0');
+    progress.setAttribute('aria-valuemax', '100');
+    progress.setAttribute('aria-valuenow', String(installationSnapshot.progress));
+    const fill = document.createElement('span');
+    fill.style.width = `${installationSnapshot.progress}%`;
+    progress.append(fill);
+    installation.append(progress);
+    if (installationSnapshot.state === 'installing') {
+        runtimeStateEl.append(installation);
+        scheduleInstallationPoll();
+        return;
+    }
+    const action = document.createElement('button');
+    action.className = 'primary-action';
+    action.type = 'button';
+    action.textContent = installationSnapshot.state === 'action_required' ? 'Try again' : 'Install Ollama and continue';
+    action.addEventListener('click', () => void startLocalInstallation());
+    runtimeStateEl.append(installation, action);
+    return;
+}
+async function refreshInstallationStatus() {
+    const response = await fetch(endpoints.installationStatus, { cache: 'no-store' });
+    if (!response.ok)
+        throw new Error('installation_status_unavailable');
+    installationSnapshot = await response.json();
+}
+async function startLocalInstallation() {
+    const response = await fetch(endpoints.installationStart, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consent: true }),
+        cache: 'no-store',
+    });
+    if (!response.ok)
+        throw new Error('Installation could not start');
+    installationSnapshot = await response.json();
+    renderRuntimeState();
+}
+function scheduleInstallationPoll() {
+    if (installationPollTimer !== null)
+        return;
+    installationPollTimer = window.setTimeout(async () => {
+        installationPollTimer = null;
+        try {
+            await refreshInstallationStatus();
+            if (installationSnapshot.state === 'ready')
+                await refreshRuntime();
+            else
+                renderRuntimeState();
+        }
+        catch {
+            renderRuntimeState();
+        }
+    }, 900);
 }
 function renderSelectionState() {
     clearNode(selectionCardEl);
@@ -1108,7 +1018,11 @@ async function refreshSelectionPreview() {
         title: preview.title || '',
         url: preview.url || '',
         hasSelection: Boolean(preview.hasSelection),
+        pageColor: typeof preview.pageColor === 'string' ? preview.pageColor : '',
     };
+    if (/^(?:rgb|hsl)a?\([^)]*\)$|^#[0-9a-f]{6}$/i.test(selectionPreview.pageColor || '')) {
+        document.documentElement.style.setProperty('--context-tint', selectionPreview.pageColor || 'transparent');
+    }
     setSelectionContext({
         selectionOrigin: selectionPreview.hasSelection ? 'selection' : 'page_context',
         contentLength: selectionPreview.hasSelection ? selectionPreview.selection.length : selectionPreview.pageText.length,
@@ -1137,6 +1051,13 @@ async function refreshRuntime() {
             };
         }
         const health = await fetchHealth();
+        bridgeAvailable = true;
+        try {
+            await refreshInstallationStatus();
+        }
+        catch {
+            installationSnapshot = { state: 'idle', label: 'Ready to install', progress: 0, profile: null, action_required: null };
+        }
         privacyProofSnapshot = await fetchPrivacyProof();
         runtimeSnapshot = {
             ok: Boolean(health?.ok),
@@ -1179,6 +1100,7 @@ async function refreshRuntime() {
         renderRuntimeState();
     }
     catch (e) {
+        bridgeAvailable = false;
         runtimeProfilesPayload = {
             profiles: RUNTIME_PROFILES,
             recommended_profile: 'fast',
@@ -1415,19 +1337,23 @@ async function doMemoryDelete() {
     setStatus('Memory ledger deleted');
 }
 function bindActions() {
-    const wrap = (fn) => async () => {
+    const wrap = (fn, mode = 'explicit') => async () => {
         isBusy = true;
+        if (mode === 'silent')
+            setSilentProcessing(true);
         syncControlAvailability();
         try {
             await fn();
         }
         catch (e) {
+            setSilentProcessing(false);
             const text = formatPanelError(e);
             setStatus(text);
             setStatusBar(text);
         }
         finally {
             isBusy = false;
+            setSilentProcessing(false);
             syncControlAvailability();
             void Promise.all([refreshSelectionPreview(), refreshMemoryStatus(), refreshEntitlementStatus()]);
         }
@@ -1435,21 +1361,21 @@ function bindActions() {
     refreshButtonEl?.addEventListener('click', () => {
         void Promise.all([refreshRuntime(), refreshSelectionPreview(), refreshMemoryStatus(), refreshEntitlementStatus()]);
     });
-    $('#btn-extract')?.addEventListener('click', wrap(() => doExtract()));
+    $('#btn-extract')?.addEventListener('click', wrap(() => doExtract(), 'silent'));
     selectionCardEl?.addEventListener('click', (event) => {
         const target = event.target;
         if (target?.id === 'btn-first-run-example')
-            void wrap(() => doFirstRunExample())();
+            void wrap(() => doFirstRunExample(), 'silent')();
     });
-    $('#btn-summarize')?.addEventListener('click', wrap(() => doSummarize()));
-    $('#btn-rewrite')?.addEventListener('click', wrap(() => doRewrite()));
-    $('#btn-actions')?.addEventListener('click', wrap(() => doActions()));
-    $('#btn-ask')?.addEventListener('click', wrap(() => doAsk()));
+    $('#btn-summarize')?.addEventListener('click', wrap(() => doSummarize(), 'silent'));
+    $('#btn-rewrite')?.addEventListener('click', wrap(() => doRewrite(), 'silent'));
+    $('#btn-actions')?.addEventListener('click', wrap(() => doActions(), 'silent'));
+    $('#btn-ask')?.addEventListener('click', wrap(() => doAsk(), 'silent'));
     memoryToggleButtonEl?.addEventListener('click', wrap(() => doMemoryToggle()));
     memoryInspectButtonEl?.addEventListener('click', wrap(() => doMemoryInspect()));
     memoryExportButtonEl?.addEventListener('click', wrap(() => doMemoryExport()));
     memoryDeleteButtonEl?.addEventListener('click', wrap(() => doMemoryDelete()));
-    intentExecuteButtonEl?.addEventListener('click', wrap(() => doExecuteIntent()));
+    intentExecuteButtonEl?.addEventListener('click', wrap(() => doExecuteIntent(), 'silent'));
     intentClearButtonEl?.addEventListener('click', () => clearIntentInput());
     intentInputEl?.addEventListener('input', () => {
         selectedIntentSuggestion = null;
@@ -1459,10 +1385,14 @@ function bindActions() {
         if (event.key !== 'Enter')
             return;
         event.preventDefault();
-        void wrap(() => doExecuteIntent())();
+        void wrap(() => doExecuteIntent(), 'silent')();
     });
-    syncOrderButtonEl?.addEventListener('click', wrap(() => doSyncOrderToken()));
-    orderIdInputEl?.addEventListener('input', () => syncControlAvailability());
+    attachLicenseButtonEl?.addEventListener('click', wrap(() => attachLicenseToken()));
+    startTrialButtonEl?.addEventListener('click', wrap(() => startTrial()));
+    viewPlansButtonEl?.addEventListener('click', wrap(async () => {
+        await chrome.tabs.create({ url: 'https://selectpilot.app/pricing', active: true });
+    }));
+    licenseTokenInputEl?.addEventListener('input', () => syncControlAvailability());
     extractPresetEl?.addEventListener('change', () => syncPresetHelp());
     runtimeStateEl?.addEventListener('click', (event) => {
         const target = event.target;
@@ -1491,6 +1421,14 @@ function bindActions() {
 populatePresetOptions();
 bindActions();
 async function initialize() {
+    const storedSettings = await chrome.storage.sync.get('selectpilot_settings');
+    const settings = (storedSettings.selectpilot_settings || {});
+    const textSize = typeof settings.textSize === 'string' ? settings.textSize : 'standard';
+    document.body.dataset.controlSide = settings.controlSide === 'left' ? 'left' : 'right';
+    document.body.dataset.textSize = ['large', 'larger'].includes(textSize) ? textSize : 'standard';
+    document.body.dataset.highContrast = settings.highContrast ? 'true' : 'false';
+    document.body.dataset.reduceMotion = settings.reduceMotion ? 'true' : 'false';
+    currentResultView = settings.resultView === 'structured' ? 'structured' : 'readable';
     const topologyValidation = validateTopologyMap();
     const requiredTopologyComponents = [
         'panel_header',
@@ -1515,8 +1453,10 @@ async function initialize() {
     }
     setVisiblePanels(['selection_surface', 'runtime_surface', 'report_surface']);
     firstRunCompleted = Boolean(await getJSON(FIRST_RUN_COMPLETED_KEY));
-    renderRuntimeMetaOverlay();
-    void connectRuntimeMetaStream();
+    if (XRAY_ENABLED) {
+        renderRuntimeMetaOverlay();
+        void connectRuntimeMetaStream();
+    }
     refreshIntentSuggestions();
     await loadBenchmarkSnapshot();
     renderMemoryState();
