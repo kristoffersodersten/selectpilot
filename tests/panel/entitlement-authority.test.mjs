@@ -1,3 +1,5 @@
+// module_name: entitlement_authority_tests
+// spec_ref: "testing_strategy.integration_tests"
 import assert from 'node:assert/strict';
 import { createHmac, generateKeyPairSync } from 'node:crypto';
 import { mkdtemp, writeFile } from 'node:fs/promises';

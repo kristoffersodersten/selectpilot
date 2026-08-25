@@ -1,3 +1,5 @@
+// module_name: entitlement_key_verification
+// spec_ref: "validation_layer"
 import { createPrivateKey, createPublicKey, sign, verify } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 

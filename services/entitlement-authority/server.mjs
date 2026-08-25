@@ -1,3 +1,5 @@
+// module_name: entitlement_authority
+// spec_ref: "validation_layer"
 import { createHash, createHmac, randomBytes, sign, timingSafeEqual } from 'node:crypto';
 import { createServer } from 'node:http';
 import { readFile, rename, writeFile } from 'node:fs/promises';
@@ -42,6 +44,7 @@ function parsePriceMap(value) {
   return parsed;
 }
 
+// @spec_ref validation_layer
 export function verifyPaddleSignature(rawBody, header, secret, nowSeconds = Math.floor(Date.now() / 1000)) {
   const parts = Object.fromEntries(String(header || '').split(';').map((part) => part.split('=', 2)));
   const timestamp = Number(parts.ts);
