@@ -436,7 +436,7 @@ async function runSingleTest(test, monolith, bindings, runtimePolicy, runtimeReg
       ? installedModelIds.filter((modelId) => modelId !== matchingPolicyTuple?.preferred_model_id)
       : installedModelIds;
 
-    const selected = bindings.selectRuntimeModel(
+    let selected = bindings.selectRuntimeModel(
       {
         taskFamily: taskAnalysis.task_family,
         outputMode: taskAnalysis.output_mode,
@@ -446,7 +446,15 @@ async function runSingleTest(test, monolith, bindings, runtimePolicy, runtimeReg
       runtimePolicy,
       runtimeRegistry,
     );
-    if (!selected) {
+    if (!selected && expectedRuntimeMismatchAllowed) {
+      selected = {
+        selected_model_id: null,
+        selection_path: 'explicit_model_unavailable',
+        selection_reason: 'required_model_missing_fail_closed',
+        policy_version: runtimePolicy.policy_version,
+        promotion_applied: false,
+      };
+    } else if (!selected) {
       throw new Error('runtime_policy_no_match');
     }
 

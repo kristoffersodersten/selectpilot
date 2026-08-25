@@ -326,13 +326,14 @@
           "content": "Extract JSON under constrained model availability."
         },
         "expected": {
-          "fallback_triggered": true,
-          "runtime_profile": "downgraded",
-          "no_silent_failure": true
+          "execution_blocked": true,
+          "model_substitution": false,
+          "failure_mode": "explicit"
         },
         "fail_conditions": [
           "crash",
-          "no_fallback",
+          "execution_continued",
+          "implicit_fallback",
           "silent_model_switch"
         ]
       },
@@ -480,9 +481,7 @@
         "baseline_selector",
         "baseline_smallest_sufficient_selection_from_registry"
       ],
-      "fallback_selection_paths": [
-        "runtime_policy_fallback"
-      ],
+      "fallback_selection_paths": [],
       "resource_efficiency_small_model_pattern": "0.5b"
     }
   },
