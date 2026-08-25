@@ -1,6 +1,8 @@
 # module_name: ollama_runtime
 # spec_ref: "provisioning_layer"
 # @spec_ref prompt_determinism
+from __future__ import annotations
+
 import json
 import os
 import re
