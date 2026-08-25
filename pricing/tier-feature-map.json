@@ -21,10 +21,6 @@
     "structured_summaries"
   ],
   "pro": [
-    "audio_transcription",
-    "video_frame_ocr",
-    "image_ocr",
-    "multimodal_clipper",
     "local_embeddings",
     "advanced_agent_reasoning",
     "project_memory",

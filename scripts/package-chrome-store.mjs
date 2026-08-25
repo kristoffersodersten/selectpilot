@@ -51,6 +51,7 @@ export async function collectRuntimeFiles(root = projectRoot) {
     const absoluteRoot = path.join(root, runtimeRoot);
     for (const nested of await walk(absoluteRoot)) {
       const relative = path.posix.join(runtimeRoot, nested.split(path.sep).join(path.posix.sep));
+      if (runtimeRoot === 'content' && relative !== 'content/content-script.bundle.js') continue;
       if (allowedExtensions.has(path.extname(relative)) && !forbiddenPath.test(relative)) files.push(relative);
     }
   }

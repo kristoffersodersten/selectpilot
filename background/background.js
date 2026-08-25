@@ -135,30 +135,16 @@ async function collectContext() {
     const tab = await getActiveTab();
     if (!tab?.id)
         return {};
-    const [selection, doc, audio, video] = await Promise.all([
-        requestFromContent(tab.id, 'content:get_selection'),
-        requestFromContent(tab.id, 'content:get_document'),
-        requestFromContent(tab.id, 'content:get_audio'),
-        requestFromContent(tab.id, 'content:get_video')
-    ]);
+    const selection = await requestFromContent(tab.id, 'content:get_selection');
     const selectionText = selection?.text?.text || '';
-    const documentText = doc?.documentText?.text || '';
-    const url = selection?.text?.url || doc?.documentText?.url || tab.url;
-    const title = selection?.text?.title || doc?.documentText?.title || tab.title;
-    const pageColor = selection?.text?.pageColor || doc?.documentText?.pageColor;
+    const url = selection?.text?.url || tab.url;
+    const title = selection?.text?.title || tab.title;
+    const pageColor = selection?.text?.pageColor;
     return {
         url: url || undefined,
         title: title || undefined,
         selection: selectionText || undefined,
-        pageText: documentText || undefined,
-        media: {
-            audio: audio?.audio?.audioUrl,
-            videoFrame: video?.video?.frame,
-            image: video?.video?.poster
-        },
         metadata: {
-            audioDuration: audio?.audio?.duration,
-            videoDuration: video?.video?.duration,
             capturedAt: Date.now(),
             pageColor,
         }
@@ -169,7 +155,7 @@ async function handleSummarize() {
     if (!allowed)
         throw new Error('Flow tier required for summarize');
     const context = await collectContext();
-    const text = context.selection || context.pageText || context.markdown || '';
+    const text = context.selection || context.markdown || '';
     const payload = { text, url: context.url, title: context.title, metadata: context.metadata };
     const result = await summarize(payload);
     const sourceOrigin = context.url || 'local-context';
@@ -232,7 +218,7 @@ async function handleAgent(prompt) {
     if (!allowed)
         throw new Error('Flow tier required for ask/rewrite transforms');
     const context = await collectContext();
-    const content = context.selection || context.pageText || context.markdown || '';
+    const content = context.selection || context.markdown || '';
     const result = await runPipeline(content, context, prompt);
     const sourceOrigin = context.url || 'local-context';
     await recordMemoryEvent({
@@ -254,7 +240,7 @@ async function handleSelectionPreview() {
     const context = await collectContext();
     return {
         selection: context.selection || '',
-        pageText: context.pageText || '',
+        pageText: '',
         title: context.title || '',
         url: context.url || '',
         hasSelection: Boolean(context.selection && context.selection.trim()),
@@ -269,7 +255,7 @@ async function handleIntentCompile(intent) {
     return compileIntent({
         intent: trimmed,
         has_selection: Boolean(context.selection && context.selection.trim()),
-        has_page_text: Boolean(context.pageText && context.pageText.trim()),
+        has_page_text: false,
     });
 }
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {

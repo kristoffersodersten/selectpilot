@@ -18,15 +18,3 @@ export function extractSelection() {
         pageColor: pageColor(),
     };
 }
-// @spec_ref execution_layer
-export function extractDocumentText() {
-    const article = document.querySelector('article');
-    const target = article || document.body;
-    const text = clean(target.innerText || '');
-    return {
-        text,
-        url: location.href,
-        title: document.title,
-        pageColor: pageColor(),
-    };
-}

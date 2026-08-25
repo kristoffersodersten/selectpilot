@@ -28,16 +28,3 @@ export function extractSelection(): TextExtraction {
     pageColor: pageColor(),
   };
 }
-
-// @spec_ref execution_layer
-export function extractDocumentText(): TextExtraction {
-  const article = document.querySelector('article');
-  const target = article || document.body;
-  const text = clean(target.innerText || '');
-  return {
-    text,
-    url: location.href,
-    title: document.title,
-    pageColor: pageColor(),
-  };
-}

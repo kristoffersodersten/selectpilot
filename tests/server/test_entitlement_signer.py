@@ -20,7 +20,7 @@ class EntitlementSignerTests(unittest.TestCase):
     entitlement = {
         "token": "opaque-token",
         "tier": "pro",
-        "features": ["image_ocr"],
+        "features": ["project_memory"],
         "issuedAt": 1_700_000_000_000,
         "expiresAt": 1_700_086_400_000,
     }
