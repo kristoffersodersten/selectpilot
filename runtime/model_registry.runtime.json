@@ -1,69 +1,60 @@
 {
-  "generated_at_unix_ms": 1700798162081,
-  "policy_version": "runtime-policy-c44de2e4a8a1",
+  "generated_at_unix_ms": 1700423493347,
+  "policy_version": "runtime-policy-8226a11e6ae3",
   "models": [
     {
-      "model_id": "qwen2.5:0.5b",
-      "ollama_name": "qwen2.5:0.5b",
+      "model_id": "gemma4:e2b-it-qat",
+      "ollama_name": "gemma4:e2b-it-qat",
       "supported_operation_families": [
         "extract",
         "summarize",
         "agent"
       ],
+      "preferred_task_families": [
+        "extract",
+        "summarize"
+      ],
       "min_hardware_profile": "low",
       "installation_state": "installed",
+      "baseline_approved": true,
       "runtime_status": "preferred",
-      "reliability_score": 0.81,
+      "reliability_score": 0.9,
       "policy_refs": [
-        "runtime/model_policy.json#qwen2.5:0.5b"
+        "runtime/model_policy.json#gemma4:e2b-it-qat"
       ]
     },
     {
-      "model_id": "qwen2.5:1.5b",
-      "ollama_name": "qwen2.5:1.5b",
+      "model_id": "gemma4:e4b-it-qat",
+      "ollama_name": "gemma4:e4b-it-qat",
       "supported_operation_families": [
-        "extract",
-        "summarize",
+        "agent"
+      ],
+      "preferred_task_families": [
         "agent"
       ],
       "min_hardware_profile": "medium",
       "installation_state": "installed",
-      "runtime_status": "fallback",
-      "reliability_score": 0.88,
+      "baseline_approved": true,
+      "runtime_status": "preferred",
+      "reliability_score": 0.95,
       "policy_refs": [
-        "runtime/model_policy.json#qwen2.5:1.5b"
+        "runtime/model_policy.json#gemma4:e4b-it-qat"
       ]
     },
     {
       "model_id": "qwen2.5:7b",
       "ollama_name": "qwen2.5:7b",
       "supported_operation_families": [
-        "extract",
-        "summarize",
         "agent"
       ],
+      "preferred_task_families": [],
       "min_hardware_profile": "medium_gpu",
       "installation_state": "available",
-      "runtime_status": "fallback",
+      "baseline_approved": false,
+      "runtime_status": "baseline",
       "reliability_score": 0.91,
       "policy_refs": [
         "runtime/model_policy.json#qwen2.5:7b"
-      ]
-    },
-    {
-      "model_id": "qwen2.5:14b",
-      "ollama_name": "qwen2.5:14b",
-      "supported_operation_families": [
-        "extract",
-        "summarize",
-        "agent"
-      ],
-      "min_hardware_profile": "high",
-      "installation_state": "available",
-      "runtime_status": "fallback",
-      "reliability_score": 0.93,
-      "policy_refs": [
-        "runtime/model_policy.json#qwen2.5:14b"
       ]
     }
   ]

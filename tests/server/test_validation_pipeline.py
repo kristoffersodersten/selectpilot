@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -99,6 +100,14 @@ class ValidationPipelineTests(unittest.TestCase):
         self.assertEqual(ctx.exception.code, "invalid_request_field")
         self.assertEqual(ctx.exception.details.get("field"), "metadata")
 
+    def test_long_selection_is_rejected_before_inference(self) -> None:
+        with patch("nano_server.OLLAMA", SimpleNamespace(config=SimpleNamespace(max_input_chars=10))):
+            with self.assertRaises(ValidationError) as ctx:
+                validate_extract_payload({"text": "x" * 11})
+        self.assertEqual(ctx.exception.code, "selection_too_large")
+        self.assertEqual(ctx.exception.status, 413)
+        self.assertEqual(ctx.exception.details, {"maximum_characters": 10, "received_characters": 11})
+
     def test_agent_payload_requires_context_object_when_present(self) -> None:
         with self.assertRaises(ValidationError) as ctx:
             validate_agent_payload({"prompt": "go", "context": "bad"})
@@ -122,6 +131,7 @@ class ValidationPipelineTests(unittest.TestCase):
             "model": "qwen",
             "source": "ollama",
             "raw_response": "{}",
+            "routing": {"model": "qwen", "num_ctx": 16384, "reason": "test_route"},
         }
         result = validate_summarize_response(valid)
         self.assertEqual(result["source"], "ollama")
@@ -139,6 +149,7 @@ class ValidationPipelineTests(unittest.TestCase):
             "model": "qwen",
             "source": "ollama",
             "raw_response": "{}",
+            "routing": {"model": "qwen", "num_ctx": 16384, "reason": "test_route"},
         }
         result = validate_agent_response(valid)
         self.assertEqual(result["model"], "qwen")
@@ -156,6 +167,7 @@ class ValidationPipelineTests(unittest.TestCase):
             "model": "qwen",
             "source": "ollama",
             "raw_response": "{}",
+            "routing": {"model": "qwen", "num_ctx": 16384, "reason": "test_route"},
         }
         result = validate_extract_response(valid)
         self.assertEqual(result["preset"], "action_brief")
@@ -280,6 +292,7 @@ class ValidationPipelineTests(unittest.TestCase):
                     "model": "qwen",
                     "source": "ollama",
                     "raw_response": "{}",
+                    "routing": {"model": "qwen", "num_ctx": 16384, "reason": "test_route"},
                 }
             return {
                 "summary": "ok",
@@ -291,6 +304,7 @@ class ValidationPipelineTests(unittest.TestCase):
                 "model": "qwen",
                 "source": "ollama",
                 "raw_response": "{}",
+                "routing": {"model": "qwen", "num_ctx": 16384, "reason": "test_route"},
             }
 
         with patch("nano_server.emit_runtime_meta") as emit_mock:

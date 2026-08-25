@@ -47,7 +47,7 @@ SelectPilot is built to keep the core workflow local-first and inspectable.
 pnpm setup:local
 ```
 
-This installs dependencies, builds the extension, installs/starts Ollama when needed, selects a hardware-safe local profile, pulls and prewarms the exact generation model, installs the LaunchAgent, and refuses to finish unless the bridge and both configured models are healthy. Structured generation uses a fixed zero-temperature sampling contract and seed so repeated requests follow the same decision path.
+This installs dependencies, builds the extension, installs/starts Ollama when needed, selects a hardware-safe local profile, prepares the exact local model bundle, installs the LaunchAgent, and refuses to finish unless the bridge and configured models are healthy. Extraction and summaries use the smallest qualified local model; broader agent tasks use the profile's general model. Structured generation uses a fixed zero-temperature sampling contract and seed so repeated requests follow the same decision path.
 
 2. Open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select this repository folder.
 3. Highlight text on a page → open SelectPilot → click **Extract JSON**.

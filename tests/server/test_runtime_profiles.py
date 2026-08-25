@@ -12,7 +12,13 @@ SERVER_DIR = ROOT / "server"
 if str(SERVER_DIR) not in sys.path:
     sys.path.insert(0, str(SERVER_DIR))
 
-from runtime_profiles import build_bootstrap_commands, get_runtime_profile, recommend_runtime_profile  # noqa: E402
+from runtime_profiles import (  # noqa: E402
+    build_bootstrap_commands,
+    generation_routes,
+    get_runtime_profile,
+    recommend_runtime_profile,
+    required_generation_models,
+)
 from ollama_client import OllamaClient, OllamaError  # noqa: E402
 
 
@@ -50,6 +56,7 @@ class RuntimeProfileTests(unittest.TestCase):
         }, clear=True):
             client = OllamaClient()
         self.assertEqual(client.config.model, "custom-local:model")
+        self.assertEqual(client.config.fast_model, "custom-local:model")
         self.assertEqual(client.config.num_ctx, 24576)
 
     def test_invalid_context_override_fails_explicitly(self) -> None:
@@ -61,6 +68,19 @@ class RuntimeProfileTests(unittest.TestCase):
         command = build_bootstrap_commands("balanced", ROOT)
         self.assertIn("--profile balanced", command["command"])
         self.assertEqual(command["num_ctx"], 32768)
+        self.assertEqual(command["fast_num_ctx"], 16384)
+        self.assertEqual(command["max_input_chars"], 16000)
+
+    def test_balanced_profile_routes_smallest_qualified_model_per_task(self) -> None:
+        profile = get_runtime_profile("balanced")
+        routes = generation_routes(profile)
+        self.assertEqual(routes["extract"]["model"], "gemma4:e2b-it-qat")
+        self.assertEqual(routes["summarize"]["num_ctx"], 16384)
+        self.assertEqual(routes["agent"]["model"], "gemma4:e4b-it-qat")
+        self.assertEqual(required_generation_models(profile), [
+            ("gemma4:e2b-it-qat", 16384),
+            ("gemma4:e4b-it-qat", 32768),
+        ])
 
 
 if __name__ == "__main__":

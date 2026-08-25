@@ -35,7 +35,7 @@ const REQUIRED_TOP_LEVEL_NODES = [
 ];
 
 const SCAN_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs', '.py']);
-const SCAN_IGNORE = new Set(['.git', 'node_modules', 'test-results', 'dist']);
+const SCAN_IGNORE = new Set(['.git', 'node_modules', 'test-results', 'dist', 'site-dist']);
 const SIMULATION_EVIDENCE = {
   evidence_class: 'deterministic_simulation',
   runtime_verified: false,
@@ -102,6 +102,8 @@ function percentile(values, p) {
 }
 
 function modelSizeFactor(model) {
+  if (model.includes('e2b')) return 1.0;
+  if (model.includes('e4b')) return 1.7;
   if (model.includes('0.5b')) return 1.0;
   if (model.includes('1.5b')) return 1.35;
   if (model.includes('7b')) return 2.7;

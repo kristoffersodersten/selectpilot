@@ -16,8 +16,11 @@ class RuntimeProfile:
     label: str
     description: str
     generation_model: str
+    fast_generation_model: str
     embedding_model: str
     num_ctx: int
+    fast_num_ctx: int
+    max_input_chars: int
     target_latency: str
     intended_for: str
     is_default_auto: bool = False
@@ -29,9 +32,12 @@ RUNTIME_PROFILES: dict[str, RuntimeProfile] = {
         label="Fast",
         description="Smallest viable local profile for structured extraction and low-latency summaries.",
         generation_model="gemma4:e2b-it-qat",
+        fast_generation_model="gemma4:e2b-it-qat",
         embedding_model="nomic-embed-text-v2-moe:latest",
         num_ctx=16384,
-        target_latency="1-4s",
+        fast_num_ctx=16384,
+        max_input_chars=16000,
+        target_latency="4-20s",
         intended_for="Selected-text extraction, action briefs, and quick summaries.",
         is_default_auto=True,
     ),
@@ -40,9 +46,12 @@ RUNTIME_PROFILES: dict[str, RuntimeProfile] = {
         label="Balanced",
         description="Higher quality local profile for rewrite and general-purpose browser transforms.",
         generation_model="gemma4:e4b-it-qat",
+        fast_generation_model="gemma4:e2b-it-qat",
         embedding_model="nomic-embed-text-v2-moe:latest",
         num_ctx=32768,
-        target_latency="2-6s",
+        fast_num_ctx=16384,
+        max_input_chars=16000,
+        target_latency="4-30s",
         intended_for="Daily use when you want better quality without drifting into heavy models.",
     ),
     "advanced": RuntimeProfile(
@@ -50,8 +59,11 @@ RUNTIME_PROFILES: dict[str, RuntimeProfile] = {
         label="Advanced",
         description="Manual opt-in profile for stronger reasoning on larger machines.",
         generation_model="qwen2.5:7b",
+        fast_generation_model="gemma4:e2b-it-qat",
         embedding_model="nomic-embed-text-v2-moe:latest",
         num_ctx=32768,
+        fast_num_ctx=16384,
+        max_input_chars=16000,
         target_latency="4-10s",
         intended_for="Heavier rewrite and ask flows when latency budget is less important.",
     ),
@@ -121,6 +133,35 @@ def list_runtime_profiles() -> list[dict[str, Any]]:
     return [asdict(profile) for profile in RUNTIME_PROFILES.values()]
 
 
+def generation_routes(profile: RuntimeProfile) -> dict[str, dict[str, Any]]:
+    return {
+        "extract": {
+            "model": profile.fast_generation_model,
+            "num_ctx": profile.fast_num_ctx,
+            "reason": "smallest_qualified_structured_model",
+        },
+        "summarize": {
+            "model": profile.fast_generation_model,
+            "num_ctx": profile.fast_num_ctx,
+            "reason": "smallest_qualified_structured_model",
+        },
+        "agent": {
+            "model": profile.generation_model,
+            "num_ctx": profile.num_ctx,
+            "reason": "qualified_general_model",
+        },
+    }
+
+
+def required_generation_models(profile: RuntimeProfile) -> list[tuple[str, int]]:
+    required: list[tuple[str, int]] = []
+    for route in generation_routes(profile).values():
+        item = (str(route["model"]), int(route["num_ctx"]))
+        if item not in required:
+            required.append(item)
+    return required
+
+
 def get_runtime_profile(key: str | None) -> RuntimeProfile:
     if key in RUNTIME_PROFILES:
         return RUNTIME_PROFILES[key]
@@ -138,6 +179,10 @@ def build_bootstrap_commands(profile_key: str, project_root: str | Path) -> dict
         "profile": profile.key,
         "command": command,
         "generation_model": profile.generation_model,
+        "fast_generation_model": profile.fast_generation_model,
         "embedding_model": profile.embedding_model,
         "num_ctx": profile.num_ctx,
+        "fast_num_ctx": profile.fast_num_ctx,
+        "max_input_chars": profile.max_input_chars,
+        "generation_routes": generation_routes(profile),
     }

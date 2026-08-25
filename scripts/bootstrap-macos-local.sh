@@ -63,8 +63,12 @@ print(json.dumps({
     "label": runtime_profile.label,
     "reason": reason,
     "generation_model": runtime_profile.generation_model,
+    "fast_generation_model": runtime_profile.fast_generation_model,
     "embedding_model": runtime_profile.embedding_model,
     "num_ctx": runtime_profile.num_ctx,
+    "fast_num_ctx": runtime_profile.fast_num_ctx,
+    "max_input_chars": runtime_profile.max_input_chars,
+    "generation_routes": commands["generation_routes"],
     "command": commands["command"],
 }))
 PY
@@ -77,11 +81,21 @@ import shlex
 import sys
 
 payload = json.loads(sys.argv[1])
-for key in ("selected_profile", "generation_model", "embedding_model", "num_ctx", "reason"):
+for key in (
+    "selected_profile", "generation_model", "fast_generation_model", "embedding_model",
+    "num_ctx", "fast_num_ctx", "max_input_chars", "reason",
+):
     print(f"{key.upper()}={shlex.quote(str(payload[key]))}")
 PY
 )"
 eval "$PROFILE_VARS"
+
+: "${GENERATION_MODEL:?runtime profile did not provide generation_model}"
+: "${FAST_GENERATION_MODEL:?runtime profile did not provide fast_generation_model}"
+: "${EMBEDDING_MODEL:?runtime profile did not provide embedding_model}"
+: "${NUM_CTX:?runtime profile did not provide num_ctx}"
+: "${FAST_NUM_CTX:?runtime profile did not provide fast_num_ctx}"
+: "${MAX_INPUT_CHARS:?runtime profile did not provide max_input_chars}"
 
 if [[ "$PLAN_ONLY" == "1" ]]; then
   printf '%s\n' "$PROFILE_JSON"
@@ -130,8 +144,14 @@ if [[ "$STATUS_OLLAMA_RUNNING" != "ok" ]]; then
 fi
 
 if [[ "$SKIP_MODEL_PULL" != "1" ]]; then
-  echo "Pulling generation model: $GENERATION_MODEL"
-  ollama pull "$GENERATION_MODEL"
+  GENERATION_MODELS=("$FAST_GENERATION_MODEL")
+  if [[ "$GENERATION_MODEL" != "$FAST_GENERATION_MODEL" ]]; then
+    GENERATION_MODELS+=("$GENERATION_MODEL")
+  fi
+  for model in "${GENERATION_MODELS[@]}"; do
+    echo "Pulling generation model: $model"
+    ollama pull "$model"
+  done
   echo "Pulling embedding model: $EMBEDDING_MODEL"
   ollama pull "$EMBEDDING_MODEL"
   STATUS_MODEL_PULL="ok"
@@ -139,41 +159,48 @@ else
   STATUS_MODEL_PULL="skipped"
 fi
 
-echo "Preparing generation model: $GENERATION_MODEL"
-python3 - "$GENERATION_MODEL" "$NUM_CTX" <<'PY'
+echo "Preparing local model bundle"
+python3 - "$GENERATION_MODEL" "$NUM_CTX" "$FAST_GENERATION_MODEL" "$FAST_NUM_CTX" <<'PY'
 import json
 import sys
 from urllib.request import Request, urlopen
 
-model = sys.argv[1]
-num_ctx = int(sys.argv[2])
-request = Request(
-    "http://127.0.0.1:11434/api/generate",
-    data=json.dumps({
-        "model": model,
-        "prompt": "Return only: ready",
-        "stream": False,
-        "keep_alive": "10m",
-        "options": {
-            "temperature": 0,
-            "seed": 42,
-            "num_ctx": num_ctx,
-            "num_predict": 8,
-        },
-    }).encode("utf-8"),
-    headers={"Content-Type": "application/json"},
-    method="POST",
-)
-with urlopen(request, timeout=600) as response:
-    result = json.load(response)
-if result.get("done") is not True:
-    raise SystemExit("Generation model did not finish preparing.")
+routes = [(sys.argv[1], int(sys.argv[2])), (sys.argv[3], int(sys.argv[4]))]
+seen = set()
+for model, num_ctx in reversed(routes):
+    if model in seen:
+        continue
+    seen.add(model)
+    request = Request(
+        "http://127.0.0.1:11434/api/generate",
+        data=json.dumps({
+            "model": model,
+            "prompt": "Return only: ready",
+            "stream": False,
+            "keep_alive": "10m",
+            "options": {
+                "temperature": 0,
+                "seed": 42,
+                "num_ctx": num_ctx,
+                "num_predict": 8,
+            },
+        }).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urlopen(request, timeout=600) as response:
+        result = json.load(response)
+    if result.get("done") is not True:
+        raise SystemExit("Generation model did not finish preparing.")
 PY
 STATUS_MODEL_WARMUP="ok"
 
 CHROMEAI_OLLAMA_MODEL="$GENERATION_MODEL" \
+CHROMEAI_OLLAMA_FAST_MODEL="$FAST_GENERATION_MODEL" \
 CHROMEAI_OLLAMA_EMBED_MODEL="$EMBEDDING_MODEL" \
 CHROMEAI_OLLAMA_NUM_CTX="$NUM_CTX" \
+CHROMEAI_OLLAMA_FAST_NUM_CTX="$FAST_NUM_CTX" \
+CHROMEAI_MAX_INPUT_CHARS="$MAX_INPUT_CHARS" \
 CHROMEAI_OLLAMA_SEED=42 \
 "$ROOT/scripts/install-macos-local.sh"
 STATUS_LAUNCHAGENT="ok"
@@ -212,6 +239,7 @@ SelectPilot bootstrap complete.
 Profile: $SELECTED_PROFILE
 Reason: $REASON
 Generation model: $GENERATION_MODEL
+Structured model: $FAST_GENERATION_MODEL
 Embedding model: $EMBEDDING_MODEL
 Context window: $NUM_CTX
 

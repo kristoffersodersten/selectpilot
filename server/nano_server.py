@@ -194,9 +194,21 @@ def _expect_optional_dict(payload: dict, field: str) -> dict | None:
     return raw
 
 
+def _enforce_local_input_budget(text: str) -> None:
+    limit = OLLAMA.config.max_input_chars
+    if len(text) > limit:
+        raise ValidationError(
+            "selection_too_large",
+            "This selection is too large for a predictable local response. Select a smaller section and try again.",
+            status=413,
+            details={"maximum_characters": limit, "received_characters": len(text)},
+        )
+
+
 def validate_summarize_payload(payload: object) -> dict:
     body = _expect_dict(payload)
-    _expect_string(body, "text", required=True, allow_empty=False)
+    text = _expect_string(body, "text", required=True, allow_empty=False) or ""
+    _enforce_local_input_budget(text)
     _expect_string(body, "title", required=False, allow_empty=True)
     _expect_string(body, "url", required=False, allow_empty=True)
     _expect_optional_dict(body, "metadata")
@@ -205,7 +217,8 @@ def validate_summarize_payload(payload: object) -> dict:
 
 def validate_extract_payload(payload: object) -> dict:
     body = _expect_dict(payload)
-    _expect_string(body, "text", required=True, allow_empty=False)
+    text = _expect_string(body, "text", required=True, allow_empty=False) or ""
+    _enforce_local_input_budget(text)
     preset = _expect_string(body, "preset", required=False, allow_empty=True)
     try:
         get_extraction_preset(preset or None)
@@ -224,8 +237,10 @@ def validate_extract_payload(payload: object) -> dict:
 
 def validate_agent_payload(payload: object) -> dict:
     body = _expect_dict(payload)
-    _expect_string(body, "prompt", required=True, allow_empty=False)
-    _expect_optional_dict(body, "context")
+    prompt = _expect_string(body, "prompt", required=True, allow_empty=False) or ""
+    context = _expect_optional_dict(body, "context") or {}
+    selected_text = str(context.get("selection") or context.get("pageText") or context.get("markdown") or "")
+    _enforce_local_input_budget(f"{prompt}\n{selected_text}".strip())
     return body
 
 
@@ -279,6 +294,38 @@ def _validate_object_output(value: object, field: str) -> None:
         )
 
 
+def _validate_routing_output(body: dict) -> None:
+    routing = body.get("routing")
+    if not isinstance(routing, dict):
+        raise ValidationError(
+            "invalid_model_output",
+            "routing must be an object",
+            status=502,
+            details={"field": "routing", "expected": "object"},
+        )
+    if not isinstance(routing.get("model"), str) or routing.get("model") != body.get("model"):
+        raise ValidationError(
+            "invalid_model_output",
+            "routing model must match the executed model",
+            status=502,
+            details={"field": "routing.model", "expected": body.get("model")},
+        )
+    if not isinstance(routing.get("reason"), str) or not routing.get("reason"):
+        raise ValidationError(
+            "invalid_model_output",
+            "routing reason must be a non-empty string",
+            status=502,
+            details={"field": "routing.reason", "expected": "non-empty string"},
+        )
+    if not isinstance(routing.get("num_ctx"), int) or routing.get("num_ctx") <= 0:
+        raise ValidationError(
+            "invalid_model_output",
+            "routing context must be a positive integer",
+            status=502,
+            details={"field": "routing.num_ctx", "expected": "positive integer"},
+        )
+
+
 def validate_summarize_response(response: object) -> dict:
     body = _expect_dict(response, field="response")
     for key in ["summary", "markdown", "title", "model", "source", "raw_response"]:
@@ -292,6 +339,7 @@ def validate_summarize_response(response: object) -> dict:
     _validate_list_of_strings(body.get("bullets"), "bullets")
     _validate_list_of_strings(body.get("action_items"), "action_items")
     _validate_list_of_strings(body.get("tags"), "tags")
+    _validate_routing_output(body)
     return body
 
 
@@ -307,6 +355,7 @@ def validate_agent_response(response: object) -> dict:
             )
     _validate_list_of_strings(body.get("reasoning"), "reasoning")
     _validate_object_output(body.get("json"), "json")
+    _validate_routing_output(body)
     return body
 
 
@@ -321,6 +370,7 @@ def validate_extract_response(response: object) -> dict:
                 details={"field": key, "expected": "string"},
             )
     _validate_object_output(body.get("json"), "json")
+    _validate_routing_output(body)
     return body
 
 
@@ -422,17 +472,17 @@ MODEL_FAILURE_ISOLATION_WINDOW = 10
 
 DETERMINISTIC_MODEL_REGISTRY = [
     {
-        "id": "qwen2.5:0.5b",
-        "capability_profile": {"classification": 0.9, "extract": 0.82, "rewrite": 0.75, "analyze": 0.72},
+        "id": "gemma4:e2b-it-qat",
+        "capability_profile": {"classification": 0.92, "extract": 0.94, "rewrite": 0.91, "analyze": 0.82},
         "resource_profile": {"memory": 1, "latency": 1},
-        "benchmark_scores": {"precision": 0.81, "validation_pass_rate": 0.93, "retry_rate": 0.07},
+        "benchmark_scores": {"precision": 0.9, "validation_pass_rate": 1.0, "retry_rate": 0.0},
         "installation_state": "installed",
     },
     {
-        "id": "qwen2.5:1.5b",
-        "capability_profile": {"classification": 0.94, "extract": 0.9, "rewrite": 0.84, "analyze": 0.83},
+        "id": "gemma4:e4b-it-qat",
+        "capability_profile": {"classification": 0.94, "extract": 0.9, "rewrite": 0.88, "analyze": 0.96},
         "resource_profile": {"memory": 2, "latency": 2},
-        "benchmark_scores": {"precision": 0.88, "validation_pass_rate": 0.95, "retry_rate": 0.05},
+        "benchmark_scores": {"precision": 0.95, "validation_pass_rate": 1.0, "retry_rate": 0.0},
         "installation_state": "installed",
     },
 ]
@@ -783,10 +833,16 @@ def ensure_runtime_models() -> dict:
     can run with a hardware-fit local model set.
     """
     health = OLLAMA.health()
-    generation_model = str(health.get("requested_model") or "").strip()
+    generation_models = [
+        str(route.get("model") or "").strip()
+        for route in (health.get("task_routes") or {}).values()
+        if isinstance(route, dict)
+    ]
+    if not generation_models:
+        generation_models = [str(health.get("requested_model") or "").strip()]
     embedding_model = str(health.get("requested_embed_model") or "").strip()
 
-    models_to_ensure = [name for name in [generation_model, embedding_model] if name]
+    models_to_ensure = list(dict.fromkeys(name for name in [*generation_models, embedding_model] if name))
     if not models_to_ensure:
         return {"ok": True, "already_present": [], "pulled": [], "failed": {}}
 

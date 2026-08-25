@@ -1,6 +1,6 @@
 {
-  "policy_version": "runtime-policy-c44de2e4a8a1",
-  "generated_at_unix_ms": 1700798162081,
+  "policy_version": "runtime-policy-8226a11e6ae3",
+  "generated_at_unix_ms": 1700423493347,
   "promotion_evidence": {
     "runtime_verified": false,
     "status": "simulation_only_no_promotion"
@@ -22,172 +22,145 @@
       "task_family": "extract",
       "hardware_profile": "low",
       "output_mode": "strict_json",
-      "preferred_model_id": "qwen2.5:0.5b",
+      "preferred_model_id": "gemma4:e2b-it-qat",
       "fallback_model_ids": [],
       "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
         "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700798162081
+      "effective_from_unix_ms": 1700423493347
     },
     {
       "task_family": "extract",
       "hardware_profile": "medium",
       "output_mode": "strict_json",
-      "preferred_model_id": "qwen2.5:0.5b",
-      "fallback_model_ids": [
-        "qwen2.5:1.5b"
-      ],
+      "preferred_model_id": "gemma4:e2b-it-qat",
+      "fallback_model_ids": [],
       "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
         "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700798162081
+      "effective_from_unix_ms": 1700423493347
     },
     {
       "task_family": "extract",
       "hardware_profile": "medium_gpu",
       "output_mode": "strict_json",
-      "preferred_model_id": "qwen2.5:0.5b",
-      "fallback_model_ids": [
-        "qwen2.5:1.5b",
-        "qwen2.5:7b"
-      ],
+      "preferred_model_id": "gemma4:e2b-it-qat",
+      "fallback_model_ids": [],
       "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
         "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700798162081
+      "effective_from_unix_ms": 1700423493347
     },
     {
       "task_family": "extract",
       "hardware_profile": "high",
       "output_mode": "strict_json",
-      "preferred_model_id": "qwen2.5:0.5b",
-      "fallback_model_ids": [
-        "qwen2.5:1.5b",
-        "qwen2.5:7b",
-        "qwen2.5:14b"
-      ],
+      "preferred_model_id": "gemma4:e2b-it-qat",
+      "fallback_model_ids": [],
       "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
         "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700798162081
+      "effective_from_unix_ms": 1700423493347
     },
     {
       "task_family": "summarize",
       "hardware_profile": "low",
       "output_mode": "semi_structured",
-      "preferred_model_id": "qwen2.5:0.5b",
+      "preferred_model_id": "gemma4:e2b-it-qat",
       "fallback_model_ids": [],
       "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
         "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700798162081
+      "effective_from_unix_ms": 1700423493347
     },
     {
       "task_family": "summarize",
       "hardware_profile": "medium",
       "output_mode": "semi_structured",
-      "preferred_model_id": "qwen2.5:0.5b",
-      "fallback_model_ids": [
-        "qwen2.5:1.5b"
-      ],
+      "preferred_model_id": "gemma4:e2b-it-qat",
+      "fallback_model_ids": [],
       "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
         "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700798162081
+      "effective_from_unix_ms": 1700423493347
     },
     {
       "task_family": "summarize",
       "hardware_profile": "medium_gpu",
       "output_mode": "semi_structured",
-      "preferred_model_id": "qwen2.5:0.5b",
-      "fallback_model_ids": [
-        "qwen2.5:1.5b",
-        "qwen2.5:7b"
-      ],
+      "preferred_model_id": "gemma4:e2b-it-qat",
+      "fallback_model_ids": [],
       "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
         "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700798162081
+      "effective_from_unix_ms": 1700423493347
     },
     {
       "task_family": "summarize",
       "hardware_profile": "high",
       "output_mode": "semi_structured",
-      "preferred_model_id": "qwen2.5:0.5b",
-      "fallback_model_ids": [
-        "qwen2.5:1.5b",
-        "qwen2.5:7b",
-        "qwen2.5:14b"
-      ],
+      "preferred_model_id": "gemma4:e2b-it-qat",
+      "fallback_model_ids": [],
       "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
         "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700798162081
+      "effective_from_unix_ms": 1700423493347
     },
     {
       "task_family": "agent",
       "hardware_profile": "low",
       "output_mode": "freeform",
-      "preferred_model_id": "qwen2.5:0.5b",
+      "preferred_model_id": "gemma4:e2b-it-qat",
       "fallback_model_ids": [],
       "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
         "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700798162081
+      "effective_from_unix_ms": 1700423493347
     },
     {
       "task_family": "agent",
       "hardware_profile": "medium",
       "output_mode": "freeform",
-      "preferred_model_id": "qwen2.5:0.5b",
-      "fallback_model_ids": [
-        "qwen2.5:1.5b"
-      ],
+      "preferred_model_id": "gemma4:e4b-it-qat",
+      "fallback_model_ids": [],
       "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
         "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700798162081
+      "effective_from_unix_ms": 1700423493347
     },
     {
       "task_family": "agent",
       "hardware_profile": "medium_gpu",
       "output_mode": "freeform",
-      "preferred_model_id": "qwen2.5:0.5b",
-      "fallback_model_ids": [
-        "qwen2.5:1.5b",
-        "qwen2.5:7b"
-      ],
+      "preferred_model_id": "gemma4:e4b-it-qat",
+      "fallback_model_ids": [],
       "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
         "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700798162081
+      "effective_from_unix_ms": 1700423493347
     },
     {
       "task_family": "agent",
       "hardware_profile": "high",
       "output_mode": "freeform",
-      "preferred_model_id": "qwen2.5:0.5b",
-      "fallback_model_ids": [
-        "qwen2.5:1.5b",
-        "qwen2.5:7b",
-        "qwen2.5:14b"
-      ],
+      "preferred_model_id": "gemma4:e4b-it-qat",
+      "fallback_model_ids": [],
       "selection_reason": "baseline_registry_no_runtime_promotion",
       "evidence_refs": [
         "server/model/registry_source.json"
       ],
-      "effective_from_unix_ms": 1700798162081
+      "effective_from_unix_ms": 1700423493347
     }
   ],
   "quarantined_models": [],

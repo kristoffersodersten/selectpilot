@@ -1,9 +1,10 @@
 {
-  "generated_at_unix_ms": 1700798162081,
-  "policy_version": "runtime-policy-c44de2e4a8a1",
+  "generated_at_unix_ms": 1700423493347,
+  "policy_version": "runtime-policy-8226a11e6ae3",
   "defaults_count": 12,
   "preferred_models": [
-    "qwen2.5:0.5b"
+    "gemma4:e2b-it-qat",
+    "gemma4:e4b-it-qat"
   ],
   "quarantined_models": [],
   "rejected_models": [],

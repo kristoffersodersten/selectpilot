@@ -8,6 +8,10 @@
 - Embeddings: `nomic-embed-text-v2-moe:latest`.
 - Structured generation: `temperature=0` and `seed=42` for every production profile.
 
+Structured extraction and summaries use `gemma4:e2b-it-qat`, the smallest model qualified on the physical M1 acceptance machine. The Balanced profile keeps `gemma4:e4b-it-qat` for the more open-ended agent route. Every route declares its exact model and context window in bridge health; a missing routed model stops that operation rather than substituting another model.
+
+Selections above 16,000 characters are rejected before inference with a clear, local error. This keeps waiting time predictable and prevents hidden truncation.
+
 Explicit environment overrides remain authoritative and must fail visibly when invalid or unavailable. SelectPilot never substitutes a different installed model, downloads a model without consent, or routes generation to a cloud model.
 
 Installation prewarms the selected generation model with the same context window and deterministic sampling options used at runtime. A failed prewarm is an explicit installation failure; SelectPilot does not report the runtime as ready and does not silently choose another model. `CHROMEAI_OLLAMA_SEED` may override the seed for controlled verification, but invalid or negative values fail closed.
