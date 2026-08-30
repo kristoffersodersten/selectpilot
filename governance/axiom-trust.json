@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "authority": "Namaka-Inc/axiom-core",
+  "authority_sha": "cd12d0547d210ea7e9d985fce55f90acc4d6317a",
+  "policy_sha256": "932bbb231cb5e1aeb35d6bbe6327db6f3b1b3cf1e125e38366cbccbbc59434cf",
+  "owner_public_key_sha256": "179b5520ccd5f32f04f0fc09df59a619975a2f1c93b24674883b07fa0ce301b8"
+}

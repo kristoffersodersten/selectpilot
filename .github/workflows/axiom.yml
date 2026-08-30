@@ -11,8 +11,28 @@ permissions:
   pull-requests: read
 
 jobs:
-  axiom:
-    uses: kristoffersodersten/axiom-core/.github/workflows/axiom-downstream.yml@main
-    with:
-      intent_path: intent.json
-      strict: true
+  axiom_validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout downstream repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Load changed files
+        run: |
+          mkdir -p .axiom-runtime
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff --name-only "origin/${{ github.base_ref }}"...HEAD > .axiom-runtime/changed-files.txt
+          else
+            git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" > .axiom-runtime/changed-files.txt
+          fi
+
+      - name: Verify signed Axiom intent and change boundary
+        run: node scripts/verify-axiom-intent.mjs --changed-files .axiom-runtime/changed-files.txt
