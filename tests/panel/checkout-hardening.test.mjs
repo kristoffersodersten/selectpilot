@@ -1,3 +1,5 @@
+// module_name: checkout_hardening_tests
+// spec_ref: "privacy_and_debug_policy"
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
