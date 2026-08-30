@@ -54,6 +54,21 @@ export async function getDecrypted(key) {
         return null;
     }
 }
+export async function setEncryptedJSON(key, value) {
+    await setEncrypted(key, JSON.stringify(value));
+}
+export async function getEncryptedJSON(key) {
+    const decrypted = await getDecrypted(key);
+    if (decrypted === null)
+        return null;
+    try {
+        return JSON.parse(decrypted);
+    }
+    catch {
+        error('storage', 'decrypted_json_invalid');
+        return null;
+    }
+}
 export async function setJSON(key, value) {
     await chrome.storage.local.set({ [key]: JSON.stringify(value) });
 }

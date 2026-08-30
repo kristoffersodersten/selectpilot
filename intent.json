@@ -1,0 +1,72 @@
+{
+  "id": "AXIOM-20260830-OXBH25",
+  "goal": "Close SelectPilot pre-deployment gaps, blind spots, negative space, abuse resilience, recovery, security, and full-system production readiness before Chrome Web Store publication",
+  "linear_issue_id": "SOD-1071",
+  "canonical_reference": "kristoffersodersten/selectpilot@937e4926944052495c8fc626f2d36cb422fbec4d",
+  "contract_target": "docs/aegis/plans/2026-08-18-selectpilot-full-system-completion.md",
+  "layer": "full-system-release-hardening",
+  "acceptance_criteria": [
+    "global constitution mapped and enforced",
+    "material gaps implemented",
+    "extreme deterministic abuse suite passes",
+    "no implicit fallback or bypass",
+    "rollback and recovery proven",
+    "exact evidence published"
+  ],
+  "verification_method": [
+    "Hetzner full test and stress suite",
+    "GitHub exact-head CI and security",
+    "physical Apple runtime failure and recovery",
+    "Linear SOD-1071 evidence"
+  ],
+  "constraints": [
+    "no self approval",
+    "no branch protection bypass",
+    "no production claim before exact merge SHA",
+    "no secrets or PII in repo or logs",
+    "Mac control only and heavy proof on Hetzner or GitHub"
+  ],
+  "allowed_actions": [
+    "**"
+  ],
+  "forbidden_actions": [
+    ".env*",
+    "**/*.pem",
+    "**/*.key",
+    "**/secrets/**",
+    "main"
+  ],
+  "perception_targets": [
+    "explicit causal errors",
+    "visible locality and provider",
+    "visible recovery state",
+    "calm non-coercive UI under failure"
+  ],
+  "expires_at": 1790726400,
+  "nonce": "a43cdb50-45fa-4d70-8cb4-241544a20873",
+  "signer": {
+    "public_key": "MCowBQYDK2VwAyEAqVq6w6JT3xe8AZydV7bto90lPToV8GqmeCmxG09zlgU=",
+    "role": "owner"
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "public_key": "MCowBQYDK2VwAyEAqVq6w6JT3xe8AZydV7bto90lPToV8GqmeCmxG09zlgU=",
+    "value": "/La7J8OL82qBNOUXwQn05xub3QpM0GRVVbB7H7R2bVg6uKRr8J6rYLn0WkeuhrlX+PV++PC5Q0nmwxpNfuzgBA==",
+    "signed_payload_fields": [
+      "id",
+      "goal",
+      "linear_issue_id",
+      "canonical_reference",
+      "contract_target",
+      "layer",
+      "acceptance_criteria",
+      "verification_method",
+      "constraints",
+      "allowed_actions",
+      "forbidden_actions",
+      "perception_targets",
+      "expires_at",
+      "nonce"
+    ]
+  }
+}

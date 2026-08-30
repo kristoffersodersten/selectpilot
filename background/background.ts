@@ -8,6 +8,7 @@ import { getEntitlementSnapshot } from './entitlement-service.js';
 import { ApiRequestError } from '../api/request.js';
 import type { AgentContext } from '../agent/agent-types.js';
 import { FIRST_RUN_EXAMPLE } from '../shared/first-run-example.js';
+import { getEncryptedJSON, setEncryptedJSON } from '../utils/storage.js';
 
 type MemoryEntry = {
   action: 'extract' | 'summarize' | 'agent';
@@ -57,13 +58,20 @@ async function setMemoryEnabled(enabled: boolean): Promise<void> {
 }
 
 async function getMemoryLedger(): Promise<MemoryEntry[]> {
+  const encrypted = await getEncryptedJSON<MemoryEntry[]>(MEMORY_LEDGER_KEY);
+  if (Array.isArray(encrypted)) return encrypted;
+
+  // One-way, in-place migration from the pre-encryption schema.
   const stored = await chrome.storage.local.get(MEMORY_LEDGER_KEY);
-  const entries = stored[MEMORY_LEDGER_KEY];
-  return Array.isArray(entries) ? entries : [];
+  const legacy = stored[MEMORY_LEDGER_KEY];
+  if (!Array.isArray(legacy)) return [];
+  const bounded = legacy.slice(-200) as MemoryEntry[];
+  await setEncryptedJSON(MEMORY_LEDGER_KEY, bounded);
+  return bounded;
 }
 
 async function setMemoryLedger(entries: MemoryEntry[]): Promise<void> {
-  await chrome.storage.local.set({ [MEMORY_LEDGER_KEY]: entries.slice(-200) });
+  await setEncryptedJSON(MEMORY_LEDGER_KEY, entries.slice(-200));
 }
 
 async function recordMemoryEvent(entry: Omit<MemoryEntry, 'createdAt'>): Promise<void> {

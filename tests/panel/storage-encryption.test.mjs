@@ -17,7 +17,7 @@ globalThis.chrome = {
   },
 };
 
-const { getDecrypted, setEncrypted } = await import('../../utils/storage.js');
+const { getDecrypted, getEncryptedJSON, setEncrypted, setEncryptedJSON } = await import('../../utils/storage.js');
 
 test('AES-GCM storage creates a non-exportable per-install key and round-trips data', async () => {
   await setEncrypted('test_payload', 'private local value');
@@ -27,4 +27,19 @@ test('AES-GCM storage creates a non-exportable per-install key and round-trips d
   assert.equal(values.get('selectpilot_encryption_key_v1').length, 32);
   assert.equal(typeof values.get('test_payload'), 'string');
   assert.equal(values.get('test_payload').includes('private local value'), false);
+});
+
+test('encrypted JSON never persists private fields as plaintext', async () => {
+  const ledger = [{ content: 'private selected text', url: 'https://private.example/path' }];
+  await setEncryptedJSON('ledger', ledger);
+
+  const persisted = values.get('ledger');
+  assert.equal(persisted.includes('private selected text'), false);
+  assert.equal(persisted.includes('private.example'), false);
+  assert.deepEqual(await getEncryptedJSON('ledger'), ledger);
+});
+
+test('corrupt encrypted JSON fails closed without returning partial data', async () => {
+  values.set('corrupt', JSON.stringify({ iv: [1, 2], data: [3, 4] }));
+  assert.equal(await getEncryptedJSON('corrupt'), null);
 });

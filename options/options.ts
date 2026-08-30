@@ -21,7 +21,7 @@ const fields = {
 const statusMessage = document.querySelector('#status');
 
 async function load() {
-  const stored = await chrome.storage.sync.get('selectpilot_settings');
+  const stored = await chrome.storage.local.get('selectpilot_settings');
   const settings = { ...defaults, ...(stored.selectpilot_settings || {}) } as Settings;
   fields.controlSide!.value = settings.controlSide;
   fields.resultView!.value = settings.resultView;
@@ -38,7 +38,7 @@ async function save() {
     highContrast: fields.highContrast!.checked,
     textSize: fields.textSize!.value as Settings['textSize'],
   };
-  await chrome.storage.sync.set({ selectpilot_settings: settings });
+  await chrome.storage.local.set({ selectpilot_settings: settings });
   if (statusMessage) statusMessage.textContent = 'Saved.';
 }
 

@@ -1,6 +1,7 @@
 // module_name: api_request_ts
 // spec_ref: "execution_layer"
 import { log, warn } from '../utils/logger.js';
+const DEFAULT_TIMEOUT_MS = 15_000;
 export class ApiRequestError extends Error {
     status;
     code;
@@ -33,8 +34,13 @@ function parseJsonSafe(text) {
     }
 }
 export async function apiRequest(url, options = {}) {
-    const { method = 'POST', headers = {}, body } = options;
+    const { method = 'POST', headers = {}, body, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
+    if (!Number.isFinite(timeoutMs) || timeoutMs < 100 || timeoutMs > 120_000) {
+        throw new TypeError('timeoutMs must be between 100 and 120000');
+    }
     const traceId = createTraceId();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
     const init = {
         method,
         headers: {
@@ -43,10 +49,25 @@ export async function apiRequest(url, options = {}) {
             ...headers
         },
         body: body !== undefined ? JSON.stringify(body) : undefined,
-        cache: 'no-store'
+        cache: 'no-store',
+        signal: controller.signal,
     };
-    log('api', method, url);
-    const res = await fetch(url, init);
+    log('api', method);
+    let res;
+    try {
+        res = await fetch(url, init);
+    }
+    catch (cause) {
+        const timedOut = cause instanceof DOMException && cause.name === 'AbortError';
+        throw new ApiRequestError(timedOut ? 'Local runtime request timed out' : 'Local runtime request failed', {
+            status: 0,
+            code: timedOut ? 'request_timeout' : 'network_error',
+            traceId,
+        });
+    }
+    finally {
+        clearTimeout(timeout);
+    }
     const text = await res.text();
     const parsed = parseJsonSafe(text);
     const maybeError = parsed?.error;
@@ -54,9 +75,9 @@ export async function apiRequest(url, options = {}) {
         maybeError?.details?.trace_id ||
         traceId;
     if (!res.ok) {
-        warn('api', 'non-200', res.status, text);
+        warn('api', 'non_200', res.status);
         const code = maybeError?.code || `http_${res.status}`;
-        const message = maybeError?.message || `API ${res.status}: ${text}`;
+        const message = maybeError?.message || `Local runtime returned HTTP ${res.status}`;
         throw new ApiRequestError(message, {
             status: res.status,
             code,

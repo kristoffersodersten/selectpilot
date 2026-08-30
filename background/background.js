@@ -7,6 +7,7 @@ import { requireFeature, getLicenseTier, attachLicenseToken, refreshLicense } fr
 import { getEntitlementSnapshot } from './entitlement-service.js';
 import { ApiRequestError } from '../api/request.js';
 import { FIRST_RUN_EXAMPLE } from '../shared/first-run-example.js';
+import { getEncryptedJSON, setEncryptedJSON } from '../utils/storage.js';
 const MEMORY_ENABLED_KEY = 'selectpilot_memory_enabled_v1';
 const MEMORY_LEDGER_KEY = 'selectpilot_memory_ledger_v1';
 async function openForActiveTab() {
@@ -36,12 +37,20 @@ async function setMemoryEnabled(enabled) {
     await chrome.storage.local.set({ [MEMORY_ENABLED_KEY]: enabled });
 }
 async function getMemoryLedger() {
+    const encrypted = await getEncryptedJSON(MEMORY_LEDGER_KEY);
+    if (Array.isArray(encrypted))
+        return encrypted;
+    // One-way, in-place migration from the pre-encryption schema.
     const stored = await chrome.storage.local.get(MEMORY_LEDGER_KEY);
-    const entries = stored[MEMORY_LEDGER_KEY];
-    return Array.isArray(entries) ? entries : [];
+    const legacy = stored[MEMORY_LEDGER_KEY];
+    if (!Array.isArray(legacy))
+        return [];
+    const bounded = legacy.slice(-200);
+    await setEncryptedJSON(MEMORY_LEDGER_KEY, bounded);
+    return bounded;
 }
 async function setMemoryLedger(entries) {
-    await chrome.storage.local.set({ [MEMORY_LEDGER_KEY]: entries.slice(-200) });
+    await setEncryptedJSON(MEMORY_LEDGER_KEY, entries.slice(-200));
 }
 async function recordMemoryEvent(entry) {
     if (!(await canUseProjectMemory()))
