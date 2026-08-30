@@ -211,6 +211,9 @@ class ValidationPipelineTests(unittest.TestCase):
         generated = _resolve_trace_id({}, {})
         self.assertTrue(isinstance(generated, str) and len(generated) > 0)
 
+        hostile = _resolve_trace_id({}, {"x-selectpilot-trace-id": "secret\n" + "x" * 200})
+        self.assertRegex(hostile, r"^sp_[0-9a-f]{24}$")
+
     def test_runtime_meta_details_are_sanitized_for_privacy(self) -> None:
         sanitized = sanitize_runtime_meta_details(
             {
@@ -218,13 +221,14 @@ class ValidationPipelineTests(unittest.TestCase):
                 "text": "secret",
                 "prompt": "never log me",
                 "safe_scalar": "ok",
-                "nested": {"allowed": "yes", "blocked": ["x"]},
+                "nested": {"allowed": "yes", "prompt": "nested secret", "blocked": ["x"]},
             }
         )
         self.assertNotIn("text", sanitized)
         self.assertNotIn("prompt", sanitized)
         self.assertEqual(sanitized.get("safe_scalar"), "ok")
         self.assertEqual(sanitized.get("request_fields"), 2)
+        self.assertNotIn("prompt", sanitized.get("nested", {}))
 
     def test_runtime_meta_event_contract_contains_privacy_flags(self) -> None:
         event = build_runtime_meta_event(

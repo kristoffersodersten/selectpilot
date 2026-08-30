@@ -406,10 +406,9 @@ def enforce_contract_fields(payload: dict, contract: OperationContract) -> None:
 def _resolve_trace_id(payload: dict, headers: dict[str, str]) -> str:
     header_trace = str(headers.get("x-selectpilot-trace-id") or headers.get("x-trace-id") or "").strip()
     body_trace = str(payload.get("session_id") or "").strip() if isinstance(payload, dict) else ""
-    if header_trace:
-        return header_trace
-    if body_trace:
-        return body_trace
+    candidate = header_trace or body_trace
+    if candidate and re.fullmatch(r"[A-Za-z0-9_.:-]{1,64}", candidate):
+        return candidate
     basis = {
         "payload": payload if isinstance(payload, dict) else {},
         "content_type": str(headers.get("content-type") or ""),
@@ -461,6 +460,8 @@ RUNTIME_POLICY_PATH = RUNTIME_DIR / "model_policy.json"
 RUNTIME_REGISTRY_PATH = RUNTIME_DIR / "model_registry.runtime.json"
 LIVE_FEEDBACK_PATH = RUNTIME_DIR / "live_feedback.jsonl"
 _LIVE_FEEDBACK_LOCK = threading.Lock()
+MAX_LIVE_FEEDBACK_BYTES = 2 * 1024 * 1024
+MAX_RUNTIME_META_STREAMS = 4
 
 RUNTIME_META_EVENT_VERSION = "1.0"
 RUNTIME_META_DEFAULT_LATENCY_HINT_MS = 1200
@@ -496,6 +497,9 @@ def _append_live_feedback(event: dict) -> None:
         }
         line = json.dumps(entry, ensure_ascii=False, separators=(",", ":"))
         with _LIVE_FEEDBACK_LOCK:
+            if LIVE_FEEDBACK_PATH.exists() and LIVE_FEEDBACK_PATH.stat().st_size >= MAX_LIVE_FEEDBACK_BYTES:
+                rotated = LIVE_FEEDBACK_PATH.with_suffix(".jsonl.previous")
+                os.replace(LIVE_FEEDBACK_PATH, rotated)
             with LIVE_FEEDBACK_PATH.open("a", encoding="utf-8") as handle:
                 handle.write(f"{line}\n")
     except Exception:
@@ -753,7 +757,7 @@ def sanitize_runtime_meta_details(details: dict | None) -> dict:
         elif isinstance(value, list):
             safe[key_str] = len(value)
         elif isinstance(value, dict):
-            safe[key_str] = {k: v for k, v in value.items() if isinstance(v, (str, int, float, bool, type(None)))}
+            safe[key_str] = sanitize_runtime_meta_details(value)
         else:
             safe[key_str] = str(value)
     return safe
@@ -1494,6 +1498,9 @@ class Handler(BaseHTTPRequestHandler):
             })
             return
         if path == '/runtime-meta/stream':
+            if RUNTIME_META.active_stream_count() >= MAX_RUNTIME_META_STREAMS:
+                self._write_error(429, "runtime_meta_stream_limit", "Too many active runtime streams")
+                return
             query = parse_qs(parsed.query)
             after = query.get("after", [""])[0]
             header_last_event = str(self.headers.get("Last-Event-ID") or "").strip()
@@ -1831,7 +1838,7 @@ class Handler(BaseHTTPRequestHandler):
                 trace_id,
                 contract.name,
                 "runtime_error",
-                {"code": "ollama_unavailable", "message": str(e)},
+                {"code": "ollama_unavailable"},
             )
             emit_runtime_meta(
                 event_type="STEP_FAILED",
@@ -1839,7 +1846,7 @@ class Handler(BaseHTTPRequestHandler):
                 operation=contract.name,
                 status="error",
                 step=current_step,
-                message=str(e),
+                message="Local model runtime is unavailable",
                 details={"code": "ollama_unavailable"},
             )
             emit_runtime_meta(
@@ -1847,11 +1854,11 @@ class Handler(BaseHTTPRequestHandler):
                 trace_id=trace_id,
                 operation=contract.name,
                 status="error",
-                message=str(e),
+                message="Local model runtime is unavailable",
                 duration_ms=duration_ms,
                 details={"code": "ollama_unavailable"},
             )
-            self._write_error(503, "ollama_unavailable", str(e))
+            self._write_error(503, "ollama_unavailable", "Local model runtime is unavailable")
             return
 
         if isinstance(resp, dict):
