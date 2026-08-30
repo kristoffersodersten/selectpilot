@@ -22,11 +22,22 @@
   }
 
   // utils/logger.js
-  var ENABLE_LOG = true;
+  var ENABLE_DEBUG_LOG = false;
+  function safe(values) {
+    return values.map((value) => {
+      if (value === null || value === void 0 || typeof value === "boolean" || typeof value === "number")
+        return value;
+      if (typeof value === "string" && /^[a-z0-9_.:/-]{1,96}$/i.test(value))
+        return value;
+      if (value instanceof Error)
+        return value.name;
+      return "[redacted]";
+    });
+  }
   function log(scope, ...args) {
-    if (!ENABLE_LOG)
+    if (!ENABLE_DEBUG_LOG)
       return;
-    console.log(`[ChromeAI:${scope}]`, ...args);
+    console.log(`[SelectPilot:${scope}]`, ...safe(args));
   }
 
   // content/content-script.ts
