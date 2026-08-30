@@ -32,10 +32,18 @@ import sys
 sys.path.insert(0, sys.argv[1])
 from runtime_profiles import get_runtime_profile, recommend_runtime_profile
 profile = get_runtime_profile(recommend_runtime_profile()["recommended_profile"])
-print(f"{profile.generation_model}|{profile.embedding_model}|{profile.num_ctx}")
+print("|".join(str(value) for value in (
+    profile.key,
+    profile.generation_model,
+    profile.fast_generation_model,
+    profile.embedding_model,
+    profile.num_ctx,
+    profile.fast_num_ctx,
+    profile.max_input_chars,
+)))
 PY
 )"
-IFS='|' read -r OLLAMA_MODEL OLLAMA_EMBED_MODEL OLLAMA_NUM_CTX <<EOF
+IFS='|' read -r RUNTIME_PROFILE OLLAMA_MODEL OLLAMA_FAST_MODEL OLLAMA_EMBED_MODEL OLLAMA_NUM_CTX OLLAMA_FAST_NUM_CTX MAX_INPUT_CHARS <<EOF
 $PROFILE_VALUES
 EOF
 
@@ -47,9 +55,13 @@ sed \
   -e "s|__LOG_DIR__|$LOG_DIR|g" \
   -e "s|__BINARY_HASH__|$HASH|g" \
   -e "s|__OLLAMA_BASE_URL__|http://127.0.0.1:11434|g" \
+  -e "s|__RUNTIME_PROFILE__|$RUNTIME_PROFILE|g" \
   -e "s|__OLLAMA_MODEL__|$OLLAMA_MODEL|g" \
+  -e "s|__OLLAMA_FAST_MODEL__|$OLLAMA_FAST_MODEL|g" \
   -e "s|__OLLAMA_EMBED_MODEL__|$OLLAMA_EMBED_MODEL|g" \
   -e "s|__OLLAMA_NUM_CTX__|$OLLAMA_NUM_CTX|g" \
+  -e "s|__OLLAMA_FAST_NUM_CTX__|$OLLAMA_FAST_NUM_CTX|g" \
+  -e "s|__MAX_INPUT_CHARS__|$MAX_INPUT_CHARS|g" \
   -e "s|__OLLAMA_SEED__|42|g" \
   -e "s|__ENTITLEMENT_AUTHORITY_URL__|https://license.selectpilot.app|g" \
   "$SOURCE_ROOT/launchd/com.selectpilot.bridge.plist.template" > "$AGENT_PATH"
