@@ -8,7 +8,7 @@ import { mkdir } from 'node:fs/promises';
 
 const TIERS = new Set(['essential', 'plus', 'pro']);
 const MAX_BODY_BYTES = 256 * 1024;
-const PADDLE_TOLERANCE_SECONDS = 300;
+const PADDLE_TOLERANCE_SECONDS = 5;
 
 function required(name, env = process.env) {
   const value = env[name]?.trim();
@@ -46,13 +46,15 @@ function parsePriceMap(value) {
 
 // @spec_ref validation_layer
 export function verifyPaddleSignature(rawBody, header, secret, nowSeconds = Math.floor(Date.now() / 1000)) {
-  const parts = Object.fromEntries(String(header || '').split(';').map((part) => part.split('=', 2)));
-  const timestamp = Number(parts.ts);
-  const supplied = parts.h1;
-  if (!Number.isInteger(timestamp) || !/^[0-9a-f]{64}$/i.test(supplied || '')) return false;
+  const parts = String(header || '').split(';').map((part) => part.split('=', 2));
+  const timestamps = parts.filter(([name]) => name === 'ts').map(([, value]) => value);
+  const signatures = parts.filter(([name]) => name === 'h1').map(([, value]) => value);
+  const timestamp = Number(timestamps[0]);
+  if (timestamps.length !== 1 || signatures.length === 0 || !Number.isInteger(timestamp)) return false;
+  if (signatures.some((supplied) => !/^[0-9a-f]{64}$/i.test(supplied || ''))) return false;
   if (Math.abs(nowSeconds - timestamp) > PADDLE_TOLERANCE_SECONDS) return false;
   const expected = createHmac('sha256', secret).update(`${timestamp}:${rawBody}`).digest('hex');
-  return timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(supplied, 'hex'));
+  return signatures.some((supplied) => timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(supplied, 'hex')));
 }
 
 async function readBody(req) {

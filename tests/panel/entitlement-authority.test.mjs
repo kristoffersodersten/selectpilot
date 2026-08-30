@@ -117,11 +117,18 @@ test('subscription updates preserve the token and cancellation revokes it', asyn
   assert.equal((await post(base, '/v1/entitlements/verify', { token: claimed.token })).status, 401);
 });
 
-test('Paddle signature rejects stale and forged events', () => {
+test('Paddle signature supports rotation and rejects stale or forged events', () => {
   const body = '{}';
   const now = 2_000_000_000;
   const valid = createHmac('sha256', 'secret').update(`${now}:${body}`).digest('hex');
+  const invalid = createHmac('sha256', 'wrong').update(`${now}:${body}`).digest('hex');
+  const boundary = createHmac('sha256', 'secret').update(`${now - 5}:${body}`).digest('hex');
+  const stale = createHmac('sha256', 'secret').update(`${now - 6}:${body}`).digest('hex');
   assert.equal(verifyPaddleSignature(body, `ts=${now};h1=${valid}`, 'secret', now), true);
+  assert.equal(verifyPaddleSignature(body, `ts=${now};h1=${invalid};h1=${valid}`, 'secret', now), true);
   assert.equal(verifyPaddleSignature(body, `ts=${now};h1=${valid}`, 'wrong', now), false);
-  assert.equal(verifyPaddleSignature(body, `ts=${now - 301};h1=${valid}`, 'secret', now), false);
+  assert.equal(verifyPaddleSignature(body, `ts=${now - 5};h1=${boundary}`, 'secret', now), true);
+  assert.equal(verifyPaddleSignature(body, `ts=${now - 6};h1=${stale}`, 'secret', now), false);
+  assert.equal(verifyPaddleSignature(body, `ts=${now};ts=${now};h1=${valid}`, 'secret', now), false);
+  assert.equal(verifyPaddleSignature(body, `ts=${now};h1=malformed;h1=${valid}`, 'secret', now), false);
 });
