@@ -132,3 +132,21 @@ test('Paddle signature supports rotation and rejects stale or forged events', ()
   assert.equal(verifyPaddleSignature(body, `ts=${now};ts=${now};h1=${valid}`, 'secret', now), false);
   assert.equal(verifyPaddleSignature(body, `ts=${now};h1=malformed;h1=${valid}`, 'secret', now), false);
 });
+
+test('authority rejects malformed, mistyped, oversized and ambiguous identifiers explicitly', async (t) => {
+  const base = await fixture(t);
+  assert.equal((await post(base, '/v1/trials/start', '{')).status, 400);
+  assert.equal((await fetch(`${base}/v1/trials/start`, { method: 'POST', body: '{}' })).status, 415);
+  assert.equal((await post(base, '/v1/trials/start', [])).status, 400);
+  assert.equal((await post(base, '/v1/trials/start', { installation_id: 'x'.repeat(201) })).status, 400);
+  assert.equal((await post(base, '/v1/claims/redeem', { claim_id: 'x'.repeat(201) })).status, 400);
+  assert.equal((await post(base, '/v1/entitlements/verify', { token: 'x'.repeat(201) })).status, 400);
+});
+
+test('concurrent trial abuse preserves one deterministic entitlement', async (t) => {
+  const base = await fixture(t);
+  const responses = await Promise.all(Array.from({ length: 200 }, () =>
+    post(base, '/v1/trials/start', { installation_id: 'same-installation' }).then((response) => response.json())
+  ));
+  assert.equal(new Set(responses.map((entry) => entry.token)).size, 1);
+});

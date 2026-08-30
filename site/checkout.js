@@ -8,31 +8,74 @@
   const claimStorageKey = `selectpilot_claim_${tier || 'unknown'}`;
   const claimId = localStorage.getItem(claimStorageKey) || crypto.randomUUID();
   localStorage.setItem(claimStorageKey, claimId);
+  const POLL_DEADLINE_MS = 5 * 60 * 1000;
+  const REQUEST_TIMEOUT_MS = 10_000;
+  const startedAt = Date.now();
+  let pollAttempt = 0;
 
-  function message(title, detail, action = '') {
-    state.innerHTML = `<div><h2>${title}</h2><p>${detail}</p>${action}</div>`;
+  function message(title, detail, action) {
+    const container = document.createElement('div');
+    const heading = document.createElement('h2');
+    const paragraph = document.createElement('p');
+    heading.textContent = title;
+    paragraph.textContent = detail;
+    container.append(heading, paragraph);
+    if (action) container.append(action);
+    state.replaceChildren(container);
+  }
+
+  async function post(path, body) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const response = await fetch(`${config.entitlementAuthorityUrl}${path}`, {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
+        cache: 'no-store', signal: controller.signal,
+      });
+      if (!response.ok) throw new Error(`authority_http_${response.status}`);
+      return await response.json();
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  function scheduleRedeem() {
+    if (Date.now() - startedAt >= POLL_DEADLINE_MS) {
+      message('License preparation needs attention', 'Reload this page to check again. Your payment has not been repeated.');
+      return;
+    }
+    const delay = Math.min(15_000, 1_500 * (2 ** Math.min(pollAttempt, 4)));
+    pollAttempt += 1;
+    setTimeout(() => redeem().catch(scheduleRedeem), delay);
   }
 
   async function redeem() {
-    const response = await fetch(`${config.entitlementAuthorityUrl}/v1/claims/redeem`, {
-      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ claim_id: claimId })
-    });
-    const result = await response.json();
+    const result = await post('/v1/claims/redeem', { claim_id: claimId });
     if (result.status === 'ready' && result.token) {
       const token = result.token;
-      message('Your license is ready', 'Copy this key, then enter it in SelectPilot.', `<p><code id="license-key">${token}</code></p><button class="button" id="copy-license">Copy license key</button>`);
-      document.querySelector('#copy-license').addEventListener('click', async () => {
-        await navigator.clipboard.writeText(token);
-        await fetch(`${config.entitlementAuthorityUrl}/v1/claims/ack`, {
-          method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ claim_id: claimId })
-        });
-        localStorage.removeItem(claimStorageKey);
-        message('License copied', 'Return to SelectPilot and choose Activate.');
+      const action = document.createElement('div');
+      const key = document.createElement('code');
+      const button = document.createElement('button');
+      key.textContent = token;
+      button.className = 'button';
+      button.type = 'button';
+      button.textContent = 'Copy license key';
+      action.append(key, button);
+      message('Your license is ready', 'Copy this key, then enter it in SelectPilot.', action);
+      button.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(token);
+          await post('/v1/claims/ack', { claim_id: claimId });
+          localStorage.removeItem(claimStorageKey);
+          message('License copied', 'Return to SelectPilot and choose Activate.');
+        } catch {
+          message('License copied, acknowledgement pending', 'Keep this page open and try Copy license key again before closing it.', action);
+        }
       });
       return;
     }
     message('Payment received', 'Your license is being prepared. This page will update automatically.');
-    setTimeout(redeem, 1800);
+    scheduleRedeem();
   }
 
   if (!config || !priceId || !window.Paddle || !/^pri_/.test(priceId)) {
@@ -41,7 +84,7 @@
   }
   if (config.paddleEnvironment === 'sandbox') Paddle.Environment.set('sandbox');
   Paddle.Initialize({ token: config.paddleClientToken, eventCallback(event) {
-    if (event.name === 'checkout.completed') redeem().catch(() => message('Payment received', 'Keep this page open while your license is prepared.'));
+    if (event.name === 'checkout.completed') redeem().catch(scheduleRedeem);
   }});
   Paddle.Checkout.open({ items: [{ priceId, quantity: 1 }], customData: { claim_id: claimId }, settings: { displayMode: 'inline', frameTarget: 'checkout-state', frameInitialHeight: 450, frameStyle: 'width:100%;border:0;background:transparent;' } });
 })();

@@ -9,6 +9,25 @@ import { mkdir } from 'node:fs/promises';
 const TIERS = new Set(['essential', 'plus', 'pro']);
 const MAX_BODY_BYTES = 256 * 1024;
 const PADDLE_TOLERANCE_SECONDS = 5;
+const MAX_IDENTIFIER_CHARS = 200;
+
+function parseObject(rawBody) {
+  let parsed;
+  try {
+    parsed = JSON.parse(rawBody || '{}');
+  } catch {
+    throw Object.assign(new Error('invalid_json'), { status: 400 });
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw Object.assign(new Error('invalid_json_object'), { status: 400 });
+  }
+  return parsed;
+}
+
+function identifier(value) {
+  return typeof value === 'string' && value.trim().length > 0 && value.trim().length <= MAX_IDENTIFIER_CHARS
+    ? value.trim() : null;
+}
 
 function required(name, env = process.env) {
   const value = env[name]?.trim();
@@ -143,7 +162,7 @@ export async function createAuthority(config = {}) {
     return current;
   };
 
-  return createServer(async (req, res) => {
+  const server = createServer(async (req, res) => {
     try {
       if (req.headers.origin === allowedWebOrigin) {
         res.setHeader('access-control-allow-origin', allowedWebOrigin);
@@ -157,10 +176,13 @@ export async function createAuthority(config = {}) {
       }
       if (req.method === 'GET' && req.url === '/health') return send(res, 200, { status: 'ok' });
       if (req.method !== 'POST') return send(res, 404, { error: 'not_found' });
+      if (!String(req.headers['content-type'] || '').toLowerCase().startsWith('application/json')) {
+        return send(res, 415, { error: 'json_content_type_required' });
+      }
       const rawBody = await readBody(req);
 
       if (req.url === '/v1/entitlements/verify') {
-        const token = JSON.parse(rawBody || '{}').token?.trim();
+        const token = identifier(parseObject(rawBody).token);
         if (!token) return send(res, 400, { error: 'token_required' });
         const state = await loadState(statePath);
         const record = state.tokens[tokenHash(token)];
@@ -171,8 +193,8 @@ export async function createAuthority(config = {}) {
       }
 
       if (req.url === '/v1/trials/start') {
-        const installationId = JSON.parse(rawBody || '{}').installation_id?.trim();
-        if (!installationId || installationId.length > 200) return send(res, 400, { error: 'installation_id_required' });
+        const installationId = identifier(parseObject(rawBody).installation_id);
+        if (!installationId) return send(res, 400, { error: 'installation_id_required' });
         let response;
         await serial(async () => {
           const state = await loadState(statePath);
@@ -196,7 +218,7 @@ export async function createAuthority(config = {}) {
       }
 
       if (req.url === '/v1/claims/redeem') {
-        const claimId = JSON.parse(rawBody || '{}').claim_id?.trim();
+        const claimId = identifier(parseObject(rawBody).claim_id);
         if (!claimId) return send(res, 400, { error: 'claim_id_required' });
         let response = { status: 'pending' };
         await serial(async () => {
@@ -219,7 +241,7 @@ export async function createAuthority(config = {}) {
       }
 
       if (req.url === '/v1/claims/ack') {
-        const claimId = JSON.parse(rawBody || '{}').claim_id?.trim();
+        const claimId = identifier(parseObject(rawBody).claim_id);
         if (!claimId) return send(res, 400, { error: 'claim_id_required' });
         await serial(async () => {
           const state = await loadState(statePath);
@@ -236,14 +258,15 @@ export async function createAuthority(config = {}) {
         if (!verifyPaddleSignature(rawBody, req.headers['paddle-signature'], webhookSecret)) {
           return send(res, 401, { error: 'invalid_webhook_signature' });
         }
-        const event = JSON.parse(rawBody);
-        const claimId = event?.data?.custom_data?.claim_id;
+        const event = parseObject(rawBody);
+        const claimId = identifier(event?.data?.custom_data?.claim_id);
         const product = purchasedItem(event, priceMap);
-        const subjectId = event?.data?.subscription_id || event?.data?.id;
-        if (!event?.event_id || !subjectId) return send(res, 422, { error: 'unsupported_event' });
+        const subjectId = identifier(event?.data?.subscription_id || event?.data?.id);
+        const eventId = identifier(event?.event_id);
+        if (!eventId || !subjectId) return send(res, 422, { error: 'unsupported_event' });
         await serial(async () => {
           const state = await loadState(statePath);
-          if (state.events[event.event_id]) return;
+          if (state.events[eventId]) return;
           if (['transaction.completed', 'subscription.activated'].includes(event.event_type)) {
             if (!claimId || !product) throw Object.assign(new Error('unsupported_event'), { status: 422 });
             const previousHash = state.subjects[subjectId];
@@ -271,7 +294,7 @@ export async function createAuthority(config = {}) {
             const currentHash = state.subjects[subjectId];
             if (currentHash && state.tokens[currentHash]) state.tokens[currentHash].revokedAt = Date.now();
           }
-          state.events[event.event_id] = { handledAt: Date.now(), type: event.event_type };
+          state.events[eventId] = { handledAt: Date.now(), type: event.event_type };
           await saveState(statePath, state);
         });
         return send(res, 200, { accepted: true });
@@ -290,6 +313,11 @@ export async function createAuthority(config = {}) {
       send(res, status, { error: error.status ? error.message : 'internal_error' });
     }
   });
+  server.requestTimeout = 15_000;
+  server.headersTimeout = 10_000;
+  server.keepAliveTimeout = 5_000;
+  server.maxRequestsPerSocket = 100;
+  return server;
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.url).pathname)) {
