@@ -277,7 +277,15 @@ export async function createAuthority(config = {}) {
 
       return send(res, 404, { error: 'not_found' });
     } catch (error) {
-      send(res, error.status || 500, { error: error.status ? error.message : 'internal_error' });
+      const status = error.status || 500;
+      console.error(JSON.stringify({
+        event: 'entitlement_authority_request_failed',
+        method: req.method,
+        path: req.url,
+        status,
+        error: error.code || error.name || 'Error',
+      }));
+      send(res, status, { error: error.status ? error.message : 'internal_error' });
     }
   });
 }

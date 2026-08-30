@@ -32,6 +32,7 @@
     "package:store": "pnpm build && pnpm lint:manifest && node ./scripts/package-chrome-store.mjs",
     "entitlements:serve": "node ./services/entitlement-authority/server.mjs",
     "entitlements:verify-key": "node ./scripts/verify-entitlement-key.mjs",
+    "entitlements:preflight": "sh ./scripts/preflight-entitlement-deployment.sh",
     "site:build": "node ./scripts/build-site-config.mjs",
     "package:helper:macos": "sh ./scripts/package-macos-helper.sh",
     "release:helper:macos": "sh ./scripts/release-macos-helper.sh",

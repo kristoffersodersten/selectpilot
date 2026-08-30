@@ -4,4 +4,5 @@ COPY services/entitlement-authority/server.mjs ./server.mjs
 USER node
 ENV HOST=0.0.0.0 PORT=8090
 EXPOSE 8090
-CMD ["node", "server.mjs"]
+ENTRYPOINT ["node"]
+CMD ["server.mjs"]
