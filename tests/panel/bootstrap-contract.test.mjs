@@ -85,3 +85,33 @@ test('production macOS package also binds launchd to Python 3.9 or newer', () =>
   assert.match(launchAgent, /__PYTHON_BIN__/);
   assert.doesNotMatch(launchAgent, /\/usr\/bin\/python3/);
 });
+
+test('production macOS package preserves hardware-aware task routing', () => {
+  const postinstall = readFileSync('./installer/macos/scripts/postinstall', 'utf8');
+  const launchAgent = readFileSync('./installer/macos/com.selectpilot.bridge.plist.template', 'utf8');
+
+  for (const field of [
+    'profile.key',
+    'profile.generation_model',
+    'profile.fast_generation_model',
+    'profile.embedding_model',
+    'profile.num_ctx',
+    'profile.fast_num_ctx',
+    'profile.max_input_chars',
+  ]) {
+    assert.ok(postinstall.includes(field), `missing profile field ${field}`);
+  }
+
+  for (const placeholder of [
+    '__RUNTIME_PROFILE__',
+    '__OLLAMA_MODEL__',
+    '__OLLAMA_FAST_MODEL__',
+    '__OLLAMA_EMBED_MODEL__',
+    '__OLLAMA_NUM_CTX__',
+    '__OLLAMA_FAST_NUM_CTX__',
+    '__MAX_INPUT_CHARS__',
+  ]) {
+    assert.ok(postinstall.includes(placeholder), `postinstall does not bind ${placeholder}`);
+    assert.ok(launchAgent.includes(placeholder), `LaunchAgent does not expose ${placeholder}`);
+  }
+});
