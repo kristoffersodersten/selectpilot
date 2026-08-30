@@ -1,3 +1,5 @@
+// module_name: api_request_hardening_tests
+// spec_ref: "privacy_and_debug_policy"
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
