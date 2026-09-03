@@ -7,6 +7,17 @@ export type SummarizePayload = { text: string; url?: string; title?: string; met
 export type ExtractPayload = { text: string; preset?: string; url?: string; title?: string; metadata?: Record<string, unknown> };
 export type AgentPayload = { prompt: string; context?: Record<string, unknown> };
 export type EmbedPayload = { text: string };
+export type RuntimeRouting = {
+  model: string;
+  num_ctx: number;
+  reason: string;
+};
+export type RuntimeResponseTruth = {
+  model: string;
+  source: string;
+  routing: RuntimeRouting;
+  trace_id?: string;
+};
 export type IntentCompilePayload = {
   intent: string;
   has_selection?: boolean;
@@ -71,13 +82,22 @@ export type RuntimeMetaEvent = {
 };
 
 export async function summarize(payload: SummarizePayload) {
-  return apiRequest<{ summary: string; markdown: string }>(endpoints.summarize, { body: payload });
+  return apiRequest<{ summary: string; markdown: string } & RuntimeResponseTruth>(endpoints.summarize, {
+    body: payload,
+    timeoutMs: 45_000,
+  });
 }
 
 export async function extract(payload: ExtractPayload) {
-  return apiRequest<{ preset: string; label: string; description: string; markdown: string; json: Record<string, unknown> }>(
+  return apiRequest<{
+    preset: string;
+    label: string;
+    description: string;
+    markdown: string;
+    json: Record<string, unknown>;
+  } & RuntimeResponseTruth>(
     endpoints.extract,
-    { body: payload }
+    { body: payload, timeoutMs: 45_000 }
   );
 }
 
@@ -86,7 +106,10 @@ export async function embed(payload: EmbedPayload) {
 }
 
 export async function agent(payload: AgentPayload) {
-  return apiRequest<{ reasoning: string[]; markdown: string; json: unknown }>(endpoints.agent, { body: payload });
+  return apiRequest<{ reasoning: string[]; markdown: string; json: unknown } & RuntimeResponseTruth>(endpoints.agent, {
+    body: payload,
+    timeoutMs: 45_000,
+  });
 }
 
 export async function compileIntent(payload: IntentCompilePayload) {

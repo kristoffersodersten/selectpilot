@@ -6,6 +6,7 @@
     <string>__PYTHON_BIN__</string><string>__PROJECT_ROOT__/server/nano_server.py</string>
     <string>--port</string><string>8083</string>
     <string>--run-dir</string><string>__RUN_DIR__</string>
+    <string>--state-dir</string><string>__STATE_DIR__</string>
     <string>--log-dir</string><string>__LOG_DIR__</string>
     <string>--binary-path</string><string>__PROJECT_ROOT__/server/nano_server.py</string>
   </array>
@@ -18,6 +19,7 @@
     <key>CHROMEAI_PORT_INFO</key><string>__RUN_DIR__/port.info</string>
     <key>CHROMEAI_EXPECTED_PORT_FILE</key><string>__RUN_DIR__/port.info</string>
     <key>CHROMEAI_ALLOWED_RANGE</key><string>8083</string>
+    <key>CHROMEAI_RUNTIME_STATE_DIR</key><string>__STATE_DIR__</string>
     <key>CHROMEAI_OLLAMA_BASE_URL</key><string>__OLLAMA_BASE_URL__</string>
     <key>CHROMEAI_RUNTIME_PROFILE</key><string>__RUNTIME_PROFILE__</string>
     <key>CHROMEAI_OLLAMA_MODEL</key><string>__OLLAMA_MODEL__</string>
@@ -29,6 +31,7 @@
     <key>CHROMEAI_OLLAMA_SEED</key><string>__OLLAMA_SEED__</string>
     <key>CHROMEAI_BINARY_HASH</key><string>__BINARY_HASH__</string>
     <key>CHROMEAI_AUTO_PULL_MODELS</key><string>0</string>
+    <key>CHROMEAI_MAX_CONCURRENT_OPERATIONS</key><string>1</string>
     <key>SELECTPILOT_ENTITLEMENT_AUTHORITY_URL</key><string>__ENTITLEMENT_AUTHORITY_URL__</string>
   </dict>
 </dict></plist>

@@ -4,11 +4,16 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import test from 'node:test';
-import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { collectRuntimeFiles, assertReleaseSafe } from '../../scripts/package-chrome-store.mjs';
+import {
+  collectRuntimeFiles,
+  assertReleaseSafe,
+  assertSourceKeyringUnprovisioned,
+  packageChromeStore,
+} from '../../scripts/package-chrome-store.mjs';
 import { REQUIRED_IMAGES, readPngDimensions, validateStoreAssets } from '../../scripts/validate-store-assets.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -37,9 +42,8 @@ test('runtime inventory excludes source, tests, reports, and transient files', a
   assert.ok(files.every((file) => !/(^|\/)(tests|reports|node_modules)(\/|$)/.test(file)));
 });
 
-test('store release accepts the pinned production entitlement keyring', async () => {
-  const files = await collectRuntimeFiles(root);
-  await assert.doesNotReject(assertReleaseSafe(files, root));
+test('repository keyring remains deliberately unprovisioned', async () => {
+  await assert.doesNotReject(assertSourceKeyringUnprovisioned(root));
 });
 
 test('store runtime captures selected text only', async () => {
@@ -54,7 +58,7 @@ test('store runtime captures selected text only', async () => {
   assert.ok(Object.values(tiers).flat().every((feature) => !/(?:audio|video|image|multimodal)/i.test(feature)));
 });
 
-test('relative CLI paths execute validation and deterministic packaging', () => {
+test('relative CLI paths validate assets and block packaging without explicit release identity', () => {
   const validation = execFileSync(process.execPath, ['./scripts/validate-store-assets.mjs'], {
     cwd: root,
     encoding: 'utf8',
@@ -64,9 +68,37 @@ test('relative CLI paths execute validation and deterministic packaging', () => 
   const packaging = spawnSync(process.execPath, ['./scripts/package-chrome-store.mjs'], {
     cwd: root,
     encoding: 'utf8',
+    env: { ...process.env, SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_JSON: '' },
   });
-  assert.equal(packaging.status, 0, packaging.stderr);
-  assert.match(packaging.stdout, /^selectpilot-1\.0\.0\.zip [0-9a-f]{64}\s*$/);
+  assert.notEqual(packaging.status, 0);
+  assert.match(packaging.stderr, /SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_JSON is required/);
+});
+
+test('explicit public identity is injected only into the isolated Store staging tree', async () => {
+  const releaseRoot = await mkdtemp(path.join(tmpdir(), 'selectpilot-store-package-'));
+  const files = await collectRuntimeFiles(root);
+  for (const relative of new Set([...files, ...REQUIRED_IMAGES.keys(), 'package.json'])) {
+    const destination = path.join(releaseRoot, relative);
+    await mkdir(path.dirname(destination), { recursive: true });
+    await cp(path.join(root, relative), destination);
+  }
+
+  const publicKey = 'ab'.repeat(32);
+  const report = await packageChromeStore(releaseRoot, {
+    entitlementKeyringJson: JSON.stringify({ 'selectpilot-test-release': publicKey }),
+    sourceRevision: '1'.repeat(40),
+  });
+  const stagedKeyring = JSON.parse(await readFile(
+    path.join(releaseRoot, 'dist/chrome-web-store/selectpilot-1.0.0/pricing/entitlement-public-keys.json'),
+    'utf8',
+  ));
+  const sourceKeyring = JSON.parse(await readFile(path.join(releaseRoot, 'pricing/entitlement-public-keys.json'), 'utf8'));
+
+  assert.deepEqual(report.entitlement_key_ids, ['selectpilot-test-release']);
+  assert.equal(report.source_revision, '1'.repeat(40));
+  assert.match(report.entitlement_keyring_sha256, /^[0-9a-f]{64}$/);
+  assert.equal(stagedKeyring.keys[0].public_key_hex, publicKey);
+  assert.deepEqual(sourceKeyring.keys, []);
 });
 
 test('store release rejects remotely hosted executable code', async () => {

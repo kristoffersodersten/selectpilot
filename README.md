@@ -214,7 +214,7 @@ Store listing copy, privacy language, and the release checklist live in:
 - [`docs/CHROME_WEB_STORE_RELEASE_CHECKLIST.md`](docs/CHROME_WEB_STORE_RELEASE_CHECKLIST.md)
 - [`docs/PRIVACY_POLICY.md`](docs/PRIVACY_POLICY.md)
 
-`pnpm package:store` builds and audits the upload ZIP. It fails closed unless the production entitlement public key is pinned and valid; unsigned or remotely executed commercial logic is never release-eligible.
+`pnpm package:store` builds and audits the upload ZIP. The repository keyring is deliberately unprovisioned; an authorized release must supply `SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_JSON`, which is validated and injected only into the isolated staging tree. The evidence report records the public key IDs and keyring digest. Missing identity, unsigned access, or remotely executed commercial logic blocks packaging.
 
 ## Compute Distribution
 

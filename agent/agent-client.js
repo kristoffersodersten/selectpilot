@@ -7,6 +7,10 @@ export async function runAgent(prompt, context) {
     return {
         reasoning: res.reasoning,
         markdown: res.markdown,
-        json: res.json ?? {}
+        json: res.json ?? {},
+        model: res.model,
+        source: res.source,
+        routing: res.routing,
+        trace_id: res.trace_id,
     };
 }

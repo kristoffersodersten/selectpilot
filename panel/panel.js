@@ -102,6 +102,7 @@ let memorySnapshot = {
     lastUpdatedAt: null,
 };
 let entitlementSnapshot = null;
+let entitlementStatusKnown = false;
 let bridgeAvailable = false;
 let installationSnapshot = {
     state: 'idle',
@@ -145,6 +146,37 @@ function setSilentProcessing(active) {
 function setStatusBar(text) {
     if (statusBar)
         statusBar.textContent = text;
+}
+function applyResponseRuntimeTruth(taskFamily, response) {
+    const value = response;
+    const routing = value?.routing;
+    if (typeof value?.model !== 'string'
+        || !value.model
+        || typeof value?.source !== 'string'
+        || !value.source
+        || typeof routing?.model !== 'string'
+        || routing.model !== value.model
+        || typeof routing.num_ctx !== 'number'
+        || !Number.isInteger(routing.num_ctx)
+        || Number(routing.num_ctx) <= 0
+        || typeof routing.reason !== 'string'
+        || !routing.reason) {
+        throw new Error('Runtime response omitted its exact local model contract');
+    }
+    applyRuntimeEvent({
+        taskFamily,
+        selectedModel: routing.model,
+        executionGeography: 'local',
+    });
+    const profile = getEffectiveRecommendedProfile();
+    const reason = routing.reason.replace(/_/g, ' ');
+    if (truthExecutionEl)
+        truthExecutionEl.textContent = 'Local';
+    if (truthModelEl)
+        truthModelEl.textContent = routing.model;
+    if (truthProfileEl)
+        truthProfileEl.textContent = `${profile.label} · ${Number(routing.num_ctx).toLocaleString()} ctx`;
+    setStatusBar(`${taskFamily} · ${routing.model} · ${Number(routing.num_ctx).toLocaleString()} ctx · ${reason}`);
 }
 function setLeakageFeedback(status, details) {
     if (leakageStatusEl)
@@ -747,6 +779,10 @@ function renderMemoryState() {
 function renderEntitlementStatus() {
     if (!entitlementStatusEl)
         return;
+    if (!entitlementStatusKnown) {
+        entitlementStatusEl.textContent = 'Access state unavailable · refresh required.';
+        return;
+    }
     const tier = entitlementSnapshot?.tier || 'essential';
     const token = entitlementSnapshot?.token;
     if (!token) {
@@ -760,9 +796,11 @@ function renderEntitlementStatus() {
 async function refreshEntitlementStatus() {
     try {
         entitlementSnapshot = await request('entitlement:get');
+        entitlementStatusKnown = true;
     }
     catch {
         entitlementSnapshot = null;
+        entitlementStatusKnown = false;
     }
     renderEntitlementStatus();
     renderSelectionState();
@@ -1037,23 +1075,20 @@ async function refreshTier() {
 async function refreshRuntime() {
     const startedAt = performance.now();
     try {
-        try {
-            runtimeProfilesPayload = await fetchRuntimeProfiles();
-        }
-        catch {
-            runtimeProfilesPayload = {
-                profiles: RUNTIME_PROFILES,
-                recommended_profile: 'fast',
-                reason: 'The smallest viable profile is the safest starting point.',
-            };
-        }
+        runtimeProfilesPayload = await fetchRuntimeProfiles();
         const health = await fetchHealth();
         bridgeAvailable = true;
         try {
             await refreshInstallationStatus();
         }
         catch {
-            installationSnapshot = { state: 'idle', label: 'Ready to install', progress: 0, profile: null, action_required: null };
+            installationSnapshot = {
+                state: 'error',
+                label: 'Installation state unavailable',
+                progress: 0,
+                profile: null,
+                action_required: 'Refresh the local bridge before changing runtime state.',
+            };
         }
         privacyProofSnapshot = await fetchPrivacyProof();
         runtimeSnapshot = {
@@ -1140,15 +1175,7 @@ async function refreshRuntime() {
 async function doSummarize() {
     setStatus('Summarizing selected text...');
     const res = await request('panel:summarize');
-    if (res?.model_selection) {
-        applyRuntimeEvent({
-            taskFamily: 'summarize',
-            selectedModel: String(res.model_selection.model || res.model || 'unknown'),
-            selectionPath: res.model_selection.selection_path,
-            policyVersion: res.model_selection.policy_version ?? null,
-            executionGeography: 'local',
-        });
-    }
+    applyResponseRuntimeTruth('summarize', res);
     renderOutput({
         title: 'Summary',
         markdown: res.markdown || res.summary || '',
@@ -1163,15 +1190,7 @@ async function doExtract(presetKey) {
     const selectedPreset = getExtractionPreset(presetKey || extractPresetEl?.value);
     setStatus(`Extracting ${selectedPreset.label.toLowerCase()}...`);
     const res = await request('panel:extract', { preset: selectedPreset.key });
-    if (res?.model_selection) {
-        applyRuntimeEvent({
-            taskFamily: 'extract',
-            selectedModel: String(res.model_selection.model || res.model || 'unknown'),
-            selectionPath: res.model_selection.selection_path,
-            policyVersion: res.model_selection.policy_version ?? null,
-            executionGeography: 'local',
-        });
-    }
+    applyResponseRuntimeTruth('extract', res);
     renderOutput({
         title: res.label || selectedPreset.label,
         markdown: res.markdown || '',
@@ -1186,6 +1205,7 @@ async function doExtract(presetKey) {
 async function doFirstRunExample() {
     const selectedPreset = getExtractionPreset(FIRST_RUN_EXAMPLE.preset);
     const res = await request('panel:extract_demo');
+    applyResponseRuntimeTruth('extract', res);
     renderOutput({
         title: res.label || selectedPreset.label,
         markdown: res.markdown || '',
@@ -1204,6 +1224,7 @@ async function doRewrite() {
     const prompt = agentPromptEl?.value.trim() || 'Rewrite the selected text in clearer, tighter language.';
     setStatus('Rewriting...');
     const res = await request('panel:agent', { prompt });
+    applyResponseRuntimeTruth('agent', res);
     const markdown = res.markdown || '';
     renderOutput({
         title: 'Rewrite',
@@ -1223,15 +1244,7 @@ async function doAsk() {
     const prompt = agentPromptEl?.value.trim() || 'Answer the question using the selected text as context.';
     setStatus('Asking Ollama...');
     const res = await request('panel:agent', { prompt });
-    if (res?.model_selection) {
-        applyRuntimeEvent({
-            taskFamily: 'agent',
-            selectedModel: String(res.model_selection.model || res.model || 'unknown'),
-            selectionPath: res.model_selection.selection_path,
-            policyVersion: res.model_selection.policy_version ?? null,
-            executionGeography: 'local',
-        });
-    }
+    applyResponseRuntimeTruth('agent', res);
     const markdown = res.markdown || '';
     renderOutput({
         title: 'Answer',

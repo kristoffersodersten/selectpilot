@@ -42,7 +42,7 @@
     "test:privacy": "node --test tests/panel/network-boundary.test.mjs && python3 -m unittest tests/server/test_privacy_proof.py",
     "test:billing": "python3 -m unittest tests/server/test_billing_security.py tests/server/test_entitlement_signer.py && python3 -c \"import sys; sys.path.insert(0, 'server'); import monero_payment_server\"",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "validate:server": "python3 server/nano_server.py --run-dir /tmp/chromeai-run --log-dir /tmp/chromeai-log"
+    "validate:server": "python3 server/nano_server.py --run-dir /tmp/chromeai-run --state-dir /tmp/chromeai-state --log-dir /tmp/chromeai-log"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

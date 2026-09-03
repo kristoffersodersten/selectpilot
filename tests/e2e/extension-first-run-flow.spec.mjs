@@ -108,6 +108,13 @@ test('real extension preserves privacy from selected text through rendered outpu
     if (path === '/extract') {
       extractRequests.push(request.postDataJSON());
       return fulfill({
+        model: 'gemma4:e2b-it-qat',
+        source: 'ollama',
+        routing: {
+          model: 'gemma4:e2b-it-qat',
+          num_ctx: 16_384,
+          reason: 'smallest_qualified_structured_model',
+        },
         preset: 'action_brief',
         label: 'Action Brief',
         description: 'Turn selected text into a concise action-oriented brief.',
@@ -156,6 +163,9 @@ test('real extension preserves privacy from selected text through rendered outpu
     });
 
     await expect(panelPage.locator('#result-title')).toHaveText('Action Brief');
+    await expect(panelPage.locator('#truth-model')).toHaveText('gemma4:e2b-it-qat');
+    await expect(panelPage.locator('#truth-profile')).toContainText('16,384 ctx');
+    await expect(panelPage.locator('#status-bar')).toContainText('smallest qualified structured model');
     await expect(panelPage.locator('#exports')).toContainText('Copy Markdown');
     await panelPage.locator('#tab-structured').click();
     await expect(panelPage.locator('#workflow')).toContainText('Publishing waits for both checks');

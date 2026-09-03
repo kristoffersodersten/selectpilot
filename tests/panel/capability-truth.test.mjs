@@ -18,4 +18,6 @@ test('unimplemented media capabilities are absent from the shipped extension', a
   assert.doesNotMatch(panel, /btn-(?:transcribe|vision)/);
   assert.doesNotMatch(harness, /btn-(?:transcribe|vision)/);
   assert.doesNotMatch(background, /panel:(?:transcribe|vision)/);
+  assert.match(panel, /id="truth-model"/);
+  assert.match(panel, /id="truth-profile"/);
 });

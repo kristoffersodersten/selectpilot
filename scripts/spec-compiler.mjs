@@ -35,7 +35,7 @@ const REQUIRED_TOP_LEVEL_NODES = [
 ];
 
 const SCAN_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs', '.py']);
-const SCAN_IGNORE = new Set(['.git', 'node_modules', 'test-results', 'dist', 'site-dist']);
+const SCAN_IGNORE = new Set(['.git', '.venv', 'node_modules', 'test-results', 'dist', 'site-dist']);
 const SIMULATION_EVIDENCE = {
   evidence_class: 'deterministic_simulation',
   runtime_verified: false,

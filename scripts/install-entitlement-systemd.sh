@@ -13,6 +13,7 @@ UNIT_TARGET=/etc/systemd/system/selectpilot-entitlement.service
 
 for secret_file in \
   /etc/selectpilot/secrets/entitlement-ed25519.pem \
+  /etc/selectpilot/secrets/entitlement-public-keys.json \
   /etc/selectpilot/secrets/paddle-webhook-secret \
   /etc/selectpilot/secrets/paddle-price-map.json
 do
@@ -32,6 +33,7 @@ if ss -ltn | awk '{print $4}' | grep -Eq '(^|:)8091$'; then
 fi
 
 SELECTPILOT_ENTITLEMENT_PRIVATE_KEY_FILE=/etc/selectpilot/secrets/entitlement-ed25519.pem \
+SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_FILE=/etc/selectpilot/secrets/entitlement-public-keys.json \
   node "$ROOT/scripts/verify-entitlement-key.mjs"
 
 install -d -o root -g root -m 0755 "$APP_DIR"

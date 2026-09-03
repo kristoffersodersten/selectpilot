@@ -62,6 +62,10 @@ export async function runPipeline(input: string, context: AgentContext, userProm
   return {
     reasoning: [...chain, ...(agentOut.reasoning || [])],
     markdown: agentOut.markdown,
-    json: agentOut.json
+    json: agentOut.json,
+    model: agentOut.model,
+    source: agentOut.source,
+    routing: agentOut.routing,
+    trace_id: agentOut.trace_id,
   };
 }

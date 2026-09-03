@@ -7,6 +7,7 @@ import { cp, mkdir, readFile, readdir, rm, stat, utimes, writeFile } from 'node:
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { parseProvisionedEntitlementKeyring, validateEntitlementKeyring } from './entitlement-keyring.mjs';
 import { validateStoreAssets } from './validate-store-assets.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -64,20 +65,7 @@ export async function assertReleaseSafe(files, root = projectRoot) {
     throw new Error('Store package blocked: production entitlement signature verification is not configured (SOD-837).');
   }
   const keyring = JSON.parse(await readFile(path.join(root, 'pricing/entitlement-public-keys.json'), 'utf8'));
-  if (
-    keyring.schema_version !== 1
-    || !Array.isArray(keyring.keys)
-    || !keyring.keys.some((key) => key.status === 'active')
-    || keyring.keys.some((key) => (
-      typeof key.kid !== 'string'
-      || !key.kid
-      || key.alg !== 'Ed25519'
-      || !/^[0-9a-f]{64}$/i.test(key.public_key_hex || '')
-      || !['active', 'retiring'].includes(key.status)
-    ))
-  ) {
-    throw new Error('Store package blocked: production entitlement keyring is invalid.');
-  }
+  validateEntitlementKeyring(keyring);
   if (files.some((file) => file.startsWith('billing/') || file === 'pricing/paddle-products.json')) {
     throw new Error('Store package blocked: inactive remote checkout code or product placeholders entered runtime inventory.');
   }
@@ -98,20 +86,52 @@ export async function assertReleaseSafe(files, root = projectRoot) {
   }
 }
 
+export async function assertSourceKeyringUnprovisioned(root = projectRoot) {
+  const keyring = JSON.parse(await readFile(path.join(root, 'pricing/entitlement-public-keys.json'), 'utf8'));
+  validateEntitlementKeyring(keyring, { requireActive: false });
+}
+
 async function sha256(filePath) {
   return createHash('sha256').update(await readFile(filePath)).digest('hex');
 }
 
-export async function packageChromeStore(root = projectRoot) {
-  await validateStoreAssets(root);
-  const files = await collectRuntimeFiles(root);
-  await assertReleaseSafe(files, root);
+function resolveSourceRevision(root, declaredRevision) {
+  const revisionResult = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
+  const actualRevision = revisionResult.status === 0 ? revisionResult.stdout.trim() : '';
+  const revision = declaredRevision || actualRevision;
+  if (!/^[0-9a-f]{40}$/i.test(revision)) {
+    throw new Error('Store package blocked: an exact 40-character source revision is required');
+  }
+  if (actualRevision && revision.toLowerCase() !== actualRevision.toLowerCase()) {
+    throw new Error('Store package blocked: declared source revision does not match checked-out HEAD');
+  }
+  if (actualRevision) {
+    const status = spawnSync('git', ['status', '--porcelain', '--untracked-files=no'], { cwd: root, encoding: 'utf8' });
+    if (status.status !== 0 || status.stdout.trim()) {
+      throw new Error('Store package blocked: tracked source is dirty after build');
+    }
+  }
+  return revision.toLowerCase();
+}
 
+export async function packageChromeStore(
+  root = projectRoot,
+  {
+    entitlementKeyringJson = process.env.SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_JSON,
+    sourceRevision = process.env.SELECTPILOT_SOURCE_SHA,
+  } = {},
+) {
   const packageJson = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
   const outputRoot = path.join(root, 'dist', 'chrome-web-store');
   const stageRoot = path.join(outputRoot, `selectpilot-${packageJson.version}`);
   const zipPath = `${stageRoot}.zip`;
   await rm(outputRoot, { recursive: true, force: true });
+
+  await validateStoreAssets(root);
+  await assertSourceKeyringUnprovisioned(root);
+  const provisionedKeyring = parseProvisionedEntitlementKeyring(entitlementKeyringJson);
+  const exactSourceRevision = resolveSourceRevision(root, sourceRevision);
+  const files = await collectRuntimeFiles(root);
   await mkdir(stageRoot, { recursive: true });
 
   for (const relative of files) {
@@ -120,6 +140,12 @@ export async function packageChromeStore(root = projectRoot) {
     await cp(path.join(root, relative), destination);
     await utimes(destination, fixedDate, fixedDate);
   }
+
+  const stagedKeyringPath = path.join(stageRoot, 'pricing/entitlement-public-keys.json');
+  const canonicalKeyring = `${JSON.stringify(provisionedKeyring, null, 2)}\n`;
+  await writeFile(stagedKeyringPath, canonicalKeyring);
+  await utimes(stagedKeyringPath, fixedDate, fixedDate);
+  await assertReleaseSafe(files, stageRoot);
 
   const zip = spawnSync('zip', ['-X', '-q', zipPath, ...files], {
     cwd: stageRoot,
@@ -131,8 +157,11 @@ export async function packageChromeStore(root = projectRoot) {
   const report = {
     schema_version: 1,
     version: packageJson.version,
+    source_revision: exactSourceRevision,
     artifact: path.basename(zipPath),
     sha256: await sha256(zipPath),
+    entitlement_keyring_sha256: createHash('sha256').update(canonicalKeyring).digest('hex'),
+    entitlement_key_ids: provisionedKeyring.keys.map((key) => key.kid),
     file_count: files.length,
     files,
   };

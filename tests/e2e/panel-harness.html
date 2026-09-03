@@ -210,6 +210,9 @@
           }
           if (msg.type === 'panel:extract_demo') {
             return {
+              model: 'gemma4:e2b-it-qat',
+              source: 'ollama',
+              routing: { model: 'gemma4:e2b-it-qat', num_ctx: 16384, reason: 'smallest_qualified_structured_model' },
               label: 'Action Brief',
               description: 'Turn selected text into a concise action-oriented brief.',
               markdown: '## Action Brief\n\n- Maya: privacy check by Thursday\n- Jonas: verify payment and store assets',
@@ -225,6 +228,9 @@
           if (msg.type === 'panel:extract') {
             pushMemory('extract');
             return {
+              model: 'gemma4:e2b-it-qat',
+              source: 'ollama',
+              routing: { model: 'gemma4:e2b-it-qat', num_ctx: 16384, reason: 'smallest_qualified_structured_model' },
               label: 'Action Brief',
               description: 'Extract action items',
               markdown: '## Action Brief\n\n- Ship update\n- Inform team',
@@ -235,7 +241,13 @@
               },
             };
           }
-          return { markdown: 'ok', json: {} };
+          return {
+            model: 'gemma4:e2b-it-qat',
+            source: 'ollama',
+            routing: { model: 'gemma4:e2b-it-qat', num_ctx: 16384, reason: 'qualified_general_model' },
+            markdown: 'ok',
+            json: {},
+          };
         },
       },
       tabs: {

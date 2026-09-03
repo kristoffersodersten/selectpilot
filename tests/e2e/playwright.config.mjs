@@ -14,7 +14,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [['list']],
   webServer: {
-    command: 'python3 server/nano_server.py --run-dir /tmp/selectpilot-e2e-run --log-dir /tmp/selectpilot-e2e-log',
+    command: 'python3 server/nano_server.py --run-dir /tmp/selectpilot-e2e-run --state-dir /tmp/selectpilot-e2e-state --log-dir /tmp/selectpilot-e2e-log',
     cwd: projectRoot,
     env: {
       ...process.env,

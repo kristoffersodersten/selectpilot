@@ -9,6 +9,10 @@ export async function runAgent(prompt: string, context: AgentContext): Promise<A
   return {
     reasoning: res.reasoning,
     markdown: res.markdown,
-    json: (res.json as Record<string, unknown>) ?? {}
+    json: (res.json as Record<string, unknown>) ?? {},
+    model: res.model,
+    source: res.source,
+    routing: res.routing,
+    trace_id: res.trace_id,
   };
 }

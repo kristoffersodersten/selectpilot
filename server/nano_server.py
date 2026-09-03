@@ -13,6 +13,7 @@ import json
 import os
 import re
 import socket
+import sys
 import threading
 import time
 from collections import deque
@@ -33,6 +34,7 @@ DEFAULT_PORT = 8083
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
 MAX_REQUEST_BYTES = 2 * 1024 * 1024
 CHROME_EXTENSION_ORIGIN = re.compile(r"^chrome-extension://[a-p]{32}$")
+INFERENCE_ENDPOINTS = {"/summarize", "/extract", "/agent", "/embed", "/benchmark"}
 
 ALLOWED_BRIDGE_ENDPOINT_PATHS = [
     "/health",
@@ -133,6 +135,49 @@ class ValidationError(RuntimeError):
         self.message = message
         self.status = status
         self.details = details or {}
+
+
+class RuntimeStateError(RuntimeError):
+    """Raised when decision-affecting local runtime state cannot be read safely."""
+
+
+class LocalOperationAdmission:
+    def __init__(self, limit: int):
+        if limit < 1 or limit > 4:
+            raise ValueError("local operation concurrency must be between 1 and 4")
+        self.limit = limit
+        self._semaphore = threading.BoundedSemaphore(limit)
+        self._lock = threading.Lock()
+        self._active = 0
+
+    def try_acquire(self) -> bool:
+        if not self._semaphore.acquire(blocking=False):
+            return False
+        with self._lock:
+            self._active += 1
+        return True
+
+    def release(self) -> None:
+        with self._lock:
+            if self._active < 1:
+                raise RuntimeError("local operation admission release imbalance")
+            self._active -= 1
+        self._semaphore.release()
+
+    def snapshot(self) -> dict:
+        with self._lock:
+            return {"active": self._active, "limit": self.limit}
+
+
+def configured_operation_concurrency() -> int:
+    raw = os.environ.get("CHROMEAI_MAX_CONCURRENT_OPERATIONS", "1")
+    try:
+        return int(raw)
+    except ValueError as exc:
+        raise RuntimeError("invalid_local_operation_concurrency") from exc
+
+
+OPERATION_ADMISSION = LocalOperationAdmission(configured_operation_concurrency())
 
 
 def extension_origin_allowed(origin: str | None) -> bool:
@@ -445,6 +490,13 @@ def verify_binary(path: Path, expected_hash: str | None = None) -> bool:
         print(f"binary hash mismatch: {digest} != {expected_hash}")
         return False
     return True
+
+
+def require_binary_integrity(path: Path, expected_hash: str | None = None) -> None:
+    if not verify_binary(path, expected_hash):
+        raise RuntimeError("runtime_integrity_check_failed")
+
+
 def ensure_dirs(path: Path):
     path.mkdir(parents=True, exist_ok=True)
 
@@ -458,7 +510,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RUNTIME_DIR = PROJECT_ROOT / "runtime"
 RUNTIME_POLICY_PATH = RUNTIME_DIR / "model_policy.json"
 RUNTIME_REGISTRY_PATH = RUNTIME_DIR / "model_registry.runtime.json"
-LIVE_FEEDBACK_PATH = RUNTIME_DIR / "live_feedback.jsonl"
+DEFAULT_RUNTIME_STATE_DIR = Path(os.path.expanduser('~/Library/Application Support/SelectPilot/state'))
+RUNTIME_STATE_DIR = Path(os.environ.get('CHROMEAI_RUNTIME_STATE_DIR', DEFAULT_RUNTIME_STATE_DIR))
+LIVE_FEEDBACK_PATH = RUNTIME_STATE_DIR / "live_feedback.jsonl"
 _LIVE_FEEDBACK_LOCK = threading.Lock()
 MAX_LIVE_FEEDBACK_BYTES = 2 * 1024 * 1024
 MAX_RUNTIME_META_STREAMS = 4
@@ -488,9 +542,34 @@ DETERMINISTIC_MODEL_REGISTRY = [
     },
 ]
 
-def _append_live_feedback(event: dict) -> None:
+def configure_runtime_state(state_dir: Path) -> None:
+    global RUNTIME_STATE_DIR, LIVE_FEEDBACK_PATH
+    resolved = state_dir.expanduser().resolve()
+    ensure_dirs(resolved)
+    probe = resolved / f".write-probe-{os.getpid()}"
     try:
-        ensure_dirs(RUNTIME_DIR)
+        probe.write_text("selectpilot-runtime-state\n", encoding="utf-8")
+        probe.unlink()
+    except OSError as exc:
+        raise RuntimeError("runtime_state_directory_unwritable") from exc
+    RUNTIME_STATE_DIR = resolved
+    LIVE_FEEDBACK_PATH = resolved / "live_feedback.jsonl"
+
+
+def _report_runtime_state_error(operation: str, exc: Exception) -> None:
+    payload = {
+        "event": "runtime_state.failed",
+        "operation": operation,
+        "status": "error",
+        "error": type(exc).__name__,
+        "ts": datetime.now(timezone.utc).isoformat(),
+    }
+    print(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), file=sys.stderr)
+
+
+def _append_live_feedback(event: dict) -> bool:
+    try:
+        ensure_dirs(LIVE_FEEDBACK_PATH.parent)
         entry = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             **event,
@@ -502,9 +581,10 @@ def _append_live_feedback(event: dict) -> None:
                 os.replace(LIVE_FEEDBACK_PATH, rotated)
             with LIVE_FEEDBACK_PATH.open("a", encoding="utf-8") as handle:
                 handle.write(f"{line}\n")
-    except Exception:
-        # Feedback sink must not break request handling.
-        return
+        return True
+    except (OSError, TypeError, ValueError) as exc:
+        _report_runtime_state_error("write_feedback", exc)
+        return False
 
 
 def _load_json_file(path: Path) -> dict | None:
@@ -649,21 +729,21 @@ def _recent_model_feedback(model_id: str, limit: int = MODEL_FAILURE_ISOLATION_W
         for line in reversed(lines):
             try:
                 item = json.loads(line)
-            except json.JSONDecodeError:
-                continue
+            except json.JSONDecodeError as exc:
+                raise RuntimeStateError("runtime_state_feedback_corrupt") from exc
             if item.get("type") == "model_feedback" and item.get("model_id") == model_id:
                 records.append(item)
                 if len(records) >= limit:
                     break
-    except OSError:
-        return []
+    except OSError as exc:
+        raise RuntimeStateError("runtime_state_feedback_unreadable") from exc
     return list(reversed(records))
 
 
-def record_model_feedback(model_id: str, *, success: bool, retries: int, latency_ms: int, cancelled: bool = False) -> None:
+def record_model_feedback(model_id: str, *, success: bool, retries: int, latency_ms: int, cancelled: bool = False) -> bool:
     if not model_id:
-        return
-    _append_live_feedback({
+        return True
+    return _append_live_feedback({
         "type": "model_feedback",
         "model_id": model_id,
         "success": bool(success),
@@ -1178,15 +1258,9 @@ def select_smallest_sufficient_model(task_analysis: dict) -> dict:
 
 
 def fixed_temperature_for_task(task_type: str) -> float:
-    values = {
-        "classification": 0.0,
-        "extract": 0.0,
-        "rewrite": 0.3,
-        "analyze": 0.2,
-        "summarize": 0.2,
-        "agent": 0.2,
-    }
-    return float(values.get(str(task_type), 0.2))
+    # Every admitted production generation route is deterministic. This
+    # metadata must describe the payload actually sent by OllamaClient.
+    return 0.0
 
 
 def run_with_output_enforcement(
@@ -1429,6 +1503,15 @@ def license_claim(payload: dict) -> dict:
 
 class Handler(BaseHTTPRequestHandler):
     server_version = "ChromeAINano/1.0"
+    _operation_slot_acquired = False
+
+    def finish(self):
+        try:
+            super().finish()
+        finally:
+            if self._operation_slot_acquired:
+                OPERATION_ADMISSION.release()
+                self._operation_slot_acquired = False
 
     def _set_headers(self):
         self.send_header("Content-Type", "application/json")
@@ -1477,6 +1560,7 @@ class Handler(BaseHTTPRequestHandler):
                 "ok": bool(health.get("reachable")) and bool(health.get("model_available")),
                 "service": self.server_version,
                 "ollama": health,
+                "local_operation_capacity": OPERATION_ADMISSION.snapshot(),
             })
             return
         if path == '/privacy-proof':
@@ -1579,6 +1663,16 @@ class Handler(BaseHTTPRequestHandler):
         if contract is None:
             self._write_json(404, {"error": "not_found"})
             return
+        if path in INFERENCE_ENDPOINTS:
+            if not OPERATION_ADMISSION.try_acquire():
+                self._write_error(
+                    429,
+                    "local_runtime_busy",
+                    "Local runtime capacity is in use; retry after the active operation completes",
+                    OPERATION_ADMISSION.snapshot(),
+                )
+                return
+            self._operation_slot_acquired = True
 
         header_map = {k.lower(): v for k, v in self.headers.items()}
         trace_id = _resolve_trace_id(payload, header_map)
@@ -1821,6 +1915,20 @@ class Handler(BaseHTTPRequestHandler):
             )
             self._write_error(e.status, e.code, e.message, e.details)
             return
+        except RuntimeStateError as e:
+            duration_ms = round((time.perf_counter() - started_at) * 1000)
+            _report_runtime_state_error("read_feedback", e)
+            emit_runtime_meta(
+                event_type="RUNTIME_FAILED",
+                trace_id=trace_id,
+                operation=contract.name,
+                status="error",
+                message="Local runtime state is unavailable",
+                duration_ms=duration_ms,
+                details={"code": str(e)},
+            )
+            self._write_error(503, str(e), "Local runtime state is unavailable")
+            return
         except (RuntimeError, OllamaError) as e:
             duration_ms = round((time.perf_counter() - started_at) * 1000)
             if runtime_model_id and path in {'/summarize', '/agent', '/extract'}:
@@ -1890,11 +1998,17 @@ class Handler(BaseHTTPRequestHandler):
 
         duration_ms = round((time.perf_counter() - started_at) * 1000)
 
+        state_persisted = True
         if runtime_model_id and path in {'/summarize', '/agent', '/extract'}:
-            record_model_feedback(runtime_model_id, success=True, retries=retry_count, latency_ms=duration_ms)
+            state_persisted = record_model_feedback(
+                runtime_model_id,
+                success=True,
+                retries=retry_count,
+                latency_ms=duration_ms,
+            )
 
         model_selection = resp.get("model_selection") if isinstance(resp, dict) else None
-        _append_live_feedback({
+        state_persisted = _append_live_feedback({
             "trace_id": trace_id,
             "operation": contract.name,
             "endpoint": contract.endpoint,
@@ -1917,7 +2031,20 @@ class Handler(BaseHTTPRequestHandler):
                 if isinstance(model_selection, dict)
                 else None
             ),
-        })
+        }) and state_persisted
+
+        if not state_persisted:
+            emit_runtime_meta(
+                event_type="RUNTIME_FAILED",
+                trace_id=trace_id,
+                operation=contract.name,
+                status="error",
+                message="Local runtime state could not be persisted",
+                duration_ms=duration_ms,
+                details={"code": "runtime_state_write_failed"},
+            )
+            self._write_error(503, "runtime_state_write_failed", "Local runtime state could not be persisted")
+            return
 
         log_runtime_event(
             "request.completed",
@@ -1944,20 +2071,21 @@ def main():
     parser.add_argument('--port-range', default=None)
     parser.add_argument('--run-dir', default=os.path.expanduser('~/Library/Application Support/SelectPilot/run'))
     parser.add_argument('--log-dir', default=os.path.expanduser('~/Library/Logs/SelectPilot'))
+    parser.add_argument('--state-dir', default=os.environ.get('CHROMEAI_RUNTIME_STATE_DIR', str(DEFAULT_RUNTIME_STATE_DIR)))
     parser.add_argument('--binary-path', default=None)
     parser.add_argument('--binary-hash', default=None)
     args = parser.parse_args()
 
     run_dir = Path(args.run_dir)
     log_dir = Path(args.log_dir)
-    ensure_dirs(RUNTIME_DIR)
+    configure_runtime_state(Path(args.state_dir))
     ensure_dirs(run_dir)
     ensure_dirs(log_dir)
     port_file = run_dir / 'port.info'
 
     binary_path = Path(args.binary_path) if args.binary_path else Path(__file__)
     expected = args.binary_hash or os.environ.get('CHROMEAI_BINARY_HASH')
-    verify_binary(binary_path, expected)
+    require_binary_integrity(binary_path, expected)
 
     auto_pull = os.environ.get('CHROMEAI_AUTO_PULL_MODELS', '0').strip().lower() not in {'0', 'false', 'no'}
     if auto_pull:

@@ -82,7 +82,11 @@ test('production macOS package also binds launchd to Python 3.9 or newer', () =>
 
   assert.match(postinstall, /sys\.version_info >= \(3, 9\)/);
   assert.match(postinstall, /s\|__PYTHON_BIN__\|\$PYTHON_BIN\|g/);
+  assert.match(postinstall, /s\|__STATE_DIR__\|\$STATE_DIR\|g/);
   assert.match(launchAgent, /__PYTHON_BIN__/);
+  assert.match(launchAgent, /--state-dir/);
+  assert.match(launchAgent, /CHROMEAI_RUNTIME_STATE_DIR/);
+  assert.match(launchAgent, /CHROMEAI_MAX_CONCURRENT_OPERATIONS<\/key><string>1/);
   assert.doesNotMatch(launchAgent, /\/usr\/bin\/python3/);
 });
 

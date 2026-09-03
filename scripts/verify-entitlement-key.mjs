@@ -2,10 +2,14 @@
 // spec_ref: "validation_layer"
 import { createPrivateKey, createPublicKey, sign, verify } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { parseProvisionedEntitlementKeyring } from './entitlement-keyring.mjs';
 
 const privateKeyFile = process.env.SELECTPILOT_ENTITLEMENT_PRIVATE_KEY_FILE;
 if (!privateKeyFile) throw new Error('SELECTPILOT_ENTITLEMENT_PRIVATE_KEY_FILE is required');
-const keyring = JSON.parse(await readFile('pricing/entitlement-public-keys.json', 'utf8'));
+const publicKeyringFile = process.env.SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_FILE;
+const publicKeyringJson = process.env.SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_JSON
+  || (publicKeyringFile ? await readFile(publicKeyringFile, 'utf8') : '');
+const keyring = parseProvisionedEntitlementKeyring(publicKeyringJson);
 const active = keyring.keys.filter((key) => key.status === 'active');
 if (active.length !== 1) throw new Error('Exactly one active entitlement key is required');
 const privateKey = createPrivateKey(await readFile(privateKeyFile));

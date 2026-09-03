@@ -3,16 +3,22 @@
 import { endpoints } from './endpoints.js';
 import { apiRequest } from './request.js';
 export async function summarize(payload) {
-    return apiRequest(endpoints.summarize, { body: payload });
+    return apiRequest(endpoints.summarize, {
+        body: payload,
+        timeoutMs: 45_000,
+    });
 }
 export async function extract(payload) {
-    return apiRequest(endpoints.extract, { body: payload });
+    return apiRequest(endpoints.extract, { body: payload, timeoutMs: 45_000 });
 }
 export async function embed(payload) {
     return apiRequest(endpoints.embed, { body: payload });
 }
 export async function agent(payload) {
-    return apiRequest(endpoints.agent, { body: payload });
+    return apiRequest(endpoints.agent, {
+        body: payload,
+        timeoutMs: 45_000,
+    });
 }
 export async function compileIntent(payload) {
     return apiRequest(endpoints.intentCompile, { body: payload });

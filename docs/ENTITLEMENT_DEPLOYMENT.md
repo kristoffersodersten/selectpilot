@@ -6,7 +6,7 @@ The authority is the only component allowed to issue SelectPilot access. It stor
 
 Create these files outside the repository with mode `0600`:
 
-- Ed25519 PKCS#8 private key matching `pricing/entitlement-public-keys.json`
+- Ed25519 PKCS#8 private key and its authorized public keyring, both provisioned outside the repository
 - Paddle webhook endpoint secret
 - Paddle price map JSON
 
@@ -19,7 +19,7 @@ The price map shape is:
 }
 ```
 
-Copy `services/entitlement-authority/.env.example` to an external deployment `.env` and set the three corresponding `*_FILE` variables. The file contains paths, IDs, and ports only; secret values remain in the referenced mode-`0600` files. Create the state directory with mode `0700` and ownership matching `SELECTPILOT_UID`/`SELECTPILOT_GID`.
+Copy `services/entitlement-authority/.env.example` to an external deployment `.env` and set the corresponding `*_FILE` variables. `SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_FILE` is the external public identity used to prove that the private signer matches the Store package; the checked-in extension keyring remains empty. The environment file contains paths, IDs, and ports only; credential values remain in the referenced mode-`0600` files. Create the state directory with mode `0700` and ownership matching `SELECTPILOT_UID`/`SELECTPILOT_GID`.
 
 Run the fail-closed preflight before Compose:
 

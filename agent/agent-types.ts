@@ -18,4 +18,12 @@ export type AgentOutput = {
   reasoning: string[];
   markdown: string;
   json: Record<string, unknown>;
+  model: string;
+  source: string;
+  routing: {
+    model: string;
+    num_ctx: number;
+    reason: string;
+  };
+  trace_id?: string;
 };

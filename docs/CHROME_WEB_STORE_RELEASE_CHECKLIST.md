@@ -15,7 +15,7 @@ Last updated: 2026-08-25
 - [ ] `pnpm package:store`
 - [ ] Package SHA-256 and inventory are preserved with the release evidence.
 
-`pnpm package:store` must fail if the pinned entitlement keyring is absent, invalid, or remote executable code enters the extension. Never bypass that gate with a development key or unsigned access.
+`pricing/entitlement-public-keys.json` in the repository must remain unprovisioned. `pnpm package:store` must fail unless an authorized entitlement keyring is supplied explicitly, and it must also fail if that keyring is invalid or remote executable code enters the extension. Never bypass that gate with a development key or unsigned access.
 
 Production packaging requires `SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_JSON` as a JSON key ring whose values are raw 32-byte Ed25519 public keys encoded as 64 hexadecimal characters. The matching issuer uses only:
 
@@ -23,6 +23,8 @@ Production packaging requires `SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_JSON` as a JS
 - `SELECTPILOT_ENTITLEMENT_SIGNING_KEY_ID`: the exact rotation ID present in the public key ring.
 
 Never place the private key, its contents, or a production signature fixture in Git, CI logs, Linear, test data, or the extension package. Signer provisioning and activation remain an authorized secrets operation.
+
+Run the dedicated `Chrome Web Store release candidate` workflow against the exact authorized revision. Its `chrome-web-store-production` environment must provide the keyring secret; ordinary pull-request CI verifies that packaging stays fail-closed and never uploads a production-looking ZIP. Packaging rejects a dirty checkout or a declared SHA that differs from `HEAD`. Reconcile the embedded source revision, artifact SHA-256, public key IDs, and keyring digest with the signer identity before Store upload.
 
 The separately operated local billing authority installs its pinned runtime with `python3 -m pip install --requirement requirements-billing.txt`. Its wallet RPC is loopback-only, entitlement/order state is written with owner-only permissions, administrative revocation requires a configured secret of at least 32 characters, and generated order IDs contain 128 bits of random material.
 
