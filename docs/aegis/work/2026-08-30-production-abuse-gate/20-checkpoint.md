@@ -2,21 +2,21 @@
 
 ## TodoCheckpointDraft
 
-- Current todo: inventory full architecture, contracts, tests, threat model, abuse surfaces, and negative space at exact head `937e4926944052495c8fc626f2d36cb422fbec4d`.
-- Completed: project identity verified; branch fast-forwarded; global constitution read; signed lifecycle policy cryptographically verified; signed intent created; Store flow paused.
-- Active slice: read-only gap and abuse-surface audit.
-- Evidence: PR #22 remains open and review-blocked; signed Axiom intent `AXIOM-20260830-OXBH25`; lifecycle policy hash `932bbb231cb5e1aeb35d6bbe6327db6f3b1b3cf1e125e38366cbccbbc59434cf`.
-- Blocked-on: installed NovaForge operator release references a missing `config/axiom-lifecycle-policy-binding.json`; production authorities remain external but do not block repository hardening.
-- Next: enumerate existing controls and tests, run fresh remote baseline, then classify and repair material findings.
+- Current todo: publish the signed repository-hardening candidate to PR #22, observe exact-head GitHub admission, and retain the external production gates without laundering them into code completion.
+- Completed: Linear global runtime laws, SelectPilot project truth, and GitHub PR state were re-read before mutation; the full-system gap/blind-spot/negative-space audit was refreshed; the signed intent remains valid.
+- Repository repairs: Store packaging now requires an explicit external entitlement public identity and exact clean SHA; ordinary CI proves the missing-identity failure path; mutable helper state is user-owned; binary mismatch stops startup; local inference concurrency is bounded; exact model/context routing survives the agent pipeline and is visible in the extension.
+- Remote evidence: Hetzner passed lint, typecheck/build parity, 50 Node tests, 73 server tests, 7 Playwright journeys, privacy, billing, manifest/assets, negative Store packaging, frontier traceability, runtime-policy validation, stress contracts, and exact-SHA code admission. The admission report correctly remained `runtime_verified=false`, `physical_hardware_verified=false`, and `full_system_ok=false`.
+- External truth: PR #22 still requires one eligible independent approval; production DNS/TLS, Paddle credentials/lifecycle, authorized entitlement signer, Developer ID Installer/notarization, exact Store upload/publication, and physical Apple first-use evidence remain outside repository authority.
+- Next: push the candidate into PR #22, require exact-head GitHub checks and independent review, then execute the external gates only when their real authorities exist.
 
 ## ResumeStateHint
 
-Resume from this checkpoint, re-read `10-intent.md`, verify `intent.json`, compare current head/worktree with this file, and refresh PR/Linear state before any completion claim.
+Resume from this checkpoint, re-read `10-intent.md`, verify `intent.json`, compare current head/worktree with this file, and refresh PR/Linear/external authority state before any completion claim.
 
 ## DriftCheckDraft
 
 - Intent alignment: yes.
 - Scope alignment: yes.
 - New fallback or duplicate owner: no.
-- Evidence sufficiency: not yet; audit and stress proof pending.
-- Decision: continue.
+- Evidence sufficiency: repository hardening is locally and remotely qualified; exact-head GitHub, physical runtime, protected review, and production activation evidence are still required.
+- Decision: continue through GitHub admission; fail closed on every external completion claim until its authority is present.
