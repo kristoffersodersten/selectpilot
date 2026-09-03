@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 SERVER_DIR = ROOT / "server"
@@ -43,6 +44,26 @@ class StubOllamaClient(OllamaClient):
 
 
 class OllamaClientContractTests(unittest.TestCase):
+    def test_transport_timeout_is_normalized_as_ollama_error(self) -> None:
+        client = OllamaClient(OllamaConfig(
+            base_url="http://127.0.0.1:11434",
+            model="gemma4:e2b-it-qat",
+            embed_model="nomic-embed-text-v2-moe:latest",
+            timeout_seconds=45,
+            num_ctx=16384,
+            seed=42,
+        ))
+
+        with patch("ollama_client.urlopen", side_effect=TimeoutError("timed out")):
+            try:
+                client._request_json("/api/generate", {"model": client.config.model})
+            except OllamaError as exc:
+                self.assertRegex(str(exc), r"timed out after 45s.*api/generate")
+            except TimeoutError:
+                self.fail("transport TimeoutError escaped the Ollama client boundary")
+            else:
+                self.fail("expected an OllamaError")
+
     def test_explicit_model_is_not_silently_substituted(self) -> None:
         client = StubOllamaClient({})
         self.assertEqual(

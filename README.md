@@ -69,6 +69,8 @@ curl -sSf http://127.0.0.1:8083/health
 
 Browser requests to the bridge are accepted only from a Chrome extension origin. Release operators should set `SELECTPILOT_EXTENSION_ORIGIN=chrome-extension://<store-extension-id>` to pin the exact installed identity; ordinary local command-line health checks omit `Origin` and remain available.
 
+The macOS installers bind the LaunchAgent to a deterministic `CHROMEAI_RUNTIME_HASH` covering the active bridge modules, extraction preset, model policy, runtime registry, and promotion audit. Any installed-file drift stops startup with `runtime_integrity_check_failed`; reinstall the exact authorized candidate instead of editing the installed runtime in place.
+
 ---
 
 ## Architecture

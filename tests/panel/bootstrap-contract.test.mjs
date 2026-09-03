@@ -64,15 +64,18 @@ test('macOS service installs outside the source checkout before launchd executio
   assert.match(installer, /ollama_client\.py/);
   assert.match(installer, /extraction_presets\.py/);
   assert.match(installer, /runtime_profiles\.py/);
+  assert.match(installer, /installation_manager\.py/);
   assert.match(installer, /presets\/extraction-presets\.json/);
   assert.match(installer, /model_policy\.json/);
   assert.match(installer, /model_registry\.runtime\.json/);
+  assert.match(installer, /CHROMEAI_RUNTIME_HASH/);
   assert.match(installer, /sys\.version_info >= \(3, 9\)/);
   assert.match(launchAgent, /__PYTHON_BIN__/);
   assert.doesNotMatch(launchAgent, /\/usr\/bin\/python3/);
   assert.match(installer, /install -m 0555 "\$ROOT\/server\/\$module" "\$INSTALL_DIR\/\$module"/);
   assert.match(launchAgent, /__INSTALLED_BINARY__/);
   assert.match(launchAgent, /__INSTALL_DIR__/);
+  assert.match(launchAgent, /CHROMEAI_RUNTIME_HASH/);
   assert.doesNotMatch(launchAgent, /__PROJECT_ROOT__/);
 });
 
@@ -86,6 +89,7 @@ test('production macOS package also binds launchd to Python 3.9 or newer', () =>
   assert.match(launchAgent, /__PYTHON_BIN__/);
   assert.match(launchAgent, /--state-dir/);
   assert.match(launchAgent, /CHROMEAI_RUNTIME_STATE_DIR/);
+  assert.match(launchAgent, /CHROMEAI_RUNTIME_HASH/);
   assert.match(launchAgent, /CHROMEAI_MAX_CONCURRENT_OPERATIONS<\/key><string>1/);
   assert.doesNotMatch(launchAgent, /\/usr\/bin\/python3/);
 });

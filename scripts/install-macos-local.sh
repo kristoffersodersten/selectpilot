@@ -12,6 +12,7 @@ RUNTIME_MODULES=(
   ollama_client.py
   extraction_presets.py
   runtime_profiles.py
+  installation_manager.py
 )
 OLLAMA_BASE_URL="${CHROMEAI_OLLAMA_BASE_URL:-http://127.0.0.1:11434}"
 OLLAMA_MODEL="${CHROMEAI_OLLAMA_MODEL:-gemma4:e2b-it-qat}"
@@ -45,6 +46,15 @@ for policy in model_policy.json model_registry.runtime.json promotion_audit.json
   install -m 0444 "$ROOT/runtime/$policy" "$APP_DIR/runtime/$policy"
 done
 HASH="$(shasum -a 256 "$INSTALLED_BINARY" | awk '{print $1}')"
+CHROMEAI_RUNTIME_HASH="$(PYTHONPATH="$INSTALL_DIR" "$PYTHON_BIN" - "$APP_DIR" <<'PY'
+import sys
+from pathlib import Path
+
+from nano_server import runtime_integrity_digest
+
+print(runtime_integrity_digest(Path(sys.argv[1])))
+PY
+)"
 
 sed \
   -e "s|__PYTHON_BIN__|$PYTHON_BIN|g" \
@@ -54,6 +64,7 @@ sed \
   -e "s|__STATE_DIR__|$STATE_DIR|g" \
   -e "s|__LOG_DIR__|$LOG_DIR|g" \
   -e "s|__BINARY_HASH__|$HASH|g" \
+  -e "s|__RUNTIME_HASH__|$CHROMEAI_RUNTIME_HASH|g" \
   -e "s|__OLLAMA_BASE_URL__|$OLLAMA_BASE_URL|g" \
   -e "s|__OLLAMA_MODEL__|$OLLAMA_MODEL|g" \
   -e "s|__OLLAMA_FAST_MODEL__|$OLLAMA_FAST_MODEL|g" \

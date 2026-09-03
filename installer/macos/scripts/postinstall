@@ -15,7 +15,6 @@ STATE_DIR="$USER_HOME/Library/Application Support/SelectPilot/state"
 LOG_DIR="$USER_HOME/Library/Logs/SelectPilot"
 AGENT_DIR="$USER_HOME/Library/LaunchAgents"
 AGENT_PATH="$AGENT_DIR/com.selectpilot.bridge.plist"
-HASH="$(shasum -a 256 "$SOURCE_ROOT/server/nano_server.py" | awk '{print $1}')"
 PYTHON_BIN=""
 for candidate in /opt/homebrew/bin/python3 /usr/local/bin/python3 /Library/Frameworks/Python.framework/Versions/Current/bin/python3 /usr/bin/python3; do
   if [ -x "$candidate" ] && "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 1)'; then
@@ -27,6 +26,16 @@ if [ -z "$PYTHON_BIN" ]; then
   echo "SelectPilot requires Python 3.9 or newer." >&2
   exit 1
 fi
+HASH="$(shasum -a 256 "$SOURCE_ROOT/server/nano_server.py" | awk '{print $1}')"
+CHROMEAI_RUNTIME_HASH="$(PYTHONPATH="$SOURCE_ROOT/server" "$PYTHON_BIN" - "$SOURCE_ROOT" <<'PY'
+import sys
+from pathlib import Path
+
+from nano_server import runtime_integrity_digest
+
+print(runtime_integrity_digest(Path(sys.argv[1])))
+PY
+)"
 
 PROFILE_VALUES="$(sudo -u "$CONSOLE_USER" "$PYTHON_BIN" - "$SOURCE_ROOT/server" <<'PY'
 import sys
@@ -56,6 +65,7 @@ sed \
   -e "s|__STATE_DIR__|$STATE_DIR|g" \
   -e "s|__LOG_DIR__|$LOG_DIR|g" \
   -e "s|__BINARY_HASH__|$HASH|g" \
+  -e "s|__RUNTIME_HASH__|$CHROMEAI_RUNTIME_HASH|g" \
   -e "s|__OLLAMA_BASE_URL__|http://127.0.0.1:11434|g" \
   -e "s|__RUNTIME_PROFILE__|$RUNTIME_PROFILE|g" \
   -e "s|__OLLAMA_MODEL__|$OLLAMA_MODEL|g" \

@@ -9,6 +9,7 @@ import threading
 import unittest
 from http.server import ThreadingHTTPServer
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 SERVER_DIR = ROOT / "server"
@@ -31,9 +32,16 @@ class BridgeOriginTests(unittest.TestCase):
         cls.server.server_close()
         cls.thread.join(timeout=2)
 
-    def request(self, method: str, path: str, *, headers: dict[str, str] | None = None):
+    def request(
+        self,
+        method: str,
+        path: str,
+        *,
+        body: bytes | None = None,
+        headers: dict[str, str] | None = None,
+    ):
         connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=2)
-        connection.request(method, path, headers=headers or {})
+        connection.request(method, path, body=body, headers=headers or {})
         response = connection.getresponse()
         body = response.read()
         response_headers = dict(response.getheaders())
@@ -60,6 +68,19 @@ class BridgeOriginTests(unittest.TestCase):
         )
         self.assertEqual(status, 413)
         self.assertEqual(json.loads(body)["error"]["code"], "request_too_large")
+
+    def test_ollama_transport_timeout_returns_explicit_service_error(self) -> None:
+        payload = json.dumps({"text": "selected text"}).encode("utf-8")
+        with patch("ollama_client.urlopen", side_effect=TimeoutError("timed out")):
+            status, _headers, body = self.request(
+                "POST",
+                "/extract",
+                body=payload,
+                headers={"Content-Type": "application/json"},
+            )
+
+        self.assertEqual(status, 503)
+        self.assertEqual(json.loads(body)["error"]["code"], "ollama_unavailable")
 
 
 if __name__ == "__main__":

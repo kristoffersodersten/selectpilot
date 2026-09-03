@@ -30,6 +30,7 @@
     <key>CHROMEAI_MAX_INPUT_CHARS</key><string>__MAX_INPUT_CHARS__</string>
     <key>CHROMEAI_OLLAMA_SEED</key><string>__OLLAMA_SEED__</string>
     <key>CHROMEAI_BINARY_HASH</key><string>__BINARY_HASH__</string>
+    <key>CHROMEAI_RUNTIME_HASH</key><string>__RUNTIME_HASH__</string>
     <key>CHROMEAI_AUTO_PULL_MODELS</key><string>0</string>
     <key>CHROMEAI_MAX_CONCURRENT_OPERATIONS</key><string>1</string>
     <key>SELECTPILOT_ENTITLEMENT_AUTHORITY_URL</key><string>__ENTITLEMENT_AUTHORITY_URL__</string>

@@ -497,6 +497,43 @@ def require_binary_integrity(path: Path, expected_hash: str | None = None) -> No
         raise RuntimeError("runtime_integrity_check_failed")
 
 
+RUNTIME_INTEGRITY_FILES = (
+    "server/nano_server.py",
+    "server/ollama_client.py",
+    "server/extraction_presets.py",
+    "server/runtime_profiles.py",
+    "server/installation_manager.py",
+    "presets/extraction-presets.json",
+    "runtime/model_policy.json",
+    "runtime/model_registry.runtime.json",
+    "runtime/promotion_audit.json",
+)
+
+
+def runtime_integrity_digest(root: Path) -> str:
+    records: list[str] = []
+    for relative_path in RUNTIME_INTEGRITY_FILES:
+        candidate = root / relative_path
+        if not candidate.is_file():
+            raise RuntimeError(f"runtime integrity file missing: {relative_path}")
+        digest = hashlib.sha256(candidate.read_bytes()).hexdigest()
+        records.append(f"{relative_path}\t{digest}\n")
+    return hashlib.sha256("".join(records).encode("utf-8")).hexdigest()
+
+
+def require_runtime_integrity(root: Path, expected_hash: str | None = None) -> None:
+    try:
+        digest = runtime_integrity_digest(root)
+    except (OSError, RuntimeError) as exc:
+        print(str(exc))
+        raise RuntimeError("runtime_integrity_check_failed") from exc
+    if expected_hash and (
+        re.fullmatch(r"[0-9a-f]{64}", expected_hash) is None or digest != expected_hash
+    ):
+        print(f"runtime hash mismatch: {digest} != {expected_hash}")
+        raise RuntimeError("runtime_integrity_check_failed")
+
+
 def ensure_dirs(path: Path):
     path.mkdir(parents=True, exist_ok=True)
 
@@ -2086,6 +2123,7 @@ def main():
     binary_path = Path(args.binary_path) if args.binary_path else Path(__file__)
     expected = args.binary_hash or os.environ.get('CHROMEAI_BINARY_HASH')
     require_binary_integrity(binary_path, expected)
+    require_runtime_integrity(PROJECT_ROOT, os.environ.get('CHROMEAI_RUNTIME_HASH'))
 
     auto_pull = os.environ.get('CHROMEAI_AUTO_PULL_MODELS', '0').strip().lower() not in {'0', 'false', 'no'}
     if auto_pull:

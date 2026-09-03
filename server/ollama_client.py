@@ -324,6 +324,10 @@ class OllamaClient:
             raise OllamaError(f"{path} returned {e.code}: {raw or e.reason}") from e
         except URLError as e:
             raise OllamaError(f"cannot reach Ollama at {self.config.base_url}: {e.reason}") from e
+        except TimeoutError as e:
+            raise OllamaError(
+                f"Ollama request timed out after {self.config.timeout_seconds:g}s at {path}"
+            ) from e
 
         try:
             return json.loads(raw) if raw else {}

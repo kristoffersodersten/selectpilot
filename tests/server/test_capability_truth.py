@@ -35,6 +35,40 @@ class CapabilityTruthTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "runtime_integrity_check_failed"):
                     nano_server.require_binary_integrity(binary, expected)
 
+    def test_runtime_integrity_covers_imported_code_and_policy(self):
+        relative_paths = (
+            "server/nano_server.py",
+            "server/ollama_client.py",
+            "server/extraction_presets.py",
+            "server/runtime_profiles.py",
+            "server/installation_manager.py",
+            "presets/extraction-presets.json",
+            "runtime/model_policy.json",
+            "runtime/model_registry.runtime.json",
+            "runtime/promotion_audit.json",
+        )
+        self.assertTrue(
+            hasattr(nano_server, "require_runtime_integrity"),
+            "runtime tree has no integrity verifier",
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            records = []
+            for relative_path in relative_paths:
+                target = root / relative_path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(f"trusted:{relative_path}\n", encoding="utf-8")
+                records.append(f"{relative_path}\t{sha256(target.read_bytes()).hexdigest()}\n")
+
+            expected = sha256("".join(records).encode("utf-8")).hexdigest()
+            nano_server.require_runtime_integrity(root, expected)
+
+            (root / "server/ollama_client.py").write_text("tampered\n", encoding="utf-8")
+            with redirect_stdout(io.StringIO()):
+                with self.assertRaisesRegex(RuntimeError, "runtime_integrity_check_failed"):
+                    nano_server.require_runtime_integrity(root, expected)
+
     def test_runtime_feedback_uses_explicit_mutable_state_directory(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             state_dir = Path(temp_dir) / "state"
