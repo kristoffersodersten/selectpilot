@@ -32,11 +32,16 @@ class RuntimeProfileTests(unittest.TestCase):
         self.assertEqual(profile.generation_model, "gemma4:e2b-it-qat")
         self.assertEqual(profile.num_ctx, 16384)
 
-    def test_auto_recommendation_prefers_balanced_on_large_machines(self) -> None:
+    def test_auto_recommendation_uses_smallest_qualified_profile_on_large_machines(self) -> None:
         recommendation = recommend_runtime_profile(
             {"machine": "arm64", "memory_gb": 64, "platform": "darwin", "cpu_count": 10}
         )
-        self.assertEqual(recommendation["recommended_profile"], "balanced")
+        self.assertEqual(recommendation["recommended_profile"], "fast")
+        self.assertIn("smallest qualified", recommendation["reason"].lower())
+        auto_profile = get_runtime_profile(recommendation["recommended_profile"])
+        self.assertEqual(required_generation_models(auto_profile), [
+            ("gemma4:e2b-it-qat", 16384),
+        ])
 
     def test_low_memory_and_intel_hardware_use_fast(self) -> None:
         low_memory = recommend_runtime_profile(

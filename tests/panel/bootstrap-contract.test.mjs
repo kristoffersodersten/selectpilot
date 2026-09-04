@@ -42,7 +42,7 @@ test('bootstrap plan exposes exact fail-closed Balanced runtime contract without
   assert.equal(plan.reason, 'Explicit profile selected by operator.');
 });
 
-test('one-command setup preserves hardware-aware automatic profile selection', () => {
+test('one-command setup preserves smallest-qualified automatic profile selection', () => {
   const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
   assert.match(packageJson.scripts['setup:local'], /bootstrap-macos-local\.sh --profile auto$/);
 });
@@ -94,7 +94,7 @@ test('production macOS package also binds launchd to Python 3.9 or newer', () =>
   assert.doesNotMatch(launchAgent, /\/usr\/bin\/python3/);
 });
 
-test('production macOS package preserves hardware-aware task routing', () => {
+test('production macOS package preserves explicit task routing and profile truth', () => {
   const postinstall = readFileSync('./installer/macos/scripts/postinstall', 'utf8');
   const launchAgent = readFileSync('./installer/macos/com.selectpilot.bridge.plist.template', 'utf8');
 

@@ -36,6 +36,7 @@ This contract defines which local runtime may perform each class of work without
 
 - No silent provider or model failover.
 - No remote inference fallback.
+- Automatic setup selects the smallest qualified local profile; heavier profiles require explicit operator selection.
 - Gemini Nano cannot create, repair, or persist Golden JSON.
 - WebGPU is acceleration, never semantic authority.
 - Capability detection sends no selected text and creates no model session.

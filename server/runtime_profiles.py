@@ -102,25 +102,11 @@ def detect_system_snapshot() -> dict[str, Any]:
 
 def recommend_runtime_profile(system_snapshot: dict[str, Any] | None = None) -> dict[str, Any]:
     snapshot = system_snapshot or detect_system_snapshot()
-    memory_gb = snapshot.get("memory_gb")
-    machine = str(snapshot.get("machine") or "")
-
-    if memory_gb is None:
-        profile = RUNTIME_PROFILES["fast"]
-        reason = "Memory could not be detected, so the smallest viable profile is safest."
-    elif memory_gb < 16:
-        profile = RUNTIME_PROFILES["fast"]
-        reason = "This machine benefits from the smallest viable profile for low-latency extraction."
-    elif memory_gb < 32:
-        profile = RUNTIME_PROFILES["balanced"]
-        reason = "This machine can comfortably handle the balanced profile without overprovisioning."
-    else:
-        profile = RUNTIME_PROFILES["balanced"]
-        reason = "Even on larger machines, balanced is the default because SelectPilot prioritizes fit-for-task over maximum model size."
-
-    if machine.startswith("x86") and profile.key != "fast":
-        profile = RUNTIME_PROFILES["fast"]
-        reason = "Intel machines default to the fast profile unless you explicitly opt into heavier models."
+    profile = RUNTIME_PROFILES["fast"]
+    reason = (
+        "SelectPilot automatically uses the smallest qualified local profile. "
+        "Heavier profiles require explicit operator selection."
+    )
 
     return {
         "recommended_profile": profile.key,
