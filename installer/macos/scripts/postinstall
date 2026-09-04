@@ -75,6 +75,7 @@ sed \
   -e "s|__OLLAMA_FAST_NUM_CTX__|$OLLAMA_FAST_NUM_CTX|g" \
   -e "s|__MAX_INPUT_CHARS__|$MAX_INPUT_CHARS|g" \
   -e "s|__OLLAMA_SEED__|42|g" \
+  -e "s|__OLLAMA_KEEP_ALIVE_SECONDS__|-1|g" \
   -e "s|__ENTITLEMENT_AUTHORITY_URL__|https://license.selectpilot.app|g" \
   "$SOURCE_ROOT/launchd/com.selectpilot.bridge.plist.template" > "$AGENT_PATH"
 chown "$CONSOLE_USER" "$AGENT_PATH"

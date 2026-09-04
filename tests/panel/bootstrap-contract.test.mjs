@@ -23,6 +23,7 @@ test('bootstrap plan exposes exact fail-closed Fast runtime contract without sid
   assert.equal(plan.num_ctx, 16_384);
   assert.equal(plan.fast_num_ctx, 16_384);
   assert.equal(plan.max_input_chars, 16_000);
+  assert.equal(plan.generation_keep_alive_seconds, -1);
   assert.equal(plan.reason, 'Explicit profile selected by operator.');
 });
 
@@ -76,6 +77,9 @@ test('macOS service installs outside the source checkout before launchd executio
   assert.match(launchAgent, /__INSTALLED_BINARY__/);
   assert.match(launchAgent, /__INSTALL_DIR__/);
   assert.match(launchAgent, /CHROMEAI_RUNTIME_HASH/);
+  assert.match(installer, /CHROMEAI_OLLAMA_KEEP_ALIVE_SECONDS/);
+  assert.match(installer, /must be -1 or a non-negative integer in seconds/);
+  assert.match(launchAgent, /CHROMEAI_OLLAMA_KEEP_ALIVE_SECONDS/);
   assert.doesNotMatch(launchAgent, /__PROJECT_ROOT__/);
 });
 
@@ -118,6 +122,7 @@ test('production macOS package preserves explicit task routing and profile truth
     '__OLLAMA_NUM_CTX__',
     '__OLLAMA_FAST_NUM_CTX__',
     '__MAX_INPUT_CHARS__',
+    '__OLLAMA_KEEP_ALIVE_SECONDS__',
   ]) {
     assert.ok(postinstall.includes(placeholder), `postinstall does not bind ${placeholder}`);
     assert.ok(launchAgent.includes(placeholder), `LaunchAgent does not expose ${placeholder}`);

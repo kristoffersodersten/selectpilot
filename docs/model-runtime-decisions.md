@@ -2,8 +2,8 @@
 
 ## Current production defaults
 
-- Fast / unknown / under 16 GB / Intel: `gemma4:e2b-it-qat`, `num_ctx=16384`.
-- Balanced / Apple Silicon with 16 GB or more: `gemma4:e4b-it-qat`, `num_ctx=32768`.
+- Fast / automatic default: `gemma4:e2b-it-qat`, `num_ctx=16384`.
+- Balanced / manual opt-in: `gemma4:e4b-it-qat`, `num_ctx=32768`.
 - Advanced: manual opt-in only, `qwen2.5:7b`, `num_ctx=32768`.
 - Embeddings: `nomic-embed-text-v2-moe:latest`.
 - Structured generation: `temperature=0` and `seed=42` for every production profile.
@@ -14,7 +14,7 @@ Selections above 16,000 characters are rejected before inference with a clear, l
 
 Explicit environment overrides remain authoritative and must fail visibly when invalid or unavailable. SelectPilot never substitutes a different installed model, downloads a model without consent, or routes generation to a cloud model.
 
-Installation prewarms the selected generation model with the same context window and deterministic sampling options used at runtime. A failed prewarm is an explicit installation failure; SelectPilot does not report the runtime as ready and does not silently choose another model. `CHROMEAI_OLLAMA_SEED` may override the seed for controlled verification, but invalid or negative values fail closed.
+Installation prewarms the selected generation model with the same context window, deterministic sampling options, and keep-alive contract used at runtime. Generation requests set `keep_alive=-1` so Ollama keeps the smallest qualified model resident after idle instead of reloading it inside the interactive request timeout. The explicit `CHROMEAI_OLLAMA_KEEP_ALIVE_SECONDS` override accepts `-1` or a non-negative integer number of seconds and fails closed on invalid values. A failed prewarm is an explicit installation failure; SelectPilot does not report the runtime as ready and does not silently choose another model. `CHROMEAI_OLLAMA_SEED` may override the seed for controlled verification, but invalid or negative values fail closed.
 
 ## Deferred decisions
 

@@ -7,6 +7,7 @@ SKIP_OLLAMA_INSTALL="0"
 SKIP_MODEL_PULL="0"
 PLAN_ONLY="0"
 BRIDGE_HEALTH_URL="http://127.0.0.1:8083/health"
+GENERATION_KEEP_ALIVE_SECONDS="${CHROMEAI_OLLAMA_KEEP_ALIVE_SECONDS:--1}"
 
 STATUS_OLLAMA_INSTALL="pending"
 STATUS_OLLAMA_RUNNING="pending"
@@ -41,7 +42,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 read_profile_json() {
-  python3 - "$PROFILE" "$ROOT" <<'PY'
+  python3 - "$PROFILE" "$ROOT" "$GENERATION_KEEP_ALIVE_SECONDS" <<'PY'
 import json
 import sys
 from pathlib import Path
@@ -50,6 +51,7 @@ profile = sys.argv[1]
 root = Path(sys.argv[2])
 sys.path.insert(0, str(root / "server"))
 
+from ollama_client import parse_generation_keep_alive_seconds
 from runtime_profiles import build_bootstrap_commands, get_runtime_profile, recommend_runtime_profile
 
 recommendation = recommend_runtime_profile()
@@ -57,6 +59,7 @@ selected = recommendation["recommended_profile"] if profile == "auto" else profi
 runtime_profile = get_runtime_profile(selected)
 commands = build_bootstrap_commands(runtime_profile.key, root)
 reason = recommendation["reason"] if profile == "auto" else "Explicit profile selected by operator."
+generation_keep_alive_seconds = parse_generation_keep_alive_seconds(sys.argv[3])
 
 print(json.dumps({
     "selected_profile": runtime_profile.key,
@@ -68,6 +71,7 @@ print(json.dumps({
     "num_ctx": runtime_profile.num_ctx,
     "fast_num_ctx": runtime_profile.fast_num_ctx,
     "max_input_chars": runtime_profile.max_input_chars,
+    "generation_keep_alive_seconds": generation_keep_alive_seconds,
     "generation_routes": commands["generation_routes"],
     "command": commands["command"],
 }))
@@ -84,6 +88,7 @@ payload = json.loads(sys.argv[1])
 for key in (
     "selected_profile", "generation_model", "fast_generation_model", "embedding_model",
     "num_ctx", "fast_num_ctx", "max_input_chars", "reason",
+    "generation_keep_alive_seconds",
 ):
     print(f"{key.upper()}={shlex.quote(str(payload[key]))}")
 PY
@@ -160,12 +165,13 @@ else
 fi
 
 echo "Preparing local model bundle"
-python3 - "$GENERATION_MODEL" "$NUM_CTX" "$FAST_GENERATION_MODEL" "$FAST_NUM_CTX" <<'PY'
+python3 - "$GENERATION_MODEL" "$NUM_CTX" "$FAST_GENERATION_MODEL" "$FAST_NUM_CTX" "$GENERATION_KEEP_ALIVE_SECONDS" <<'PY'
 import json
 import sys
 from urllib.request import Request, urlopen
 
 routes = [(sys.argv[1], int(sys.argv[2])), (sys.argv[3], int(sys.argv[4]))]
+keep_alive_seconds = int(sys.argv[5])
 seen = set()
 for model, num_ctx in reversed(routes):
     if model in seen:
@@ -177,7 +183,7 @@ for model, num_ctx in reversed(routes):
             "model": model,
             "prompt": "Return only: ready",
             "stream": False,
-            "keep_alive": "10m",
+            "keep_alive": keep_alive_seconds,
             "options": {
                 "temperature": 0,
                 "seed": 42,
@@ -202,6 +208,7 @@ CHROMEAI_OLLAMA_NUM_CTX="$NUM_CTX" \
 CHROMEAI_OLLAMA_FAST_NUM_CTX="$FAST_NUM_CTX" \
 CHROMEAI_MAX_INPUT_CHARS="$MAX_INPUT_CHARS" \
 CHROMEAI_OLLAMA_SEED=42 \
+CHROMEAI_OLLAMA_KEEP_ALIVE_SECONDS="$GENERATION_KEEP_ALIVE_SECONDS" \
 "$ROOT/scripts/install-macos-local.sh"
 STATUS_LAUNCHAGENT="ok"
 

@@ -12,7 +12,12 @@ SERVER_DIR = ROOT / "server"
 if str(SERVER_DIR) not in sys.path:
     sys.path.insert(0, str(SERVER_DIR))
 
-from ollama_client import OllamaClient, OllamaConfig, OllamaError  # noqa: E402
+from ollama_client import (  # noqa: E402
+    OllamaClient,
+    OllamaConfig,
+    OllamaError,
+    parse_generation_keep_alive_seconds,
+)
 
 
 class StubOllamaClient(OllamaClient):
@@ -80,6 +85,19 @@ class OllamaClientContractTests(unittest.TestCase):
         self.assertEqual(client.last_payload["options"]["num_ctx"], 16384)
         self.assertEqual(client.last_payload["options"]["seed"], 42)
         self.assertEqual(client.last_payload["options"]["temperature"], 0.0)
+        self.assertEqual(client.last_payload["keep_alive"], -1)
+
+    def test_generation_keep_alive_override_is_validated(self) -> None:
+        self.assertEqual(parse_generation_keep_alive_seconds("-1"), -1)
+        self.assertEqual(parse_generation_keep_alive_seconds("3600"), 3600)
+        with self.assertRaisesRegex(OllamaError, "-1 or a non-negative integer"):
+            parse_generation_keep_alive_seconds("forever")
+        with self.assertRaisesRegex(OllamaError, "-1 or a non-negative integer"):
+            parse_generation_keep_alive_seconds("-2")
+
+    def test_health_exposes_generation_keep_alive_contract(self) -> None:
+        client = StubOllamaClient({})
+        self.assertEqual(client.health()["generation_keep_alive_seconds"], -1)
 
     def test_balanced_routes_structured_and_agent_tasks_to_exact_models(self) -> None:
         client = StubOllamaClient({
@@ -136,6 +154,7 @@ class OllamaClientContractTests(unittest.TestCase):
                 client.response = responses.pop(0)
         self.assertEqual([payload["format"]["type"] for payload in payloads], ["object"] * 3)
         self.assertTrue(all(payload["format"]["additionalProperties"] is False for payload in payloads))
+        self.assertTrue(all(payload["keep_alive"] == -1 for payload in payloads))
 
 
 if __name__ == "__main__":

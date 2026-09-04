@@ -92,6 +92,9 @@ EMBED_MODEL_PREFERENCES = [
     "mxbai-embed-large",
 ]
 
+DEFAULT_GENERATION_KEEP_ALIVE_SECONDS = -1
+GENERATION_KEEP_ALIVE_ENV = "CHROMEAI_OLLAMA_KEEP_ALIVE_SECONDS"
+
 
 @dataclass(frozen=True)
 class OllamaConfig:
@@ -101,6 +104,7 @@ class OllamaConfig:
     timeout_seconds: float
     num_ctx: int
     seed: int
+    generation_keep_alive_seconds: int = DEFAULT_GENERATION_KEEP_ALIVE_SECONDS
     fast_model: str | None = None
     fast_num_ctx: int | None = None
     max_input_chars: int = 16000
@@ -127,6 +131,19 @@ def _nonnegative_int(value: Any, name: str) -> int:
         raise OllamaError(f"{name} must be a non-negative integer") from exc
     if parsed < 0:
         raise OllamaError(f"{name} must be a non-negative integer")
+    return parsed
+
+
+def parse_generation_keep_alive_seconds(
+    value: Any,
+    name: str = GENERATION_KEEP_ALIVE_ENV,
+) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError) as exc:
+        raise OllamaError(f"{name} must be -1 or a non-negative integer in seconds") from exc
+    if parsed < -1:
+        raise OllamaError(f"{name} must be -1 or a non-negative integer in seconds")
     return parsed
 
 
@@ -159,6 +176,9 @@ class OllamaClient:
                 timeout_seconds=float(os.environ.get("CHROMEAI_OLLAMA_TIMEOUT_SECONDS", "30")),
                 num_ctx=_positive_int(os.environ.get("CHROMEAI_OLLAMA_NUM_CTX", default_num_ctx), "CHROMEAI_OLLAMA_NUM_CTX"),
                 seed=_nonnegative_int(os.environ.get("CHROMEAI_OLLAMA_SEED", "42"), "CHROMEAI_OLLAMA_SEED"),
+                generation_keep_alive_seconds=parse_generation_keep_alive_seconds(
+                    os.environ.get(GENERATION_KEEP_ALIVE_ENV, DEFAULT_GENERATION_KEEP_ALIVE_SECONDS),
+                ),
                 fast_model=fast_model,
                 fast_num_ctx=_positive_int(
                     os.environ.get("CHROMEAI_OLLAMA_FAST_NUM_CTX", profile.fast_num_ctx),
@@ -360,6 +380,7 @@ class OllamaClient:
                 "timeout_seconds": self.config.timeout_seconds,
                 "num_ctx": self.config.num_ctx,
                 "seed": self.config.seed,
+                "generation_keep_alive_seconds": self.config.generation_keep_alive_seconds,
                 "reachable": False,
                 "status": "degraded",
                 "error": str(e),
@@ -402,6 +423,7 @@ class OllamaClient:
             "timeout_seconds": self.config.timeout_seconds,
             "num_ctx": self.config.num_ctx,
             "seed": self.config.seed,
+            "generation_keep_alive_seconds": self.config.generation_keep_alive_seconds,
             "max_input_chars": self.config.max_input_chars,
             "task_routes": routes,
         }
@@ -453,6 +475,7 @@ class OllamaClient:
             "prompt": prompt,
             "system": "You write precise summaries for selected text in a browser side panel.",
             "stream": False,
+            "keep_alive": self.config.generation_keep_alive_seconds,
             "format": schema,
             "options": self._generation_options(0.0, route["num_ctx"]),
         }
@@ -510,6 +533,7 @@ class OllamaClient:
             "prompt": user_prompt,
             "system": "You are a practical browser copilot that rewrites and structures selected text locally.",
             "stream": False,
+            "keep_alive": self.config.generation_keep_alive_seconds,
             "format": schema,
             "options": self._generation_options(0.0, route["num_ctx"]),
         }
@@ -611,6 +635,7 @@ class OllamaClient:
             "prompt": prompt,
             "system": "You generate clean structured extraction results for highlighted browser text.",
             "stream": False,
+            "keep_alive": self.config.generation_keep_alive_seconds,
             "format": preset.schema,
             "options": self._generation_options(0.0, route["num_ctx"]),
         }

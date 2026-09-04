@@ -22,6 +22,7 @@ OLLAMA_NUM_CTX="${CHROMEAI_OLLAMA_NUM_CTX:-16384}"
 OLLAMA_FAST_NUM_CTX="${CHROMEAI_OLLAMA_FAST_NUM_CTX:-$OLLAMA_NUM_CTX}"
 MAX_INPUT_CHARS="${CHROMEAI_MAX_INPUT_CHARS:-16000}"
 OLLAMA_SEED="${CHROMEAI_OLLAMA_SEED:-42}"
+OLLAMA_KEEP_ALIVE_SECONDS="${CHROMEAI_OLLAMA_KEEP_ALIVE_SECONDS:--1}"
 RUN_DIR="${CHROMEAI_RUN_DIR:-${HOME}/Library/Application Support/SelectPilot/run}"
 STATE_DIR="${CHROMEAI_RUNTIME_STATE_DIR:-${HOME}/Library/Application Support/SelectPilot/state}"
 LOG_DIR="${CHROMEAI_LOG_DIR:-${HOME}/Library/Logs/SelectPilot}"
@@ -29,6 +30,11 @@ PYTHON_BIN="${CHROMEAI_PYTHON_BIN:-$(command -v python3)}"
 
 if ! "$PYTHON_BIN" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 1)'; then
   echo "SelectPilot requires Python 3.9 or newer; found $($PYTHON_BIN --version 2>&1)." >&2
+  exit 1
+fi
+
+if [[ ! "$OLLAMA_KEEP_ALIVE_SECONDS" =~ ^-1$|^[0-9]+$ ]]; then
+  echo "CHROMEAI_OLLAMA_KEEP_ALIVE_SECONDS must be -1 or a non-negative integer in seconds." >&2
   exit 1
 fi
 
@@ -73,6 +79,7 @@ sed \
   -e "s|__OLLAMA_FAST_NUM_CTX__|$OLLAMA_FAST_NUM_CTX|g" \
   -e "s|__MAX_INPUT_CHARS__|$MAX_INPUT_CHARS|g" \
   -e "s|__OLLAMA_SEED__|$OLLAMA_SEED|g" \
+  -e "s|__OLLAMA_KEEP_ALIVE_SECONDS__|$OLLAMA_KEEP_ALIVE_SECONDS|g" \
   "$TEMPLATE" > "$DEST"
 
 launchctl unload "$DEST" 2>/dev/null || true
@@ -93,8 +100,9 @@ Next steps:
   5. Local bridge URL: http://127.0.0.1:8083
   6. Ollama context window: $OLLAMA_NUM_CTX
   7. Deterministic seed: $OLLAMA_SEED
-  8. Run dir: $RUN_DIR
-  9. Runtime state dir: $STATE_DIR
-  10. Log dir: $LOG_DIR
-  11. Run 'pnpm benchmark:local' to validate latency on this machine.
+  8. Generation keep-alive seconds: $OLLAMA_KEEP_ALIVE_SECONDS
+  9. Run dir: $RUN_DIR
+  10. Runtime state dir: $STATE_DIR
+  11. Log dir: $LOG_DIR
+  12. Run 'pnpm benchmark:local' to validate latency on this machine.
 EOF

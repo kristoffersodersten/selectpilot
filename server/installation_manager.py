@@ -12,6 +12,11 @@ import time
 from pathlib import Path
 from urllib.request import Request, urlopen
 
+from ollama_client import (
+    DEFAULT_GENERATION_KEEP_ALIVE_SECONDS,
+    GENERATION_KEEP_ALIVE_ENV,
+    parse_generation_keep_alive_seconds,
+)
 from runtime_profiles import get_runtime_profile, recommend_runtime_profile, required_generation_models
 
 OLLAMA_DOWNLOAD_URL = "https://ollama.com/download/Ollama-darwin.zip"
@@ -130,13 +135,16 @@ class InstallationManager:
         seed = int(os.environ.get("CHROMEAI_OLLAMA_SEED", "42"))
         if seed < 0:
             raise RuntimeError("model_warmup_failed")
+        keep_alive_seconds = parse_generation_keep_alive_seconds(
+            os.environ.get(GENERATION_KEEP_ALIVE_ENV, DEFAULT_GENERATION_KEEP_ALIVE_SECONDS),
+        )
         request = Request(
             "http://127.0.0.1:11434/api/generate",
             data=json.dumps({
                 "model": model,
                 "prompt": "Return only: ready",
                 "stream": False,
-                "keep_alive": "10m",
+                "keep_alive": keep_alive_seconds,
                 "options": {
                     "temperature": 0,
                     "seed": seed,

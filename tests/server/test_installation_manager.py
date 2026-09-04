@@ -45,6 +45,7 @@ class InstallationManagerTests(unittest.TestCase):
         request = mocked.call_args.args[0]
         payload = json.loads(request.data)
         self.assertEqual(payload["model"], "gemma4:e4b-it-qat")
+        self.assertEqual(payload["keep_alive"], -1)
         self.assertEqual(payload["options"], {
             "temperature": 0,
             "seed": 42,
@@ -64,6 +65,15 @@ class InstallationManagerTests(unittest.TestCase):
             InstallationManager()._warm_model("gemma4:e4b-it-qat", 32768)
         payload = json.loads(mocked.call_args.args[0].data)
         self.assertEqual(payload["options"]["seed"], 7)
+
+    def test_warmup_rejects_invalid_keep_alive_override(self) -> None:
+        with patch.dict(
+            "installation_manager.os.environ",
+            {"CHROMEAI_OLLAMA_KEEP_ALIVE_SECONDS": "forever"},
+            clear=True,
+        ), patch("installation_manager.urlopen"):
+            with self.assertRaisesRegex(RuntimeError, "-1 or a non-negative integer"):
+                InstallationManager()._warm_model("gemma4:e2b-it-qat", 16384)
 
 
 if __name__ == "__main__":
