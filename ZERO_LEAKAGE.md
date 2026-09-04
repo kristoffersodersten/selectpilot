@@ -9,7 +9,7 @@ The runtime is also profile-based: the product prefers the smallest viable local
 - Selected text is processed through a local bridge at `http://127.0.0.1:8083`.
 - The local bridge talks only to a locally running Ollama instance.
 - Cloud-hosted Ollama models are intentionally ignored for the core summarize, agent, and embed flows.
-- If a requested model is unavailable locally, the bridge falls back only to other local models.
+- If the exact policy-selected local model is unavailable, the request fails explicitly. A different local model may be used only when it is preinstalled, declared in signed runtime policy, non-quarantined, and surfaced to the user as a fallback; the current production policy declares no model fallback.
 - The first-run flow is expected to detect the runtime, install the small local profile, benchmark it, and assign the result before the extension is treated as ready.
 
 ## What runs locally
@@ -41,7 +41,7 @@ The runtime is also profile-based: the product prefers the smallest viable local
 
 ## Experimental surfaces
 
-- `Transcribe` and `Vision OCR` remain prototype utilities and are not part of the privacy claim.
+- Audio transcription and vision OCR are absent from the shipped runtime and entitlement map.
 - Billing code exists in the repo as a prototype but is not part of the selected-text local copilot flow.
 
 ## How to verify

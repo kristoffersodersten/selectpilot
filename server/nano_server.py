@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
+# module_name: deterministic_bridge
+# spec_ref: "validation_layer"
+# @spec_ref output_enforcement
+# @spec_ref model_switch_hysteresis
+# @spec_ref failure_isolation
+# @spec_ref latency_budget
+from __future__ import annotations
+
 import argparse
-import base64
-import hmac
 import hashlib
 import json
 import os
+import re
 import socket
+import sys
 import threading
 import time
 from collections import deque
@@ -14,12 +22,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from datetime import datetime, timezone
 from urllib.parse import urlparse, parse_qs
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from ollama_client import OllamaClient, OllamaError
+from extraction_presets import get_extraction_preset
 from runtime_profiles import build_bootstrap_commands, list_runtime_profiles, recommend_runtime_profile
+from installation_manager import INSTALLATION
 
 DEFAULT_PORT = 8083
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
+MAX_REQUEST_BYTES = 2 * 1024 * 1024
+CHROME_EXTENSION_ORIGIN = re.compile(r"^chrome-extension://[a-p]{32}$")
+INFERENCE_ENDPOINTS = {"/summarize", "/extract", "/agent", "/embed", "/benchmark"}
 
 ALLOWED_BRIDGE_ENDPOINT_PATHS = [
     "/health",
@@ -33,9 +48,11 @@ ALLOWED_BRIDGE_ENDPOINT_PATHS = [
     "/extract",
     "/agent",
     "/embed",
-    "/transcribe",
-    "/vision",
     "/license/verify",
+    "/license/trial",
+    "/license/claim",
+    "/installation/status",
+    "/installation/start",
 ]
 
 
@@ -78,29 +95,35 @@ OPERATION_CONTRACTS: dict[str, OperationContract] = {
         template="embed.v1",
         allowed_fields=("text", "session_id"),
     ),
-    "/transcribe": OperationContract(
-        name="transcribe",
-        endpoint="/transcribe",
-        template="transcribe.v1",
-        allowed_fields=("audioUrl", "mediaId", "session_id"),
-    ),
-    "/vision": OperationContract(
-        name="vision",
-        endpoint="/vision",
-        template="vision.v1",
-        allowed_fields=("imageBase64", "videoFrame", "session_id"),
-    ),
     "/license/verify": OperationContract(
         name="license_verify",
         endpoint="/license/verify",
         template="license_verify.v1",
         allowed_fields=("token",),
     ),
+    "/license/trial": OperationContract(
+        name="license_trial",
+        endpoint="/license/trial",
+        template="license_trial.v1",
+        allowed_fields=("installation_id",),
+    ),
+    "/license/claim": OperationContract(
+        name="license_claim",
+        endpoint="/license/claim",
+        template="license_claim.v1",
+        allowed_fields=("claim_id",),
+    ),
     "/benchmark": OperationContract(
         name="benchmark",
         endpoint="/benchmark",
         template="benchmark.v1",
         allowed_fields=(),
+    ),
+    "/installation/start": OperationContract(
+        name="installation_start",
+        endpoint="/installation/start",
+        template="installation_start.v1",
+        allowed_fields=("consent",),
     ),
 }
 
@@ -112,6 +135,59 @@ class ValidationError(RuntimeError):
         self.message = message
         self.status = status
         self.details = details or {}
+
+
+class RuntimeStateError(RuntimeError):
+    """Raised when decision-affecting local runtime state cannot be read safely."""
+
+
+class LocalOperationAdmission:
+    def __init__(self, limit: int):
+        if limit < 1 or limit > 4:
+            raise ValueError("local operation concurrency must be between 1 and 4")
+        self.limit = limit
+        self._semaphore = threading.BoundedSemaphore(limit)
+        self._lock = threading.Lock()
+        self._active = 0
+
+    def try_acquire(self) -> bool:
+        if not self._semaphore.acquire(blocking=False):
+            return False
+        with self._lock:
+            self._active += 1
+        return True
+
+    def release(self) -> None:
+        with self._lock:
+            if self._active < 1:
+                raise RuntimeError("local operation admission release imbalance")
+            self._active -= 1
+        self._semaphore.release()
+
+    def snapshot(self) -> dict:
+        with self._lock:
+            return {"active": self._active, "limit": self.limit}
+
+
+def configured_operation_concurrency() -> int:
+    raw = os.environ.get("CHROMEAI_MAX_CONCURRENT_OPERATIONS", "1")
+    try:
+        return int(raw)
+    except ValueError as exc:
+        raise RuntimeError("invalid_local_operation_concurrency") from exc
+
+
+OPERATION_ADMISSION = LocalOperationAdmission(configured_operation_concurrency())
+
+
+def extension_origin_allowed(origin: str | None) -> bool:
+    candidate = str(origin or "").strip()
+    if not candidate:
+        return False
+    configured = os.environ.get("SELECTPILOT_EXTENSION_ORIGIN", "").strip()
+    if configured:
+        return bool(candidate == configured and CHROME_EXTENSION_ORIGIN.fullmatch(configured))
+    return bool(CHROME_EXTENSION_ORIGIN.fullmatch(candidate))
 
 
 def _expect_dict(value: object, *, field: str = "payload") -> dict:
@@ -163,9 +239,21 @@ def _expect_optional_dict(payload: dict, field: str) -> dict | None:
     return raw
 
 
+def _enforce_local_input_budget(text: str) -> None:
+    limit = OLLAMA.config.max_input_chars
+    if len(text) > limit:
+        raise ValidationError(
+            "selection_too_large",
+            "This selection is too large for a predictable local response. Select a smaller section and try again.",
+            status=413,
+            details={"maximum_characters": limit, "received_characters": len(text)},
+        )
+
+
 def validate_summarize_payload(payload: object) -> dict:
     body = _expect_dict(payload)
-    _expect_string(body, "text", required=True, allow_empty=False)
+    text = _expect_string(body, "text", required=True, allow_empty=False) or ""
+    _enforce_local_input_budget(text)
     _expect_string(body, "title", required=False, allow_empty=True)
     _expect_string(body, "url", required=False, allow_empty=True)
     _expect_optional_dict(body, "metadata")
@@ -174,8 +262,18 @@ def validate_summarize_payload(payload: object) -> dict:
 
 def validate_extract_payload(payload: object) -> dict:
     body = _expect_dict(payload)
-    _expect_string(body, "text", required=True, allow_empty=False)
-    _expect_string(body, "preset", required=False, allow_empty=True)
+    text = _expect_string(body, "text", required=True, allow_empty=False) or ""
+    _enforce_local_input_budget(text)
+    preset = _expect_string(body, "preset", required=False, allow_empty=True)
+    try:
+        get_extraction_preset(preset or None)
+    except ValueError as exc:
+        raise ValidationError(
+            "unknown_extraction_preset",
+            str(exc),
+            status=422,
+            details={"preset": preset},
+        ) from exc
     _expect_string(body, "title", required=False, allow_empty=True)
     _expect_string(body, "url", required=False, allow_empty=True)
     _expect_optional_dict(body, "metadata")
@@ -184,8 +282,10 @@ def validate_extract_payload(payload: object) -> dict:
 
 def validate_agent_payload(payload: object) -> dict:
     body = _expect_dict(payload)
-    _expect_string(body, "prompt", required=True, allow_empty=False)
-    _expect_optional_dict(body, "context")
+    prompt = _expect_string(body, "prompt", required=True, allow_empty=False) or ""
+    context = _expect_optional_dict(body, "context") or {}
+    selected_text = str(context.get("selection") or context.get("pageText") or context.get("markdown") or "")
+    _enforce_local_input_budget(f"{prompt}\n{selected_text}".strip())
     return body
 
 
@@ -239,6 +339,38 @@ def _validate_object_output(value: object, field: str) -> None:
         )
 
 
+def _validate_routing_output(body: dict) -> None:
+    routing = body.get("routing")
+    if not isinstance(routing, dict):
+        raise ValidationError(
+            "invalid_model_output",
+            "routing must be an object",
+            status=502,
+            details={"field": "routing", "expected": "object"},
+        )
+    if not isinstance(routing.get("model"), str) or routing.get("model") != body.get("model"):
+        raise ValidationError(
+            "invalid_model_output",
+            "routing model must match the executed model",
+            status=502,
+            details={"field": "routing.model", "expected": body.get("model")},
+        )
+    if not isinstance(routing.get("reason"), str) or not routing.get("reason"):
+        raise ValidationError(
+            "invalid_model_output",
+            "routing reason must be a non-empty string",
+            status=502,
+            details={"field": "routing.reason", "expected": "non-empty string"},
+        )
+    if not isinstance(routing.get("num_ctx"), int) or routing.get("num_ctx") <= 0:
+        raise ValidationError(
+            "invalid_model_output",
+            "routing context must be a positive integer",
+            status=502,
+            details={"field": "routing.num_ctx", "expected": "positive integer"},
+        )
+
+
 def validate_summarize_response(response: object) -> dict:
     body = _expect_dict(response, field="response")
     for key in ["summary", "markdown", "title", "model", "source", "raw_response"]:
@@ -252,6 +384,7 @@ def validate_summarize_response(response: object) -> dict:
     _validate_list_of_strings(body.get("bullets"), "bullets")
     _validate_list_of_strings(body.get("action_items"), "action_items")
     _validate_list_of_strings(body.get("tags"), "tags")
+    _validate_routing_output(body)
     return body
 
 
@@ -267,6 +400,7 @@ def validate_agent_response(response: object) -> dict:
             )
     _validate_list_of_strings(body.get("reasoning"), "reasoning")
     _validate_object_output(body.get("json"), "json")
+    _validate_routing_output(body)
     return body
 
 
@@ -281,6 +415,7 @@ def validate_extract_response(response: object) -> dict:
                 details={"field": key, "expected": "string"},
             )
     _validate_object_output(body.get("json"), "json")
+    _validate_routing_output(body)
     return body
 
 
@@ -316,10 +451,9 @@ def enforce_contract_fields(payload: dict, contract: OperationContract) -> None:
 def _resolve_trace_id(payload: dict, headers: dict[str, str]) -> str:
     header_trace = str(headers.get("x-selectpilot-trace-id") or headers.get("x-trace-id") or "").strip()
     body_trace = str(payload.get("session_id") or "").strip() if isinstance(payload, dict) else ""
-    if header_trace:
-        return header_trace
-    if body_trace:
-        return body_trace
+    candidate = header_trace or body_trace
+    if candidate and re.fullmatch(r"[A-Za-z0-9_.:-]{1,64}", candidate):
+        return candidate
     basis = {
         "payload": payload if isinstance(payload, dict) else {},
         "content_type": str(headers.get("content-type") or ""),
@@ -356,6 +490,50 @@ def verify_binary(path: Path, expected_hash: str | None = None) -> bool:
         print(f"binary hash mismatch: {digest} != {expected_hash}")
         return False
     return True
+
+
+def require_binary_integrity(path: Path, expected_hash: str | None = None) -> None:
+    if not verify_binary(path, expected_hash):
+        raise RuntimeError("runtime_integrity_check_failed")
+
+
+RUNTIME_INTEGRITY_FILES = (
+    "server/nano_server.py",
+    "server/ollama_client.py",
+    "server/extraction_presets.py",
+    "server/runtime_profiles.py",
+    "server/installation_manager.py",
+    "presets/extraction-presets.json",
+    "runtime/model_policy.json",
+    "runtime/model_registry.runtime.json",
+    "runtime/promotion_audit.json",
+)
+
+
+def runtime_integrity_digest(root: Path) -> str:
+    records: list[str] = []
+    for relative_path in RUNTIME_INTEGRITY_FILES:
+        candidate = root / relative_path
+        if not candidate.is_file():
+            raise RuntimeError(f"runtime integrity file missing: {relative_path}")
+        digest = hashlib.sha256(candidate.read_bytes()).hexdigest()
+        records.append(f"{relative_path}\t{digest}\n")
+    return hashlib.sha256("".join(records).encode("utf-8")).hexdigest()
+
+
+def require_runtime_integrity(root: Path, expected_hash: str | None = None) -> None:
+    try:
+        digest = runtime_integrity_digest(root)
+    except (OSError, RuntimeError) as exc:
+        print(str(exc))
+        raise RuntimeError("runtime_integrity_check_failed") from exc
+    if expected_hash and (
+        re.fullmatch(r"[0-9a-f]{64}", expected_hash) is None or digest != expected_hash
+    ):
+        print(f"runtime hash mismatch: {digest} != {expected_hash}")
+        raise RuntimeError("runtime_integrity_check_failed")
+
+
 def ensure_dirs(path: Path):
     path.mkdir(parents=True, exist_ok=True)
 
@@ -369,8 +547,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RUNTIME_DIR = PROJECT_ROOT / "runtime"
 RUNTIME_POLICY_PATH = RUNTIME_DIR / "model_policy.json"
 RUNTIME_REGISTRY_PATH = RUNTIME_DIR / "model_registry.runtime.json"
-LIVE_FEEDBACK_PATH = RUNTIME_DIR / "live_feedback.jsonl"
+DEFAULT_RUNTIME_STATE_DIR = Path(os.path.expanduser('~/Library/Application Support/SelectPilot/state'))
+RUNTIME_STATE_DIR = Path(os.environ.get('CHROMEAI_RUNTIME_STATE_DIR', DEFAULT_RUNTIME_STATE_DIR))
+LIVE_FEEDBACK_PATH = RUNTIME_STATE_DIR / "live_feedback.jsonl"
 _LIVE_FEEDBACK_LOCK = threading.Lock()
+MAX_LIVE_FEEDBACK_BYTES = 2 * 1024 * 1024
+MAX_RUNTIME_META_STREAMS = 4
 
 RUNTIME_META_EVENT_VERSION = "1.0"
 RUNTIME_META_DEFAULT_LATENCY_HINT_MS = 1200
@@ -382,35 +564,64 @@ MODEL_FAILURE_ISOLATION_WINDOW = 10
 
 DETERMINISTIC_MODEL_REGISTRY = [
     {
-        "id": "qwen2.5:0.5b",
-        "capability_profile": {"classification": 0.9, "extract": 0.82, "rewrite": 0.75, "analyze": 0.72},
+        "id": "gemma4:e2b-it-qat",
+        "capability_profile": {"classification": 0.92, "extract": 0.94, "rewrite": 0.91, "analyze": 0.82},
         "resource_profile": {"memory": 1, "latency": 1},
-        "benchmark_scores": {"precision": 0.81, "validation_pass_rate": 0.93, "retry_rate": 0.07},
+        "benchmark_scores": {"precision": 0.9, "validation_pass_rate": 1.0, "retry_rate": 0.0},
         "installation_state": "installed",
     },
     {
-        "id": "qwen2.5:1.5b",
-        "capability_profile": {"classification": 0.94, "extract": 0.9, "rewrite": 0.84, "analyze": 0.83},
+        "id": "gemma4:e4b-it-qat",
+        "capability_profile": {"classification": 0.94, "extract": 0.9, "rewrite": 0.88, "analyze": 0.96},
         "resource_profile": {"memory": 2, "latency": 2},
-        "benchmark_scores": {"precision": 0.88, "validation_pass_rate": 0.95, "retry_rate": 0.05},
+        "benchmark_scores": {"precision": 0.95, "validation_pass_rate": 1.0, "retry_rate": 0.0},
         "installation_state": "installed",
     },
 ]
 
-def _append_live_feedback(event: dict) -> None:
+def configure_runtime_state(state_dir: Path) -> None:
+    global RUNTIME_STATE_DIR, LIVE_FEEDBACK_PATH
+    resolved = state_dir.expanduser().resolve()
+    ensure_dirs(resolved)
+    probe = resolved / f".write-probe-{os.getpid()}"
     try:
-        ensure_dirs(RUNTIME_DIR)
+        probe.write_text("selectpilot-runtime-state\n", encoding="utf-8")
+        probe.unlink()
+    except OSError as exc:
+        raise RuntimeError("runtime_state_directory_unwritable") from exc
+    RUNTIME_STATE_DIR = resolved
+    LIVE_FEEDBACK_PATH = resolved / "live_feedback.jsonl"
+
+
+def _report_runtime_state_error(operation: str, exc: Exception) -> None:
+    payload = {
+        "event": "runtime_state.failed",
+        "operation": operation,
+        "status": "error",
+        "error": type(exc).__name__,
+        "ts": datetime.now(timezone.utc).isoformat(),
+    }
+    print(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), file=sys.stderr)
+
+
+def _append_live_feedback(event: dict) -> bool:
+    try:
+        ensure_dirs(LIVE_FEEDBACK_PATH.parent)
         entry = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             **event,
         }
         line = json.dumps(entry, ensure_ascii=False, separators=(",", ":"))
         with _LIVE_FEEDBACK_LOCK:
+            if LIVE_FEEDBACK_PATH.exists() and LIVE_FEEDBACK_PATH.stat().st_size >= MAX_LIVE_FEEDBACK_BYTES:
+                rotated = LIVE_FEEDBACK_PATH.with_suffix(".jsonl.previous")
+                os.replace(LIVE_FEEDBACK_PATH, rotated)
             with LIVE_FEEDBACK_PATH.open("a", encoding="utf-8") as handle:
                 handle.write(f"{line}\n")
-    except Exception:
-        # Feedback sink must not break request handling.
-        return
+        return True
+    except (OSError, TypeError, ValueError) as exc:
+        _report_runtime_state_error("write_feedback", exc)
+        return False
 
 
 def _load_json_file(path: Path) -> dict | None:
@@ -444,6 +655,8 @@ def _runtime_policy_select(
         return None
 
     policy_version = str(policy.get("policy_version") or "") or None
+    promotion_evidence = policy.get("promotion_evidence") if isinstance(policy.get("promotion_evidence"), dict) else {}
+    promotion_history = policy.get("promotion_history") if isinstance(policy.get("promotion_history"), list) else []
     defaults = policy.get("defaults") if isinstance(policy.get("defaults"), list) else []
     quarantined = set()
     for item in policy.get("quarantined_models") or []:
@@ -503,13 +716,20 @@ def _runtime_policy_select(
 
     chosen = matches[0]
     preferred = str(chosen.get("preferred_model_id") or "").strip()
+    verified_preferred_promotion = bool(promotion_evidence.get("runtime_verified")) and any(
+        isinstance(item, dict)
+        and str(item.get("task_family") or "") == task_family
+        and str(item.get("hardware_profile") or "") == hardware_profile
+        and str(item.get("new_model_id") or "") == preferred
+        for item in promotion_history
+    )
     if preferred and _model_available(preferred) and _hardware_allows(preferred) and preferred not in quarantined and not _is_quarantined(preferred):
         return {
             "model_id": preferred,
             "selection_path": "runtime_policy_preferred",
             "selection_reason": str(chosen.get("selection_reason") or "runtime_policy_preferred_model_if_available_and_not_quarantined"),
             "policy_version": policy_version,
-            "promotion_applied": True,
+            "promotion_applied": verified_preferred_promotion,
         }
 
     for fallback in chosen.get("fallback_model_ids") or []:
@@ -526,7 +746,7 @@ def _runtime_policy_select(
                 "selection_path": "runtime_policy_fallback",
                 "selection_reason": "runtime_policy_fallback_models_in_order",
                 "policy_version": policy_version,
-                "promotion_applied": True,
+                "promotion_applied": False,
             }
 
     return None
@@ -536,19 +756,67 @@ def _now_ms() -> int:
     return int(time.time() * 1000)
 
 
-def record_model_feedback(model_id: str, *, success: bool, retries: int, latency_ms: int, cancelled: bool = False) -> None:
-    return
+def _recent_model_feedback(model_id: str, limit: int = MODEL_FAILURE_ISOLATION_WINDOW) -> list[dict]:
+    if not model_id or not LIVE_FEEDBACK_PATH.exists():
+        return []
+    records: list[dict] = []
+    try:
+        with _LIVE_FEEDBACK_LOCK:
+            lines = LIVE_FEEDBACK_PATH.read_text(encoding="utf-8").splitlines()
+        for line in reversed(lines):
+            try:
+                item = json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise RuntimeStateError("runtime_state_feedback_corrupt") from exc
+            if item.get("type") == "model_feedback" and item.get("model_id") == model_id:
+                records.append(item)
+                if len(records) >= limit:
+                    break
+    except OSError as exc:
+        raise RuntimeStateError("runtime_state_feedback_unreadable") from exc
+    return list(reversed(records))
+
+
+def record_model_feedback(model_id: str, *, success: bool, retries: int, latency_ms: int, cancelled: bool = False) -> bool:
+    if not model_id:
+        return True
+    return _append_live_feedback({
+        "type": "model_feedback",
+        "model_id": model_id,
+        "success": bool(success),
+        "retries": max(0, int(retries)),
+        "latency_ms": max(0, int(latency_ms)),
+        "cancelled": bool(cancelled),
+    })
 
 
 def _is_quarantined(model_id: str) -> bool:
-    return False
+    records = _recent_model_feedback(model_id)
+    if len(records) < MODEL_FAILURE_ISOLATION_WINDOW:
+        return False
+    failures = sum(1 for item in records if not item.get("success") or item.get("cancelled"))
+    return (failures / len(records)) > MODEL_FAILURE_ISOLATION_THRESHOLD
 
 
 def _recent_feedback_penalty(model_id: str) -> float:
-    return 0.0
+    records = _recent_model_feedback(model_id)
+    if not records:
+        return 0.0
+    failure_ratio = sum(1 for item in records if not item.get("success") or item.get("cancelled")) / len(records)
+    retry_ratio = sum(min(3, int(item.get("retries") or 0)) for item in records) / (len(records) * 3)
+    latency_overrun_ratio = sum(1 for item in records if int(item.get("latency_ms") or 0) > 10_000) / len(records)
+    return round(failure_ratio + (retry_ratio * 0.25) + (latency_overrun_ratio * 0.1), 4)
 
 
 def apply_hysteresis(task_type: str, selected_model_id: str, available_model_ids: list[str]) -> str:
+    del task_type
+    if selected_model_id not in available_model_ids or _is_quarantined(selected_model_id):
+        raise ValidationError(
+            "selected_model_unavailable",
+            "Selected model is unavailable or quarantined",
+            status=503,
+            details={"selected_model_id": selected_model_id},
+        )
     return selected_model_id
 
 
@@ -606,7 +874,7 @@ def sanitize_runtime_meta_details(details: dict | None) -> dict:
         elif isinstance(value, list):
             safe[key_str] = len(value)
         elif isinstance(value, dict):
-            safe[key_str] = {k: v for k, v in value.items() if isinstance(v, (str, int, float, bool, type(None)))}
+            safe[key_str] = sanitize_runtime_meta_details(value)
         else:
             safe[key_str] = str(value)
     return safe
@@ -686,10 +954,16 @@ def ensure_runtime_models() -> dict:
     can run with a hardware-fit local model set.
     """
     health = OLLAMA.health()
-    generation_model = str(health.get("requested_model") or "").strip()
+    generation_models = [
+        str(route.get("model") or "").strip()
+        for route in (health.get("task_routes") or {}).values()
+        if isinstance(route, dict)
+    ]
+    if not generation_models:
+        generation_models = [str(health.get("requested_model") or "").strip()]
     embedding_model = str(health.get("requested_embed_model") or "").strip()
 
-    models_to_ensure = [name for name in [generation_model, embedding_model] if name]
+    models_to_ensure = list(dict.fromkeys(name for name in [*generation_models, embedding_model] if name))
     if not models_to_ensure:
         return {"ok": True, "already_present": [], "pulled": [], "failed": {}}
 
@@ -975,6 +1249,8 @@ def select_smallest_sufficient_model(task_analysis: dict) -> dict:
             },
         )
 
+    selected_id = apply_hysteresis(task_type, selected_id, available_ids)
+    selected = next(item[0] for item in sorted_candidates if str(item[0].get("id") or "") == selected_id)
     selected_penalty = _recent_feedback_penalty(selected_id)
     return {
         "model": selected.get("id"),
@@ -1019,15 +1295,9 @@ def select_smallest_sufficient_model(task_analysis: dict) -> dict:
 
 
 def fixed_temperature_for_task(task_type: str) -> float:
-    values = {
-        "classification": 0.0,
-        "extract": 0.0,
-        "rewrite": 0.3,
-        "analyze": 0.2,
-        "summarize": 0.2,
-        "agent": 0.2,
-    }
-    return float(values.get(str(task_type), 0.2))
+    # Every admitted production generation route is deterministic. This
+    # metadata must describe the payload actually sent by OllamaClient.
+    return 0.0
 
 
 def run_with_output_enforcement(
@@ -1142,19 +1412,6 @@ def build_privacy_proof(health: dict | None = None, port: int = DEFAULT_PORT) ->
     }
 
 
-def transcribe(payload: dict) -> dict:
-    source = payload.get("audioUrl") or payload.get("mediaId") or "audio"
-    text = f"Transcribed from {source}"
-    return {"text": text, "confidence": 0.95}
-
-
-def vision(payload: dict) -> dict:
-    blob = payload.get("imageBase64") or payload.get("videoFrame") or ""
-    digest = hashlib.sha256(blob.encode("utf-8")).hexdigest() if blob else ""
-    text = f"Image signature {digest[:16]}" if digest else "No image provided"
-    return {"text": text, "tags": ["ocr", "frame"] if blob else []}
-
-
 def embed(payload: dict) -> dict:
     text = payload.get("text", "")
     try:
@@ -1200,105 +1457,110 @@ def benchmark_runtime() -> dict:
     }
 
 
+def _entitlement_authority_url(path: str) -> str:
+    base_url = os.environ.get(
+        "SELECTPILOT_ENTITLEMENT_AUTHORITY_URL",
+        "http://127.0.0.1:8090",
+    ).rstrip("/")
+    parsed = urlparse(base_url)
+    is_local_http = parsed.scheme == "http" and parsed.hostname in LOCAL_HOSTS
+    is_remote_https = parsed.scheme == "https" and bool(parsed.hostname)
+    if not (is_local_http or is_remote_https) or parsed.path not in {"", "/"} or parsed.query or parsed.fragment or parsed.username:
+        raise ValidationError(
+            "invalid_entitlement_verifier",
+            "Entitlement authority must use HTTPS or an explicit local loopback endpoint",
+            status=503,
+        )
+    return f"{base_url}{path}"
+
+
+def _entitlement_request(path: str, payload: dict) -> dict:
+    verifier_url = _entitlement_authority_url(path)
+
+    request = Request(
+        verifier_url,
+        data=json.dumps(payload, separators=(",", ":")).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=2.0) as response:
+            result = json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        if exc.code == 401:
+            raise ValidationError("invalid_entitlement", "Entitlement token is invalid", status=401) from exc
+        raise ValidationError("entitlement_verifier_error", "Entitlement authority rejected the request", status=503) from exc
+    except (URLError, TimeoutError, json.JSONDecodeError) as exc:
+        raise ValidationError("entitlement_verifier_unavailable", "Entitlement authority is unavailable", status=503) from exc
+    if not isinstance(result, dict):
+        raise ValidationError("invalid_entitlement_response", "Entitlement authority returned an invalid contract", status=503)
+    return result
+
 def license_verify(payload: dict) -> dict:
-    token = payload.get("token", "")
-    tier = "pro" if "pro" in token else "plus" if "plus" in token else "essential"
-    token_basis = str(token or "")
-    token_hash = hashlib.sha256(token_basis.encode("utf-8")).hexdigest()
-    now = 1_700_000_000_000 + int(token_hash[:8], 16)
-    features_by_tier = {
-        "essential": [
-            "selection_clipping",
-            "markdown_export",
-            "clipboard_export",
-            "side_panel_ui",
-            "structured_extraction",
-            "canonical_metadata",
-            "local_processing",
-        ],
-        "plus": [
-            "selection_clipping",
-            "markdown_export",
-            "clipboard_export",
-            "side_panel_ui",
-            "structured_extraction",
-            "canonical_metadata",
-            "local_processing",
-            "text_summarization",
-            "basic_local_agent",
-            "export_obsidian",
-            "export_notion",
-            "export_mem_ai",
-            "export_apple_notes",
-            "format_adapters",
-            "one_click_export",
-            "batch_clipping",
-            "structured_summaries",
-        ],
-        "pro": [
-            "selection_clipping",
-            "markdown_export",
-            "clipboard_export",
-            "side_panel_ui",
-            "structured_extraction",
-            "canonical_metadata",
-            "local_processing",
-            "text_summarization",
-            "basic_local_agent",
-            "export_obsidian",
-            "export_notion",
-            "export_mem_ai",
-            "export_apple_notes",
-            "format_adapters",
-            "one_click_export",
-            "batch_clipping",
-            "structured_summaries",
-            "audio_transcription",
-            "video_frame_ocr",
-            "image_ocr",
-            "multimodal_clipper",
-            "local_embeddings",
-            "advanced_agent_reasoning",
-            "project_memory",
-            "knowledge_graph",
-            "offline_search",
-            "auto_history_indexing",
-        ],
-    }
-    entitlement = {
-        "token": token,
-        "tier": tier,
-        "features": features_by_tier.get(tier, []),
-        "issuedAt": now,
-        "expiresAt": now + 30 * 24 * 60 * 60 * 1000,
-    }
+    token = str(payload.get("token") or "").strip()
+    if not token:
+        raise ValidationError("missing_token", "Entitlement token is required")
+    result = _entitlement_request("/v1/entitlements/verify", {"token": token})
 
-    # Minimal signed payload support for MVP environments.
-    # In production, replace with Ed25519 signing and public-key verification in client.
-    signing_secret = os.environ.get("CHROMEAI_ENTITLEMENT_SIGNING_SECRET", "")
-    canonical = json.dumps(entitlement, separators=(",", ":"), ensure_ascii=False)
-    signature = ""
-    if signing_secret:
-        digest = hmac.new(signing_secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256).digest()
-        signature = base64.b64encode(digest).decode("ascii")
+    entitlement = result.get("entitlement") if isinstance(result, dict) else None
+    issued_at = entitlement.get("issuedAt") if isinstance(entitlement, dict) else None
+    expires_at = entitlement.get("expiresAt") if isinstance(entitlement, dict) else None
+    if (
+        not isinstance(result, dict)
+        or not isinstance(entitlement, dict)
+        or entitlement.get("token") != token
+        or entitlement.get("tier") not in {"essential", "plus", "pro"}
+        or not isinstance(entitlement.get("features"), list)
+        or not isinstance(issued_at, int)
+        or isinstance(issued_at, bool)
+        or (expires_at is not None and (not isinstance(expires_at, int) or isinstance(expires_at, bool)))
+        or result.get("alg") != "Ed25519"
+        or not isinstance(result.get("kid"), str)
+        or not result.get("kid")
+        or not isinstance(result.get("signature"), str)
+        or not result.get("signature")
+    ):
+        raise ValidationError("invalid_entitlement_response", "Entitlement authority returned an invalid contract", status=503)
+    return result
 
-    response = {
-        "entitlement": entitlement,
-        "signature": signature,
-        "alg": "HMAC-SHA256" if signing_secret else "none",
-        "kid": "local-dev",
-    }
-    return response
+
+def license_trial(payload: dict) -> dict:
+    installation_id = str(payload.get("installation_id") or "").strip()
+    if not installation_id:
+        raise ValidationError("missing_installation_id", "Installation identity is required")
+    return _entitlement_request("/v1/trials/start", {"installation_id": installation_id})
+
+
+def license_claim(payload: dict) -> dict:
+    claim_id = str(payload.get("claim_id") or "").strip()
+    if not claim_id:
+        raise ValidationError("missing_claim_id", "Purchase claim is required")
+    return _entitlement_request("/v1/claims/redeem", {"claim_id": claim_id})
 
 
 class Handler(BaseHTTPRequestHandler):
     server_version = "ChromeAINano/1.0"
+    _operation_slot_acquired = False
+
+    def finish(self):
+        try:
+            super().finish()
+        finally:
+            if self._operation_slot_acquired:
+                OPERATION_ADMISSION.release()
+                self._operation_slot_acquired = False
 
     def _set_headers(self):
         self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, Last-Event-ID, x-selectpilot-trace-id, x-trace-id")
+
+    def _origin_allowed(self) -> bool:
+        origin = self.headers.get("Origin")
+        if not origin or extension_origin_allowed(origin):
+            return True
+        self._write_error(403, "origin_not_allowed", "Browser origin is not authorized for the local bridge")
+        return False
 
     def _write_json(self, status: int, payload: dict):
         self.send_response(status)
@@ -1319,9 +1581,13 @@ class Handler(BaseHTTPRequestHandler):
         self._write_json(status, payload)
 
     def do_OPTIONS(self):
+        if not self._origin_allowed():
+            return
         self._write_json(204, {})
 
     def do_GET(self):
+        if not self._origin_allowed():
+            return
         parsed = urlparse(self.path)
         path = parsed.path.rstrip('/')
 
@@ -1331,6 +1597,7 @@ class Handler(BaseHTTPRequestHandler):
                 "ok": bool(health.get("reachable")) and bool(health.get("model_available")),
                 "service": self.server_version,
                 "ollama": health,
+                "local_operation_capacity": OPERATION_ADMISSION.snapshot(),
             })
             return
         if path == '/privacy-proof':
@@ -1338,6 +1605,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == '/profiles':
             self._write_json(200, runtime_profiles())
+            return
+        if path == '/installation/status':
+            self._write_json(200, INSTALLATION.status())
             return
         if path == '/runtime-meta/health':
             self._write_json(200, {
@@ -1349,6 +1619,9 @@ class Handler(BaseHTTPRequestHandler):
             })
             return
         if path == '/runtime-meta/stream':
+            if RUNTIME_META.active_stream_count() >= MAX_RUNTIME_META_STREAMS:
+                self._write_error(429, "runtime_meta_stream_limit", "Too many active runtime streams")
+                return
             query = parse_qs(parsed.query)
             after = query.get("after", [""])[0]
             header_last_event = str(self.headers.get("Last-Event-ID") or "").strip()
@@ -1361,7 +1634,6 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/event-stream")
             self.send_header("Cache-Control", "no-cache")
             self.send_header("Connection", "keep-alive")
-            self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
 
             RUNTIME_META.increment_streams()
@@ -1402,7 +1674,16 @@ class Handler(BaseHTTPRequestHandler):
         self._write_json(404, {"error": "not_found"})
 
     def do_POST(self):
-        length = int(self.headers.get('Content-Length', '0'))
+        if not self._origin_allowed():
+            return
+        try:
+            length = int(self.headers.get('Content-Length', '0'))
+        except ValueError:
+            self._write_error(400, "invalid_content_length", "Content-Length must be an integer")
+            return
+        if length < 0 or length > MAX_REQUEST_BYTES:
+            self._write_error(413, "request_too_large", f"Request body exceeds {MAX_REQUEST_BYTES} bytes")
+            return
         body = self.rfile.read(length) if length else b'{}'
         try:
             payload = json.loads(body.decode('utf-8'))
@@ -1419,6 +1700,16 @@ class Handler(BaseHTTPRequestHandler):
         if contract is None:
             self._write_json(404, {"error": "not_found"})
             return
+        if path in INFERENCE_ENDPOINTS:
+            if not OPERATION_ADMISSION.try_acquire():
+                self._write_error(
+                    429,
+                    "local_runtime_busy",
+                    "Local runtime capacity is in use; retry after the active operation completes",
+                    OPERATION_ADMISSION.snapshot(),
+                )
+                return
+            self._operation_slot_acquired = True
 
         header_map = {k.lower(): v for k, v in self.headers.items()}
         trace_id = _resolve_trace_id(payload, header_map)
@@ -1554,10 +1845,6 @@ class Handler(BaseHTTPRequestHandler):
                         "reason": ((compiled.get("model_selection") or {}).get("reason") if isinstance(compiled.get("model_selection"), dict) else ""),
                     },
                 )
-            elif path == '/transcribe':
-                resp = transcribe(payload)
-            elif path == '/vision':
-                resp = vision(payload)
             elif path == '/embed':
                 resp = embed(payload)
             elif path == '/agent':
@@ -1584,8 +1871,19 @@ class Handler(BaseHTTPRequestHandler):
                 runtime_model_id = str(resp.get("model") or "") if isinstance(resp, dict) else None
             elif path == '/license/verify':
                 resp = license_verify(payload)
+            elif path == '/license/trial':
+                resp = license_trial(payload)
+            elif path == '/license/claim':
+                resp = license_claim(payload)
             elif path == '/benchmark':
                 resp = benchmark_runtime()
+            elif path == '/installation/start':
+                try:
+                    resp = INSTALLATION.start(payload.get("consent") is True)
+                except ValueError as exc:
+                    raise ValidationError("installation_consent_required", "Installation requires your approval") from exc
+                except RuntimeError as exc:
+                    raise ValidationError("installation_unavailable", "Installation is not available on this device", status=422) from exc
 
             emit_runtime_meta(
                 event_type="STEP_COMPLETED",
@@ -1654,8 +1952,24 @@ class Handler(BaseHTTPRequestHandler):
             )
             self._write_error(e.status, e.code, e.message, e.details)
             return
+        except RuntimeStateError as e:
+            duration_ms = round((time.perf_counter() - started_at) * 1000)
+            _report_runtime_state_error("read_feedback", e)
+            emit_runtime_meta(
+                event_type="RUNTIME_FAILED",
+                trace_id=trace_id,
+                operation=contract.name,
+                status="error",
+                message="Local runtime state is unavailable",
+                duration_ms=duration_ms,
+                details={"code": str(e)},
+            )
+            self._write_error(503, str(e), "Local runtime state is unavailable")
+            return
         except (RuntimeError, OllamaError) as e:
             duration_ms = round((time.perf_counter() - started_at) * 1000)
+            if runtime_model_id and path in {'/summarize', '/agent', '/extract'}:
+                record_model_feedback(runtime_model_id, success=False, retries=retry_count, latency_ms=duration_ms)
             _append_live_feedback({
                 "trace_id": trace_id,
                 "operation": contract.name,
@@ -1669,7 +1983,7 @@ class Handler(BaseHTTPRequestHandler):
                 trace_id,
                 contract.name,
                 "runtime_error",
-                {"code": "ollama_unavailable", "message": str(e)},
+                {"code": "ollama_unavailable"},
             )
             emit_runtime_meta(
                 event_type="STEP_FAILED",
@@ -1677,7 +1991,7 @@ class Handler(BaseHTTPRequestHandler):
                 operation=contract.name,
                 status="error",
                 step=current_step,
-                message=str(e),
+                message="Local model runtime is unavailable",
                 details={"code": "ollama_unavailable"},
             )
             emit_runtime_meta(
@@ -1685,11 +1999,11 @@ class Handler(BaseHTTPRequestHandler):
                 trace_id=trace_id,
                 operation=contract.name,
                 status="error",
-                message=str(e),
+                message="Local model runtime is unavailable",
                 duration_ms=duration_ms,
                 details={"code": "ollama_unavailable"},
             )
-            self._write_error(503, "ollama_unavailable", str(e))
+            self._write_error(503, "ollama_unavailable", "Local model runtime is unavailable")
             return
 
         if isinstance(resp, dict):
@@ -1721,11 +2035,17 @@ class Handler(BaseHTTPRequestHandler):
 
         duration_ms = round((time.perf_counter() - started_at) * 1000)
 
+        state_persisted = True
         if runtime_model_id and path in {'/summarize', '/agent', '/extract'}:
-            record_model_feedback(runtime_model_id, success=True, retries=retry_count, latency_ms=duration_ms)
+            state_persisted = record_model_feedback(
+                runtime_model_id,
+                success=True,
+                retries=retry_count,
+                latency_ms=duration_ms,
+            )
 
         model_selection = resp.get("model_selection") if isinstance(resp, dict) else None
-        _append_live_feedback({
+        state_persisted = _append_live_feedback({
             "trace_id": trace_id,
             "operation": contract.name,
             "endpoint": contract.endpoint,
@@ -1748,7 +2068,20 @@ class Handler(BaseHTTPRequestHandler):
                 if isinstance(model_selection, dict)
                 else None
             ),
-        })
+        }) and state_persisted
+
+        if not state_persisted:
+            emit_runtime_meta(
+                event_type="RUNTIME_FAILED",
+                trace_id=trace_id,
+                operation=contract.name,
+                status="error",
+                message="Local runtime state could not be persisted",
+                duration_ms=duration_ms,
+                details={"code": "runtime_state_write_failed"},
+            )
+            self._write_error(503, "runtime_state_write_failed", "Local runtime state could not be persisted")
+            return
 
         log_runtime_event(
             "request.completed",
@@ -1775,22 +2108,24 @@ def main():
     parser.add_argument('--port-range', default=None)
     parser.add_argument('--run-dir', default=os.path.expanduser('~/Library/Application Support/SelectPilot/run'))
     parser.add_argument('--log-dir', default=os.path.expanduser('~/Library/Logs/SelectPilot'))
+    parser.add_argument('--state-dir', default=os.environ.get('CHROMEAI_RUNTIME_STATE_DIR', str(DEFAULT_RUNTIME_STATE_DIR)))
     parser.add_argument('--binary-path', default=None)
     parser.add_argument('--binary-hash', default=None)
     args = parser.parse_args()
 
     run_dir = Path(args.run_dir)
     log_dir = Path(args.log_dir)
-    ensure_dirs(RUNTIME_DIR)
+    configure_runtime_state(Path(args.state_dir))
     ensure_dirs(run_dir)
     ensure_dirs(log_dir)
     port_file = run_dir / 'port.info'
 
     binary_path = Path(args.binary_path) if args.binary_path else Path(__file__)
     expected = args.binary_hash or os.environ.get('CHROMEAI_BINARY_HASH')
-    verify_binary(binary_path, expected)
+    require_binary_integrity(binary_path, expected)
+    require_runtime_integrity(PROJECT_ROOT, os.environ.get('CHROMEAI_RUNTIME_HASH'))
 
-    auto_pull = os.environ.get('CHROMEAI_AUTO_PULL_MODELS', '1').strip().lower() not in {'0', 'false', 'no'}
+    auto_pull = os.environ.get('CHROMEAI_AUTO_PULL_MODELS', '0').strip().lower() not in {'0', 'false', 'no'}
     if auto_pull:
         ensure_runtime_models()
 

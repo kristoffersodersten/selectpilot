@@ -1,3 +1,5 @@
+// module_name: scripts_sync-manifest-version_mjs
+// spec_ref: "reporting"
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';

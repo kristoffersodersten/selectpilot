@@ -1,3 +1,5 @@
+// module_name: tests_e2e_privacy-and-runtime_spec_mjs
+// spec_ref: "testing_strategy.integration_tests"
 import { test, expect } from '@playwright/test';
 
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost']);
@@ -23,6 +25,7 @@ test('health endpoint is reachable and exposes ollama boundary state', async ({ 
   const health = await res.json();
   expect(health).toHaveProperty('ollama');
   expect(health.ollama).toHaveProperty('privacy_mode');
+  expect(health.local_operation_capacity).toEqual({ active: 0, limit: 1 });
 });
 
 test('mocked selected-text extraction response shape', async () => {

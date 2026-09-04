@@ -17,10 +17,12 @@ const state = {
     steps: [],
     visiblePanels: ['selection_surface', 'runtime_surface', 'report_surface'],
 };
+// @spec_ref frontend_state_contract
 export function setIntent(intent) {
     state.intent = String(intent || '');
     return state;
 }
+// @spec_ref frontend_state_contract
 export function setSelectionContext(input) {
     state.selectionContext = {
         ...state.selectionContext,
@@ -28,6 +30,7 @@ export function setSelectionContext(input) {
     };
     return state;
 }
+// @spec_ref frontend_state_contract
 export function applyRuntimeEvent(event) {
     state.runtimeHeader = {
         taskFamily: event.taskFamily || state.runtimeHeader.taskFamily,
@@ -45,7 +48,11 @@ export function applyRuntimeEvent(event) {
     }
     return state;
 }
+// @spec_ref frontend_state_contract
 export function setVisiblePanels(panels) {
     state.visiblePanels = [...panels].slice(0, MAX_VISIBLE_PANELS);
     return state;
 }
+// module_name: runtime_store
+// spec_ref: "frontend_state_contract"
+// @spec_ref runtime_event_contract

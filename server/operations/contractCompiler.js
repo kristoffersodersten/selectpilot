@@ -15,6 +15,7 @@ function latencyBudgetForTask(taskFamily) {
             return 3000;
     }
 }
+// @spec_ref operation_mapping_layer
 export function compileOperationContract(compiledIntent, taskAnalysis) {
     const operationName = inferOperationName(compiledIntent);
     if (operationName === 'extract') {
@@ -82,3 +83,6 @@ export function compileOperationContract(compiledIntent, taskAnalysis) {
         },
     };
 }
+// module_name: operation_contract_compiler
+// spec_ref: "operation_mapping_layer"
+// @spec_ref execution_layer

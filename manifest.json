@@ -12,7 +12,7 @@
     "256": "assets/icon256.png",
     "512": "assets/icon512.png"
   },
-  "permissions": ["activeTab", "storage", "scripting", "tabs", "sidePanel"],
+  "permissions": ["activeTab", "storage", "scripting", "sidePanel"],
   "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],
   "background": {
     "service_worker": "background/background.js",
@@ -30,17 +30,14 @@
   "side_panel": {
     "default_path": "panel/panel.html"
   },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content/content-script.js"],
-      "run_at": "document_idle"
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "commands": {
+    "open-selectpilot": {
+      "suggested_key": { "default": "Alt+Shift+S", "mac": "Command+Shift+S" },
+      "description": "Open SelectPilot for the current selection"
     }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": ["assets/icon16.png", "assets/icon32.png", "assets/icon48.png", "assets/icon128.png", "assets/icon256.png", "assets/icon512.png"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  }
 }

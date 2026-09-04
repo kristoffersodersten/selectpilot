@@ -1,0 +1,45 @@
+services:
+  authority:
+    build:
+      context: ../..
+      dockerfile: services/entitlement-authority/Dockerfile
+    restart: unless-stopped
+    user: "${SELECTPILOT_UID:-1000}:${SELECTPILOT_GID:-1000}"
+    read_only: true
+    ports:
+      - "127.0.0.1:${SELECTPILOT_AUTHORITY_HOST_PORT:-8091}:8090"
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8090"
+      SELECTPILOT_ENTITLEMENT_PRIVATE_KEY_FILE: /run/secrets/entitlement_private_key
+      SELECTPILOT_ENTITLEMENT_KEY_ID: ${SELECTPILOT_ENTITLEMENT_KEY_ID:-selectpilot-prod-2026-01}
+      SELECTPILOT_PADDLE_WEBHOOK_SECRET_FILE: /run/secrets/paddle_webhook_secret
+      SELECTPILOT_PADDLE_PRICE_MAP_FILE: /run/secrets/paddle_price_map
+      SELECTPILOT_ENTITLEMENT_STATE_FILE: /var/lib/selectpilot/entitlements.json
+      SELECTPILOT_WEB_ORIGIN: https://selectpilot.app
+    secrets:
+      - entitlement_private_key
+      - paddle_webhook_secret
+      - paddle_price_map
+    volumes:
+      - ${SELECTPILOT_STATE_DIR}:/var/lib/selectpilot
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8090/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 3s
+      retries: 4
+      start_period: 10s
+
+secrets:
+  entitlement_private_key:
+    file: ${SELECTPILOT_ENTITLEMENT_PRIVATE_KEY_FILE}
+  paddle_webhook_secret:
+    file: ${SELECTPILOT_PADDLE_WEBHOOK_SECRET_FILE}
+  paddle_price_map:
+    file: ${SELECTPILOT_PADDLE_PRICE_MAP_FILE}

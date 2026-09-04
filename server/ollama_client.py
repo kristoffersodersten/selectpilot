@@ -1,3 +1,8 @@
+# module_name: ollama_runtime
+# spec_ref: "provisioning_layer"
+# @spec_ref prompt_determinism
+from __future__ import annotations
+
 import json
 import os
 import re
@@ -87,6 +92,9 @@ EMBED_MODEL_PREFERENCES = [
     "mxbai-embed-large",
 ]
 
+DEFAULT_GENERATION_KEEP_ALIVE_SECONDS = -1
+GENERATION_KEEP_ALIVE_ENV = "CHROMEAI_OLLAMA_KEEP_ALIVE_SECONDS"
+
 
 @dataclass(frozen=True)
 class OllamaConfig:
@@ -94,36 +102,93 @@ class OllamaConfig:
     model: str
     embed_model: str
     timeout_seconds: float
+    num_ctx: int
+    seed: int
+    generation_keep_alive_seconds: int = DEFAULT_GENERATION_KEEP_ALIVE_SECONDS
+    fast_model: str | None = None
+    fast_num_ctx: int | None = None
+    max_input_chars: int = 16000
 
 
 class OllamaError(RuntimeError):
     pass
 
 
+def _positive_int(value: Any, name: str) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError) as exc:
+        raise OllamaError(f"{name} must be a positive integer") from exc
+    if parsed <= 0:
+        raise OllamaError(f"{name} must be a positive integer")
+    return parsed
+
+
+def _nonnegative_int(value: Any, name: str) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError) as exc:
+        raise OllamaError(f"{name} must be a non-negative integer") from exc
+    if parsed < 0:
+        raise OllamaError(f"{name} must be a non-negative integer")
+    return parsed
+
+
+def parse_generation_keep_alive_seconds(
+    value: Any,
+    name: str = GENERATION_KEEP_ALIVE_ENV,
+) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError) as exc:
+        raise OllamaError(f"{name} must be -1 or a non-negative integer in seconds") from exc
+    if parsed < -1:
+        raise OllamaError(f"{name} must be -1 or a non-negative integer in seconds")
+    return parsed
+
+
 class OllamaClient:
     def __init__(self, config: OllamaConfig | None = None):
         if config is None:
-            default_generation_model = "llama3.2"
+            default_generation_model = "gemma4:e2b-it-qat"
             default_embed_model = "nomic-embed-text-v2-moe:latest"
+            default_num_ctx = 16384
             runtime_profile = os.environ.get("CHROMEAI_RUNTIME_PROFILE", "auto")
 
-            try:
-                from runtime_profiles import get_runtime_profile, recommend_runtime_profile
+            from runtime_profiles import get_runtime_profile, recommend_runtime_profile
 
-                recommendation = recommend_runtime_profile()
-                resolved_profile = recommendation["recommended_profile"] if runtime_profile == "auto" else runtime_profile
-                profile = get_runtime_profile(resolved_profile)
-                default_generation_model = profile.generation_model
-                default_embed_model = profile.embedding_model
-            except Exception:
-                pass
+            recommendation = recommend_runtime_profile()
+            resolved_profile = recommendation["recommended_profile"] if runtime_profile == "auto" else runtime_profile
+            profile = get_runtime_profile(resolved_profile)
+            default_generation_model = profile.generation_model
+            default_embed_model = profile.embedding_model
+            default_num_ctx = profile.num_ctx
 
+            explicit_model = os.environ.get("CHROMEAI_OLLAMA_MODEL")
+            primary_model = explicit_model or default_generation_model
+            fast_model = os.environ.get("CHROMEAI_OLLAMA_FAST_MODEL") or (
+                primary_model if explicit_model else profile.fast_generation_model
+            )
             config = OllamaConfig(
                 base_url=_normalize_base_url(os.environ.get("CHROMEAI_OLLAMA_BASE_URL", "http://127.0.0.1:11434")),
-                model=os.environ.get("CHROMEAI_OLLAMA_MODEL", default_generation_model),
+                model=primary_model,
                 embed_model=os.environ.get("CHROMEAI_OLLAMA_EMBED_MODEL", default_embed_model),
                 timeout_seconds=float(os.environ.get("CHROMEAI_OLLAMA_TIMEOUT_SECONDS", "30")),
-        )
+                num_ctx=_positive_int(os.environ.get("CHROMEAI_OLLAMA_NUM_CTX", default_num_ctx), "CHROMEAI_OLLAMA_NUM_CTX"),
+                seed=_nonnegative_int(os.environ.get("CHROMEAI_OLLAMA_SEED", "42"), "CHROMEAI_OLLAMA_SEED"),
+                generation_keep_alive_seconds=parse_generation_keep_alive_seconds(
+                    os.environ.get(GENERATION_KEEP_ALIVE_ENV, DEFAULT_GENERATION_KEEP_ALIVE_SECONDS),
+                ),
+                fast_model=fast_model,
+                fast_num_ctx=_positive_int(
+                    os.environ.get("CHROMEAI_OLLAMA_FAST_NUM_CTX", profile.fast_num_ctx),
+                    "CHROMEAI_OLLAMA_FAST_NUM_CTX",
+                ),
+                max_input_chars=_positive_int(
+                    os.environ.get("CHROMEAI_MAX_INPUT_CHARS", profile.max_input_chars),
+                    "CHROMEAI_MAX_INPUT_CHARS",
+                ),
+            )
         self.config = config
 
     def _model_available_locally(self, requested: str, local_models: list[str]) -> bool:
@@ -210,15 +275,61 @@ class OllamaClient:
         return models
 
     def _resolve_model(self, requested: str, preferences: list[str], models: list[str]) -> str:
-        if requested in models:
-            return requested
-        for candidate in preferences:
-            for model in models:
-                if model == candidate or model.startswith(f"{candidate}:"):
-                    return model
-        if models:
-            return models[0]
+        del preferences
+        if self._model_available_locally(requested, models):
+            if requested in models:
+                return requested
+            requested_base = requested.split(":", 1)[0]
+            return next(model for model in models if model == requested_base or model.startswith(f"{requested_base}:"))
         return requested
+
+    def _generation_options(self, temperature: float, num_ctx: int | None = None) -> dict[str, Any]:
+        return {
+            "temperature": temperature,
+            "num_ctx": num_ctx or self.config.num_ctx,
+            "seed": self.config.seed,
+        }
+
+    def generation_route(self, operation: str, input_text: str, local_models: list[str] | None = None) -> dict[str, Any]:
+        if len(input_text) > self.config.max_input_chars:
+            raise OllamaError(
+                f"selection exceeds the predictable local limit of {self.config.max_input_chars} characters"
+            )
+        use_fast = operation in {"extract", "summarize"}
+        model = (self.config.fast_model or self.config.model) if use_fast else self.config.model
+        num_ctx = (self.config.fast_num_ctx or self.config.num_ctx) if use_fast else self.config.num_ctx
+        models = local_models if local_models is not None else self._model_names(local_only=True)
+        if not self._model_available_locally(model, models):
+            raise OllamaError(f"required local model is not installed: {model}")
+        return {
+            "model": model,
+            "num_ctx": num_ctx,
+            "reason": "smallest_qualified_structured_model" if use_fast else "qualified_general_model",
+        }
+
+    def _require_structured_object(self, raw_response: str, schema: dict[str, Any], operation: str) -> dict[str, Any]:
+        content = _parse_jsonish(raw_response)
+        if not isinstance(content, dict):
+            raise OllamaError(f"{operation} returned non-object structured output")
+
+        missing = [key for key in schema.get("required", []) if key not in content]
+        if missing:
+            raise OllamaError(f"{operation} structured output is missing required fields: {', '.join(missing)}")
+
+        properties = schema.get("properties", {})
+        if schema.get("additionalProperties") is False:
+            unexpected = sorted(set(content) - set(properties))
+            if unexpected:
+                raise OllamaError(f"{operation} structured output has unexpected fields: {', '.join(unexpected)}")
+
+        type_map = {"string": str, "array": list, "object": dict}
+        for key, definition in properties.items():
+            if key not in content:
+                continue
+            expected = type_map.get(definition.get("type"))
+            if expected is not None and not isinstance(content[key], expected):
+                raise OllamaError(f"{operation} structured output field {key} has invalid type")
+        return content
 
     def _request_json(self, path: str, payload: dict[str, Any] | None = None) -> Any:
         url = urljoin(self.config.base_url + "/", path.lstrip("/"))
@@ -233,6 +344,10 @@ class OllamaClient:
             raise OllamaError(f"{path} returned {e.code}: {raw or e.reason}") from e
         except URLError as e:
             raise OllamaError(f"cannot reach Ollama at {self.config.base_url}: {e.reason}") from e
+        except TimeoutError as e:
+            raise OllamaError(
+                f"Ollama request timed out after {self.config.timeout_seconds:g}s at {path}"
+            ) from e
 
         try:
             return json.loads(raw) if raw else {}
@@ -263,6 +378,9 @@ class OllamaClient:
                 "active_model": self.config.model,
                 "active_embed_model": self.config.embed_model,
                 "timeout_seconds": self.config.timeout_seconds,
+                "num_ctx": self.config.num_ctx,
+                "seed": self.config.seed,
+                "generation_keep_alive_seconds": self.config.generation_keep_alive_seconds,
                 "reachable": False,
                 "status": "degraded",
                 "error": str(e),
@@ -271,13 +389,30 @@ class OllamaClient:
                 "ignored_remote_models": [],
                 "model_available": False,
                 "embed_model_available": False,
-                "missing_models": [self.config.model, self.config.embed_model],
+                "missing_models": list(dict.fromkeys([
+                    self.config.fast_model or self.config.model,
+                    self.config.model,
+                    self.config.embed_model,
+                ])),
                 "privacy_mode": "local-only",
                 "hint": f"Start Ollama or point CHROMEAI_OLLAMA_BASE_URL at it.",
             }
 
         active_model = self.active_generation_model(local_models)
         active_embed_model = self.active_embedding_model(local_models)
+        routes = {
+            operation: {
+                "model": (self.config.fast_model or self.config.model) if operation != "agent" else self.config.model,
+                "num_ctx": (self.config.fast_num_ctx or self.config.num_ctx) if operation != "agent" else self.config.num_ctx,
+                "reason": "smallest_qualified_structured_model" if operation != "agent" else "qualified_general_model",
+            }
+            for operation in ("extract", "summarize", "agent")
+        }
+        required_models = list(dict.fromkeys([route["model"] for route in routes.values()]))
+        missing_generation_models = [model for model in required_models if model not in local_models]
+        missing_models = [*missing_generation_models, *(
+            [] if self.config.embed_model in local_models else [self.config.embed_model]
+        )]
         base = {
             "configured": True,
             "base_url": self.config.base_url,
@@ -286,26 +421,29 @@ class OllamaClient:
             "active_model": active_model,
             "active_embed_model": active_embed_model,
             "timeout_seconds": self.config.timeout_seconds,
+            "num_ctx": self.config.num_ctx,
+            "seed": self.config.seed,
+            "generation_keep_alive_seconds": self.config.generation_keep_alive_seconds,
+            "max_input_chars": self.config.max_input_chars,
+            "task_routes": routes,
         }
         return {
             **base,
             "reachable": True,
-            "status": "ok" if active_model in local_models else "degraded",
+            "status": "ok" if not missing_models else "degraded",
             "models": all_models,
             "local_models": local_models,
             "ignored_remote_models": [name for name in all_models if name not in local_models],
-            "model_available": active_model in local_models,
+            "model_available": not missing_generation_models,
             "embed_model_available": active_embed_model in local_models,
-            "missing_models": [name for name, available in (
-                (self.config.model, self.config.model in local_models),
-                (self.config.embed_model, self.config.embed_model in local_models),
-            ) if not available],
+            "missing_models": missing_models,
             "privacy_mode": "local-only",
-            "hint": None if active_model in local_models else f"Pull a local model such as `{self.config.model}` or set CHROMEAI_OLLAMA_MODEL to an installed local model.",
+            "hint": None if not missing_models else f"Install the exact required local model: {missing_models[0]}.",
         }
 
     def summarize(self, text: str, title: str | None = None, url: str | None = None, metadata: dict[str, Any] | None = None) -> dict[str, Any]:
-        model = self.active_generation_model(self._model_names(local_only=True))
+        route = self.generation_route("summarize", text)
+        model = route["model"]
         schema = {
             "type": "object",
             "properties": {
@@ -337,20 +475,13 @@ class OllamaClient:
             "prompt": prompt,
             "system": "You write precise summaries for selected text in a browser side panel.",
             "stream": False,
+            "keep_alive": self.config.generation_keep_alive_seconds,
             "format": schema,
-            "options": {"temperature": 0.2},
+            "options": self._generation_options(0.0, route["num_ctx"]),
         }
         response = self._request_json("/api/generate", payload)
         raw_response = str(response.get("response", "")).strip()
-        content = _parse_jsonish(raw_response)
-        if not isinstance(content, dict):
-            content = {
-                "summary": raw_response or "No summary produced.",
-                "bullets": [],
-                "action_items": [],
-                "title": title or "Summary",
-                "tags": ["ollama", "fallback"],
-            }
+        content = self._require_structured_object(raw_response, schema, "summarize")
 
         summary = str(content.get("summary", "")).strip()
         bullets = [str(item).strip() for item in content.get("bullets", []) if str(item).strip()]
@@ -368,12 +499,14 @@ class OllamaClient:
             "model": response.get("model", model),
             "source": "ollama",
             "raw_response": raw_response,
+            "routing": route,
         }
 
     def agent(self, prompt: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
-        model = self.active_generation_model(self._model_names(local_only=True))
         context = context or {}
         selected_text = str(context.get("selection") or context.get("pageText") or context.get("markdown") or "").strip()
+        route = self.generation_route("agent", f"{prompt}\n{selected_text}".strip())
+        model = route["model"]
         schema = {
             "type": "object",
             "properties": {
@@ -400,21 +533,13 @@ class OllamaClient:
             "prompt": user_prompt,
             "system": "You are a practical browser copilot that rewrites and structures selected text locally.",
             "stream": False,
+            "keep_alive": self.config.generation_keep_alive_seconds,
             "format": schema,
-            "options": {"temperature": 0.2},
+            "options": self._generation_options(0.0, route["num_ctx"]),
         }
         response = self._request_json("/api/generate", payload)
         raw_response = str(response.get("response", "")).strip()
-        content = _parse_jsonish(raw_response)
-        if not isinstance(content, dict):
-            content = {
-                "reasoning": ["Model response was not valid JSON"],
-                "markdown": raw_response or "No response produced.",
-                "json": {
-                    "raw": raw_response,
-                    "prompt": prompt,
-                },
-            }
+        content = self._require_structured_object(raw_response, schema, "agent")
 
         if "reasoning" not in content or "markdown" not in content or "json" not in content:
             result = content.get("result", {}) if isinstance(content.get("result"), dict) else {}
@@ -480,6 +605,7 @@ class OllamaClient:
             "model": response.get("model", model),
             "source": "ollama",
             "raw_response": raw_response,
+            "routing": route,
         }
 
     def extract(
@@ -490,7 +616,8 @@ class OllamaClient:
         url: str | None = None,
         metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        model = self.active_generation_model(self._model_names(local_only=True))
+        route = self.generation_route("extract", text)
+        model = route["model"]
         preset = get_extraction_preset(preset_key)
         prompt = (
             "You are SelectPilot, a privacy-first local execution layer for selected text.\n"
@@ -508,14 +635,13 @@ class OllamaClient:
             "prompt": prompt,
             "system": "You generate clean structured extraction results for highlighted browser text.",
             "stream": False,
+            "keep_alive": self.config.generation_keep_alive_seconds,
             "format": preset.schema,
-            "options": {"temperature": 0.1},
+            "options": self._generation_options(0.0, route["num_ctx"]),
         }
         response = self._request_json("/api/generate", payload)
         raw_response = str(response.get("response", "")).strip()
-        content = _parse_jsonish(raw_response)
-        if not isinstance(content, dict):
-            content = {}
+        content = self._require_structured_object(raw_response, preset.schema, "extract")
 
         normalized: dict[str, Any] = {}
         schema_props = preset.schema.get("properties", {})
@@ -532,7 +658,7 @@ class OllamaClient:
                 normalized[key] = str(raw_value or "").strip()
 
         if not any(normalized.values()):
-            normalized[preset.intro_key] = raw_response or "No extraction produced."
+            raise OllamaError("extract structured output contains no usable values")
 
         markdown = render_extraction_markdown(preset, normalized)
         return {
@@ -544,6 +670,7 @@ class OllamaClient:
             "model": response.get("model", model),
             "source": "ollama",
             "raw_response": raw_response,
+            "routing": route,
         }
 
     def embed(self, text: str) -> dict[str, Any]:

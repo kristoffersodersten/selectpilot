@@ -1,3 +1,5 @@
+// module_name: scripts_lint-manifest_mjs
+// spec_ref: "reporting"
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,6 +44,14 @@ if (Array.isArray(manifest.content_scripts)) {
   manifest.content_scripts.forEach((entry, index) => {
     validateMatches(entry?.matches, `content_scripts[${index}]`);
   });
+}
+
+if (manifest.permissions?.includes('tabs')) {
+  errors.push('permissions: tabs är inte tillåten; använd activeTab för det användarinitierade flödet.');
+}
+
+if (manifest.content_scripts?.some((entry) => entry?.matches?.includes('<all_urls>'))) {
+  errors.push('content_scripts: permanent <all_urls>-injektion är inte tillåten; använd activeTab + scripting.');
 }
 
 if (Array.isArray(manifest.web_accessible_resources)) {

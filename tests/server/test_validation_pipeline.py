@@ -1,8 +1,11 @@
+"""module_name: server_integration_tests; spec_ref: "testing_strategy.integration_tests"."""
+
 from __future__ import annotations
 
 import sys
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -15,6 +18,7 @@ from nano_server import (  # noqa: E402
     build_runtime_meta_event,
     compile_intent_to_ir,
     ValidationError,
+    _runtime_policy_select,
     _resolve_trace_id,
     enforce_contract_fields,
     get_operation_contract,
@@ -28,10 +32,63 @@ from nano_server import (  # noqa: E402
     validate_extract_response,
     validate_summarize_payload,
     validate_summarize_response,
+    extension_origin_allowed,
 )
 
 
 class ValidationPipelineTests(unittest.TestCase):
+    def test_cors_accepts_only_chrome_extension_origins(self) -> None:
+        extension_origin = "chrome-extension://abcdefghijklmnopabcdefghijklmnop"
+        self.assertTrue(extension_origin_allowed(extension_origin))
+        self.assertFalse(extension_origin_allowed("https://malicious.example"))
+        self.assertFalse(extension_origin_allowed("null"))
+        self.assertFalse(extension_origin_allowed(None))
+
+    def test_configured_extension_origin_is_exact(self) -> None:
+        allowed = "chrome-extension://abcdefghijklmnopabcdefghijklmnop"
+        other = "chrome-extension://ponmlkjihgfedcbaponmlkjihgfedcba"
+        with patch.dict("os.environ", {"SELECTPILOT_EXTENSION_ORIGIN": allowed}):
+            self.assertTrue(extension_origin_allowed(allowed))
+            self.assertFalse(extension_origin_allowed(other))
+
+    def test_runtime_policy_does_not_claim_unverified_promotion(self) -> None:
+        policy = {
+            "policy_version": "test-policy",
+            "promotion_evidence": {"runtime_verified": False, "status": "simulation_only_no_promotion"},
+            "promotion_history": [],
+            "quarantined_models": [],
+            "defaults": [{
+                "task_family": "extract",
+                "output_mode": "strict_json",
+                "hardware_profile": "medium",
+                "preferred_model_id": "model:preferred",
+                "fallback_model_ids": ["model:fallback"],
+                "selection_reason": "baseline_registry_no_runtime_promotion",
+            }],
+        }
+        registry = {
+            "models": [
+                {"model_id": "model:preferred", "min_hardware_profile": "low"},
+                {"model_id": "model:fallback", "min_hardware_profile": "low"},
+            ],
+        }
+        task = {"task_type": "extract", "output_structure": "strict_json", "hardware_profile": "medium"}
+
+        with patch("nano_server._load_json_file", side_effect=[policy, registry]), patch(
+            "nano_server._is_quarantined", return_value=False
+        ):
+            preferred = _runtime_policy_select(task_analysis=task, available_model_ids=["model:preferred"])
+        self.assertIsNotNone(preferred)
+        self.assertFalse(preferred["promotion_applied"])
+
+        with patch("nano_server._load_json_file", side_effect=[policy, registry]), patch(
+            "nano_server._is_quarantined", return_value=False
+        ):
+            fallback = _runtime_policy_select(task_analysis=task, available_model_ids=["model:fallback"])
+        self.assertIsNotNone(fallback)
+        self.assertEqual(fallback["selection_path"], "runtime_policy_fallback")
+        self.assertFalse(fallback["promotion_applied"])
+
     def test_summarize_payload_requires_non_empty_text(self) -> None:
         with self.assertRaises(ValidationError) as ctx:
             validate_summarize_payload({"text": "   "})
@@ -42,6 +99,14 @@ class ValidationPipelineTests(unittest.TestCase):
             validate_extract_payload({"text": "x", "metadata": ["bad"]})
         self.assertEqual(ctx.exception.code, "invalid_request_field")
         self.assertEqual(ctx.exception.details.get("field"), "metadata")
+
+    def test_long_selection_is_rejected_before_inference(self) -> None:
+        with patch("nano_server.OLLAMA", SimpleNamespace(config=SimpleNamespace(max_input_chars=10))):
+            with self.assertRaises(ValidationError) as ctx:
+                validate_extract_payload({"text": "x" * 11})
+        self.assertEqual(ctx.exception.code, "selection_too_large")
+        self.assertEqual(ctx.exception.status, 413)
+        self.assertEqual(ctx.exception.details, {"maximum_characters": 10, "received_characters": 11})
 
     def test_agent_payload_requires_context_object_when_present(self) -> None:
         with self.assertRaises(ValidationError) as ctx:
@@ -66,6 +131,7 @@ class ValidationPipelineTests(unittest.TestCase):
             "model": "qwen",
             "source": "ollama",
             "raw_response": "{}",
+            "routing": {"model": "qwen", "num_ctx": 16384, "reason": "test_route"},
         }
         result = validate_summarize_response(valid)
         self.assertEqual(result["source"], "ollama")
@@ -83,6 +149,7 @@ class ValidationPipelineTests(unittest.TestCase):
             "model": "qwen",
             "source": "ollama",
             "raw_response": "{}",
+            "routing": {"model": "qwen", "num_ctx": 16384, "reason": "test_route"},
         }
         result = validate_agent_response(valid)
         self.assertEqual(result["model"], "qwen")
@@ -100,6 +167,7 @@ class ValidationPipelineTests(unittest.TestCase):
             "model": "qwen",
             "source": "ollama",
             "raw_response": "{}",
+            "routing": {"model": "qwen", "num_ctx": 16384, "reason": "test_route"},
         }
         result = validate_extract_response(valid)
         self.assertEqual(result["preset"], "action_brief")
@@ -143,6 +211,9 @@ class ValidationPipelineTests(unittest.TestCase):
         generated = _resolve_trace_id({}, {})
         self.assertTrue(isinstance(generated, str) and len(generated) > 0)
 
+        hostile = _resolve_trace_id({}, {"x-selectpilot-trace-id": "secret\n" + "x" * 200})
+        self.assertRegex(hostile, r"^sp_[0-9a-f]{24}$")
+
     def test_runtime_meta_details_are_sanitized_for_privacy(self) -> None:
         sanitized = sanitize_runtime_meta_details(
             {
@@ -150,13 +221,14 @@ class ValidationPipelineTests(unittest.TestCase):
                 "text": "secret",
                 "prompt": "never log me",
                 "safe_scalar": "ok",
-                "nested": {"allowed": "yes", "blocked": ["x"]},
+                "nested": {"allowed": "yes", "prompt": "nested secret", "blocked": ["x"]},
             }
         )
         self.assertNotIn("text", sanitized)
         self.assertNotIn("prompt", sanitized)
         self.assertEqual(sanitized.get("safe_scalar"), "ok")
         self.assertEqual(sanitized.get("request_fields"), 2)
+        self.assertNotIn("prompt", sanitized.get("nested", {}))
 
     def test_runtime_meta_event_contract_contains_privacy_flags(self) -> None:
         event = build_runtime_meta_event(
@@ -224,6 +296,7 @@ class ValidationPipelineTests(unittest.TestCase):
                     "model": "qwen",
                     "source": "ollama",
                     "raw_response": "{}",
+                    "routing": {"model": "qwen", "num_ctx": 16384, "reason": "test_route"},
                 }
             return {
                 "summary": "ok",
@@ -235,6 +308,7 @@ class ValidationPipelineTests(unittest.TestCase):
                 "model": "qwen",
                 "source": "ollama",
                 "raw_response": "{}",
+                "routing": {"model": "qwen", "num_ctx": 16384, "reason": "test_route"},
             }
 
         with patch("nano_server.emit_runtime_meta") as emit_mock:
@@ -255,3 +329,4 @@ class ValidationPipelineTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+"""module_name: server_integration_tests; spec_ref: "testing_strategy.integration_tests"."""

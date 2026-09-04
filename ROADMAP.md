@@ -1,6 +1,6 @@
 # SelectPilot — Prioriterad åtgärdslista
 
-> Harmoniserad med repo-läget per 2026-03-25 (granskning av `manifest.json`, `package.json`, `README.md`, teststruktur och `ZERO_LEAKAGE.md`).
+> Harmoniserad med repo-, GitHub- och Linear-läget per 2026-08-18.
 > Prioritering: **P0** = blockerar trust/release · **P1** = produktkvalitet · **P2** = strategisk moat
 
 ---
@@ -32,25 +32,24 @@
 
 ### 4) Onboarding-friktion är för hög
 
-- **Status:** 🟡 Delvis löst (bootstrap-script finns).
-- **Åtgärd kvar:** ge ett verkligt one-command bootstrap-flöde som fungerar utan manuell felsökning.
+- **Status:** ✅ Implementerat fail-closed; fysisk målmaskinsverifiering kvar.
+- **Implementerat:** one-command bootstrap installerar/bygger, startar Ollama och bridge, väljer hårdvaruprofil, hämtar exakta modeller och avslutar först när generation- och embeddingkontrakten är friska.
 
 ### 5) Nginx/hosts-topologi bör vara osynlig
 
-- **Status:** ✅ I huvudsak löst i huvudflödet (direkt mot `127.0.0.1:8083`; nginx markerat som legacy).
-- **Åtgärd kvar:** behåll detta som policy i dokumentation och scripts.
+- **Status:** ✅ Implementerat i huvudflödet (direkt mot `127.0.0.1:8083`).
+- **Implementerat:** den oanvända legacy-nginx-konfigurationen är borttagen så att ingen separat proxy- eller dynamisk CORS-yta kan aktiveras av misstag.
 
 ### 6) README saknar tydligt 5-minutersflöde högst upp
 
-- **Status:** 🟡 Delvis löst (sektionen "Local setup" är bra men inte tydligt märkt som snabbstart).
-- **Åtgärd kvar:** lägg en kort **Quick Start (5 min)** tidigt i README med exakta steg i ordning.
+- **Status:** ✅ Löst i kod och dokumentation.
+- **Implementerat:** README har ett trestegs **Quick Start (5 min)** och bootstrap verifierar bridge, exakt generationmodell och embeddingmodell fail-closed.
+- **Verifiering kvar:** kör flödet på avsedd slutanvändarmaskin innan full-system-DoD.
 
 ### 7) Inga end-to-end-tester för extension-flödet
 
-- **Status:** 🟡 Delvis löst.
-- **Implementerat:** Playwright-konfiguration och E2E-suite för runtime/privacy + mockad selected-text response shape.
-- **Implementerat nu även:** harness-baserat sidepanel E2E-flöde som verifierar privacy-indikator + lokal fetch-trafik i panelens användarflöde.
-- **Åtgärd kvar:** utöka till full browser-extension user flow (markera text → sidepanel action → renderat svar) utan harness.
+- **Status:** ✅ Löst.
+- **Implementerat:** Playwright laddar den riktiga unpacked extensionen och verifierar markerad text → content script → background → sidepanel action → renderat svar.
 
 ---
 
@@ -58,12 +57,12 @@
 
 ### 8) Inga automatiska regressionstester för privacy boundary
 
-- **Status:** 🟡 Delvis löst.
+- **Status:** ✅ Löst för det automatiserade core-flödet.
 - **Implementerat:**
   - servertest för privacy proof (`tests/server/test_privacy_proof.py`)
   - Playwright-test som verifierar local-only privacy proof och local endpoints
   - Playwright-test (`tests/e2e/panel-no-leakage.spec.mjs`) som assertar lokal fetch-trafik + subtil visuell privacy proof i panel-harness
-- **Åtgärd kvar:** utöka med strikt nätverks-assert på full extensionnivå (ingen extern trafik i hela sidepanel-flödet utan harness).
+  - full-extension-test som failar vid extern HTTP(S)-trafik under core-flödet
 
 ### 9) Privacy-påstående är inte synligt verifierbart för ny användare
 
@@ -76,24 +75,23 @@
 
 ### 10) Generisk copilot-retorik underminerar edge
 
-- **Status:** 🟡 Delvis adresserat.
-- **Åtgärd kvar:** skärp positioning till structured extraction + local privacy i README/UI copy.
+- **Status:** ✅ Löst i README.
+- **Implementerat:** positionering och produktgräns utgår från deterministic structured extraction, canonical output och lokal privacy i stället för generisk copilot-retorik.
 
 ### 11) Presets är inte tillräckligt synliga eller utbyggbara
 
-- **Status:** 🟡 Delvis (preset-funktionalitet finns, men tydligt användar-API saknas).
-- **Åtgärd kvar:** exponera presets i redigerbar JSON/YAML + dokumentera format.
+- **Status:** ✅ Löst.
+- **Implementerat:** kanoniskt redigerbart JSON-register, validerad serverinläsning, genererade browserkontrakt med driftkontroll samt dokumenterat format.
 
 ### 12) Ingen tydlig upgrade-path till team/self-hosted mode
 
-- **Status:** 🟡 Planerad men ej konkretiserad.
-- **Implementerat nu:** README förtydligar tier-guardrails där Essential/Plus hålls stateless i core-flödet och Pro definieras som explicit opt-in stateful lager.
-- **Åtgärd kvar:** lägg kort sektion i README om Team/Self-hosted mode och avgränsa vad som är planerat.
+- **Status:** ✅ Dokumentationskontrakt löst; funktionen är fortsatt uttryckligen planerad och inte skeppad.
+- **Implementerat:** README avgränsar Team/Self-hosted mot operatorägd Ollama, zero-access-kryptering, tenant-/retentionkontroll, entitlementadministration och verifieringskrav före tillgänglighetsanspråk.
 
 ### 13) Tier-packaging och pricing-integritet behöver löpande styrning
 
 - **Status:** 🟡 Delvis adresserat.
-- **Implementerat:** README innehåller nu explicit tier-prissättning, Paddle-mappning, positioneringsvarianter och realistisk ARR-prognos.
+- **Implementerat:** README speglar repositoryts aktuella tier-priser, produktgränser och Paddle-mappning utan att beskriva konfiguration som fungerande produktionscheckout. Essential/Plus är stateless; Pro-state är explicit opt-in och användarstyrd.
 - **Åtgärd kvar:**
   - säkra att Pro kontinuerligt får tydlig premium-differentiering mot Plus
   - håll fast vid arkitekturkontraktet: stateless core i Essential/Plus, stateful funktioner endast via explicit opt-in i Pro
@@ -105,22 +103,11 @@
 
 ## Prioriterad genomförandeordning (från nu)
 
-### Nästa sprint (måste först)
-
-1. **P1.7** Full extension E2E (markera text → sidepanel action → svar)
-2. **P1.8** Strikt nätverksregressionstest för hela extension-flödet
-3. **P1.6** Tydlig Quick Start (5 min) i README-toppen
-
-### Därefter (releasekvalitet)
-
-4. **P1.4** Minska onboarding-friktion ytterligare i bootstrap
-
-### Strategisk polish
-
-9. **P2.10** Positioning-copy: structured outputs + local-first
-10. **P2.11** Utbyggbara presets (JSON/YAML + docs)
-11. **P2.12** Team/Self-hosted mode i README
-12. **P2.13** Tier-differentiering och pricing-integritet (särskilt Pro-value)
+1. Behörig oberoende approval och skyddad merge av PR #22; auto-merge är aktivt och skydd får inte kringgås.
+2. Verifiera exakt merge-SHA på `main` med full CI, E2E, privacy och säkerhetskontroller.
+3. Kör bootstrap och verklig Ollama-inferens på M1 8GB och M4 16GB; bevara latency-, minnes-, lång-input-, failure- och recovery-evidens.
+4. Verifiera eller håll M1 Max 32GB/Advanced-lanen explicit blockerad utan produktanspråk.
+5. Slutbedöm hela systemet mot Linear-acceptans och Definition of Done; uppdatera issues/projekt först efter observerad evidens.
 
 ---
 
@@ -131,18 +118,13 @@
 ### 1) One-command installation (absolut först)
 
 - **Mål:** användaren ska klara onboarding med en enda kommando-rad.
-- **Kvar att leverera:**
-  - gör `pnpm bootstrap:local` helt självbärande med robust felhantering
-  - automatisk kontroll av Ollama, modeller, launchd och `/health`
-  - tydlig slutrapport med exakt "klart/återstår" och nästa steg
+- **Kodstatus:** implementerad med explicit felhantering och hälsokontroll för Ollama, exakta modeller, launchd och `/health`.
+- **Kvar:** reproducerbar körning på avsedda Apple-målmaskiner.
 
 ### 2) "89-åring-läge" i README (ultrakort onboarding)
 
 - **Mål:** inga tekniska beslut i första flödet.
-- **Kvar att leverera:**
-  - 3-stegs quick start högst upp i README (kopiera kommando → ladda extension → klart)
-  - separera nybörjarflöde från advanced/dev-sektioner
-  - lägg till "om något går fel" med copy/paste-kommandon
+- **Status:** implementerad i README med tre steg och copy/paste-diagnostik.
 
 ### 3) UI/UX-polish till premium-kvalitet
 
@@ -155,17 +137,13 @@
 ### 4) E2E-bevis för verkligt användarflöde
 
 - **Mål:** kunna verifiera funktion och privacy med reproducerbara tester.
-- **Kvar att leverera:**
-  - deterministisk start/stop av lokal server i testflödet
-  - full extension-path: markera text → sidepanel action → renderat svar
-  - strikt nätverksregression: ingen extern trafik i kärnflödet
+- **Status:** automatiserat och grönt med deterministisk serverlivscykel, riktig unpacked-extension-path och strikt extern-nätverksblockering.
+- **Kvar:** upprepa mot verklig Ollama på målmaskiner; testmocken är inte runtimebevis.
 
 ### 5) Strategisk finish (efter kvalitet + onboarding)
 
-- **Kvar att leverera:**
-  - skärpt positioning-copy (structured extraction + local-first)
-  - presets som redigerbar JSON/YAML med dokumenterat schema
-  - tydlig Team/Self-hosted-sektion och migration path
+- **Status:** positioning, redigerbara presets och Team/Self-hosted-gräns är dokumenterade.
+- **Kvar:** inget Team/Self-hosted-tillgänglighetsanspråk får göras före en separat implementerad och verifierad vertikal.
 
 ---
 
@@ -176,19 +154,19 @@
 | 1  | Versionsdrift              | P0        | Löst    | Låg    |
 | 2  | Dubbla lock-filer          | P0        | Löst    | Låg    |
 | 3  | Ogiltiga manifest-fält     | P0        | Löst    | Låg    |
-| 4  | Onboarding-friktion        | P1        | Delvis  | Hög    |
+| 4  | Onboarding-friktion        | P1        | Kod löst; fysisk verifiering kvar | Hög |
 | 5  | Nginx/hosts osynlighet     | P1        | Löst*   | Hög    |
-| 6  | README Quick Start         | P1        | Delvis  | Låg    |
-| 7  | E2E-tester extension       | P1        | Delvis  | Medium |
-| 8  | Privacy regressionstester  | P1        | Delvis  | Medium |
+| 6  | README Quick Start         | P1        | Löst    | Låg    |
+| 7  | E2E-tester extension       | P1        | Löst    | Medium |
+| 8  | Privacy regressionstester  | P1        | Löst    | Medium |
 | 9  | Verifierbar privacy-yta    | P1        | Löst    | Medium |
-| 10 | Omformulera positioning    | P2        | Delvis  | Låg    |
-| 11 | Utbyggbara presets         | P2        | Delvis  | Medium |
-| 12 | Team/self-hosted-path      | P2        | Delvis  | Låg    |
+| 10 | Omformulera positioning    | P2        | Löst    | Låg    |
+| 11 | Utbyggbara presets         | P2        | Löst    | Medium |
+| 12 | Team/self-hosted-kontrakt  | P2        | Docs löst; produkt ej skeppad | Låg |
 | 13 | Tier/pricing-integritet    | P2        | Delvis  | Medium |
 
 \* Löst i huvudflödet, men behöver fortsatt skyddas från regression i docs/scripts.
 
 ---
 
-*Senast uppdaterad: 2026-03-25*
+*Senast uppdaterad: 2026-08-18*

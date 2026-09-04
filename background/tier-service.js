@@ -1,19 +1,12 @@
+// module_name: background_tier-service_ts
+// spec_ref: "execution_layer"
 import { getEntitlementTier, hasEntitlementFeature, refreshEntitlement, setEntitlementToken, } from './entitlement-service.js';
 async function loadJSON(path) {
     const url = chrome.runtime.getURL(path);
     const res = await fetch(url);
     return (await res.json());
 }
-let cachedPricing = null;
 let cachedFeatures = null;
-export async function getPricing() {
-    if (cachedPricing)
-        return cachedPricing;
-    const pricing = await loadJSON('pricing/pricing-global.json');
-    const productsPayload = await loadJSON('pricing/paddle-products.json');
-    cachedPricing = { ...pricing, products: productsPayload.products, vendor_id: productsPayload.vendor_id };
-    return cachedPricing;
-}
 export async function getFeatures() {
     if (cachedFeatures)
         return cachedFeatures;

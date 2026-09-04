@@ -1,0 +1,272 @@
+// Generated from presets/extraction-presets.json. Do not edit directly.
+export const DEFAULT_EXTRACTION_PRESET = "action_brief" as const;
+export const EXTRACTION_PRESET_DEFINITIONS = [
+  {
+    "key": "action_brief",
+    "label": "Action Brief",
+    "description": "Turn selected text into summary, actions, decisions, risks, and follow-ups.",
+    "intro_key": "summary",
+    "instructions": "Extract a tight action brief from the selected text.\n- summary: 1 to 2 sentences.\n- action_items: concrete next steps.\n- decisions: decisions already made.\n- risks: blockers or uncertainties.\n- follow_ups: open loops to revisit.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "action_items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "risks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "follow_ups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "summary",
+        "action_items",
+        "decisions",
+        "risks",
+        "follow_ups"
+      ],
+      "additionalProperties": false
+    },
+    "sections": [
+      [
+        "action_items",
+        "Action Items"
+      ],
+      [
+        "decisions",
+        "Decisions"
+      ],
+      [
+        "risks",
+        "Risks"
+      ],
+      [
+        "follow_ups",
+        "Follow-ups"
+      ]
+    ]
+  },
+  {
+    "key": "generic_json",
+    "label": "Generic JSON",
+    "description": "Create reusable JSON with key points, entities, actions, and open questions.",
+    "intro_key": "summary",
+    "instructions": "Convert the selected text into reusable structured data.\n- summary: 1 to 2 sentences.\n- key_points: the most important facts.\n- entities: named people, products, teams, or concepts.\n- action_items: concrete tasks implied by the text.\n- questions: unresolved questions or ambiguities.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "key_points": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "action_items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "summary",
+        "key_points",
+        "entities",
+        "action_items",
+        "questions"
+      ],
+      "additionalProperties": false
+    },
+    "sections": [
+      [
+        "key_points",
+        "Key Points"
+      ],
+      [
+        "entities",
+        "Entities"
+      ],
+      [
+        "action_items",
+        "Action Items"
+      ],
+      [
+        "questions",
+        "Open Questions"
+      ]
+    ]
+  },
+  {
+    "key": "job_brief",
+    "label": "Job Brief",
+    "description": "Extract a structured hiring brief from a job post or role description.",
+    "intro_key": "role",
+    "instructions": "Turn the selected text into a compact job brief.\n- role: the job title or role focus.\n- company_context: one sentence of team or company context.\n- requirements: hard requirements.\n- nice_to_haves: soft requirements or bonuses.\n- risks: ambiguity, role scope issues, or hiring risks.\n- keywords: search terms or core skills.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string"
+        },
+        "company_context": {
+          "type": "string"
+        },
+        "requirements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nice_to_haves": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "risks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "role",
+        "company_context",
+        "requirements",
+        "nice_to_haves",
+        "risks",
+        "keywords"
+      ],
+      "additionalProperties": false
+    },
+    "sections": [
+      [
+        "company_context",
+        "Company Context"
+      ],
+      [
+        "requirements",
+        "Requirements"
+      ],
+      [
+        "nice_to_haves",
+        "Nice to Haves"
+      ],
+      [
+        "risks",
+        "Risks"
+      ],
+      [
+        "keywords",
+        "Keywords"
+      ]
+    ]
+  },
+  {
+    "key": "decision_log",
+    "label": "Decision Log",
+    "description": "Capture the decision, rationale, risks, open questions, and next steps.",
+    "intro_key": "decision",
+    "instructions": "Turn the selected text into a decision log entry.\n- decision: the choice or recommendation.\n- why: short reasons or tradeoffs.\n- risks: downsides and uncertainty.\n- open_questions: unresolved decisions.\n- next_steps: concrete follow-up steps.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "decision": {
+          "type": "string"
+        },
+        "why": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "risks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "open_questions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "next_steps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "decision",
+        "why",
+        "risks",
+        "open_questions",
+        "next_steps"
+      ],
+      "additionalProperties": false
+    },
+    "sections": [
+      [
+        "why",
+        "Why"
+      ],
+      [
+        "risks",
+        "Risks"
+      ],
+      [
+        "open_questions",
+        "Open Questions"
+      ],
+      [
+        "next_steps",
+        "Next Steps"
+      ]
+    ]
+  }
+] as const;

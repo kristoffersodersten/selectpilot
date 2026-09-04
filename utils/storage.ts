@@ -1,12 +1,27 @@
+// module_name: utils_storage_ts
+// spec_ref: "frontend_state_contract"
 import { error, log } from './logger.js';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
-const KEY_MATERIAL = 'chromeai_local_key_v1';
+const KEY_STORAGE = 'selectpilot_encryption_key_v1';
+let cryptoKeyPromise: Promise<CryptoKey> | null = null;
 
-async function getCryptoKey(): Promise<CryptoKey> {
-  const keyData = encoder.encode(KEY_MATERIAL);
+async function loadOrCreateCryptoKey(): Promise<CryptoKey> {
+  const stored = (await chrome.storage.local.get(KEY_STORAGE))[KEY_STORAGE];
+  let keyData: Uint8Array<ArrayBuffer>;
+  if (Array.isArray(stored) && stored.length === 32 && stored.every((value) => Number.isInteger(value) && value >= 0 && value <= 255)) {
+    keyData = new Uint8Array(stored);
+  } else {
+    keyData = crypto.getRandomValues(new Uint8Array(32));
+    await chrome.storage.local.set({ [KEY_STORAGE]: Array.from(keyData) });
+  }
   return crypto.subtle.importKey('raw', keyData, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+}
+
+function getCryptoKey(): Promise<CryptoKey> {
+  cryptoKeyPromise ||= loadOrCreateCryptoKey();
+  return cryptoKeyPromise;
 }
 
 export async function setEncrypted(key: string, value: string): Promise<void> {
@@ -37,6 +52,21 @@ export async function getDecrypted(key: string): Promise<string | null> {
     return decoder.decode(plain);
   } catch (e) {
     error('storage', 'decrypt failed', e);
+    return null;
+  }
+}
+
+export async function setEncryptedJSON(key: string, value: unknown): Promise<void> {
+  await setEncrypted(key, JSON.stringify(value));
+}
+
+export async function getEncryptedJSON<T>(key: string): Promise<T | null> {
+  const decrypted = await getDecrypted(key);
+  if (decrypted === null) return null;
+  try {
+    return JSON.parse(decrypted) as T;
+  } catch {
+    error('storage', 'decrypted_json_invalid');
     return null;
   }
 }

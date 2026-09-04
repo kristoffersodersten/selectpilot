@@ -1,8 +1,11 @@
+// module_name: intent_normalizer
+// spec_ref: "intent_model"
 export type ResolvedIntent = {
   intent_raw: string;
   intent_normalized: string;
 };
 
+// @spec_ref intent_model
 export function resolveIntent(intentRaw: string): ResolvedIntent {
   const raw = String(intentRaw ?? '');
   const normalized = raw
@@ -21,3 +24,5 @@ export function resolveIntent(intentRaw: string): ResolvedIntent {
     intent_normalized: normalized,
   };
 }
+// module_name: intent_normalizer
+// spec_ref: "intent_model"

@@ -33,17 +33,14 @@
 - Highlight text on a page.
 - Trigger buttons: `Extract JSON`, `Summarize`, `Rewrite`, `Action brief`, `Ask Ollama`.
 - Change the extraction preset and verify the JSON pane and export buttons update.
-- Use Advanced tools only for experimental Transcribe/Vision flows.
 - Confirm the runtime strip shows the active model, ignored remote models, and local-only boundary.
 
 ## Endpoints direct
 - Summarize: `curl http://127.0.0.1:8083/summarize -H 'Content-Type: application/json' -d '{"text":"Sample sentence one. Sample sentence two."}'`
 - Extract: `curl http://127.0.0.1:8083/extract -H 'Content-Type: application/json' -d '{"preset":"action_brief","text":"Ship beta Friday. Update onboarding copy. Validate launch copy before publishing.","title":"Launch prep","url":"https://example.com"}'`
 - Agent: `curl http://127.0.0.1:8083/agent -H 'Content-Type: application/json' -d '{"prompt":"Rewrite this as a crisp product pitch.","context":{"selection":"A browser tool that rewrites selected text locally.","url":"https://example.com","title":"Example"}}'`
-- Transcribe: `curl http://127.0.0.1:8083/transcribe -H 'Content-Type: application/json' -d '{"audioUrl":"file:///tmp/a.mp3"}'`
-- Vision: `curl http://127.0.0.1:8083/vision -H 'Content-Type: application/json' -d '{"imageBase64":"abc"}'`
 - Embed: `curl http://127.0.0.1:8083/embed -H 'Content-Type: application/json' -d '{"text":"embedding text"}'`
-- License: `curl http://127.0.0.1:8083/license/verify -H 'Content-Type: application/json' -d '{"token":"pro-123"}'`
+- License verification requires a genuinely signed entitlement from the separately operated local authority; fabricated token examples are intentionally unsupported.
 - Benchmark: `pnpm benchmark:local`
 
 ## Monitoring

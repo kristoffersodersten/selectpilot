@@ -1,3 +1,5 @@
+// module_name: ambiguity_detector
+// spec_ref: "intent_ambiguity_handling"
 import type { OperationFamily } from '../../shared/types/intent.js';
 
 export type IntentOperationScores = Record<OperationFamily, number>;
@@ -25,6 +27,7 @@ function looksLikeSimpleFactualStatement(text: string): boolean {
   return /\bis\b/.test(text) && /[.!?]$/.test(text) && !hasContradictorySignals(text);
 }
 
+// @spec_ref intent_ambiguity_handling
 export function scoreIntentOperations(intentNormalized: string): IntentOperationScores {
   const text = String(intentNormalized || '').toLowerCase();
   const scores: IntentOperationScores = {
@@ -72,6 +75,7 @@ export function scoreIntentOperations(intentNormalized: string): IntentOperation
   return scores;
 }
 
+// @spec_ref intent_ambiguity_handling
 export function selectTopOperationFamily(scores: IntentOperationScores): OperationFamily {
   const ranked = (Object.entries(scores) as Array<[OperationFamily, number]>).sort((a, b) => b[1] - a[1]);
   const [top] = ranked;
@@ -79,6 +83,7 @@ export function selectTopOperationFamily(scores: IntentOperationScores): Operati
   return top[0];
 }
 
+// @spec_ref intent_ambiguity_handling
 export function computeAmbiguityScore(scores: IntentOperationScores): number {
   const ranked = (Object.entries(scores) as Array<[OperationFamily, number]>).sort((a, b) => b[1] - a[1]);
   const top = ranked[0]?.[1] ?? 0;
@@ -91,6 +96,9 @@ export function computeAmbiguityScore(scores: IntentOperationScores): number {
   return Math.max(0, Math.min(1, Number(ratio.toFixed(4))));
 }
 
+// @spec_ref intent_ambiguity_handling
 export function needsIntentClarification(ambiguityScore: number, threshold = 0.4): boolean {
   return Number(ambiguityScore) >= Number(threshold);
 }
+// module_name: ambiguity_detector
+// spec_ref: "intent_ambiguity_handling"

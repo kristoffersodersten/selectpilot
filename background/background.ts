@@ -1,10 +1,14 @@
-import { compileIntent, extract, summarize, transcribe, vision } from '../api/nano-client.js';
+// module_name: background_background_ts
+// spec_ref: "execution_layer"
+import { compileIntent, extract, summarize } from '../api/nano-client.js';
 import { runPipeline } from '../agent/agent-pipeline.js';
 import { log, error } from '../utils/logger.js';
 import { requireFeature, getLicenseTier, attachLicenseToken, refreshLicense } from './tier-service.js';
 import { getEntitlementSnapshot } from './entitlement-service.js';
 import { ApiRequestError } from '../api/request.js';
 import type { AgentContext } from '../agent/agent-types.js';
+import { FIRST_RUN_EXAMPLE } from '../shared/first-run-example.js';
+import { getEncryptedJSON, setEncryptedJSON } from '../utils/storage.js';
 
 type MemoryEntry = {
   action: 'extract' | 'summarize' | 'agent';
@@ -24,6 +28,21 @@ type MemoryEntry = {
 const MEMORY_ENABLED_KEY = 'selectpilot_memory_enabled_v1';
 const MEMORY_LEDGER_KEY = 'selectpilot_memory_ledger_v1';
 
+async function openForActiveTab(): Promise<void> {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id || tab.windowId === undefined) throw new Error('active_tab_unavailable');
+  await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    files: ['content/content-script.bundle.js'],
+  });
+  await chrome.sidePanel.setOptions({ tabId: tab.id, path: 'panel/panel.html', enabled: true });
+  await chrome.sidePanel.open({ windowId: tab.windowId });
+}
+
+chrome.commands.onCommand.addListener((command) => {
+  if (command === 'open-selectpilot') void openForActiveTab().catch((cause) => error('shortcut', 'open failed', cause));
+});
+
 async function canUseProjectMemory(): Promise<boolean> {
   const { allowed } = await requireFeature('project_memory');
   return allowed;
@@ -39,13 +58,20 @@ async function setMemoryEnabled(enabled: boolean): Promise<void> {
 }
 
 async function getMemoryLedger(): Promise<MemoryEntry[]> {
+  const encrypted = await getEncryptedJSON<MemoryEntry[]>(MEMORY_LEDGER_KEY);
+  if (Array.isArray(encrypted)) return encrypted;
+
+  // One-way, in-place migration from the pre-encryption schema.
   const stored = await chrome.storage.local.get(MEMORY_LEDGER_KEY);
-  const entries = stored[MEMORY_LEDGER_KEY];
-  return Array.isArray(entries) ? entries : [];
+  const legacy = stored[MEMORY_LEDGER_KEY];
+  if (!Array.isArray(legacy)) return [];
+  const bounded = legacy.slice(-200) as MemoryEntry[];
+  await setEncryptedJSON(MEMORY_LEDGER_KEY, bounded);
+  return bounded;
 }
 
 async function setMemoryLedger(entries: MemoryEntry[]): Promise<void> {
-  await chrome.storage.local.set({ [MEMORY_LEDGER_KEY]: entries.slice(-200) });
+  await setEncryptedJSON(MEMORY_LEDGER_KEY, entries.slice(-200));
 }
 
 async function recordMemoryEvent(entry: Omit<MemoryEntry, 'createdAt'>): Promise<void> {
@@ -142,32 +168,20 @@ async function requestFromContent<T>(tabId: number, type: string): Promise<T | n
 async function collectContext(): Promise<AgentContext> {
   const tab = await getActiveTab();
   if (!tab?.id) return {};
-  const [selection, doc, audio, video] = await Promise.all([
-    requestFromContent(tab.id, 'content:get_selection'),
-    requestFromContent(tab.id, 'content:get_document'),
-    requestFromContent(tab.id, 'content:get_audio'),
-    requestFromContent(tab.id, 'content:get_video')
-  ]);
+  const selection = await requestFromContent(tab.id, 'content:get_selection');
 
   const selectionText = (selection as any)?.text?.text || '';
-  const documentText = (doc as any)?.documentText?.text || '';
-  const url = (selection as any)?.text?.url || (doc as any)?.documentText?.url || tab.url;
-  const title = (selection as any)?.text?.title || (doc as any)?.documentText?.title || tab.title;
+  const url = (selection as any)?.text?.url || tab.url;
+  const title = (selection as any)?.text?.title || tab.title;
+  const pageColor = (selection as any)?.text?.pageColor;
 
   return {
     url: url || undefined,
     title: title || undefined,
     selection: selectionText || undefined,
-    pageText: documentText || undefined,
-    media: {
-      audio: (audio as any)?.audio?.audioUrl,
-      videoFrame: (video as any)?.video?.frame,
-      image: (video as any)?.video?.poster
-    },
     metadata: {
-      audioDuration: (audio as any)?.audio?.duration,
-      videoDuration: (video as any)?.video?.duration,
-      capturedAt: Date.now()
+      capturedAt: Date.now(),
+      pageColor,
     }
   };
 }
@@ -176,7 +190,7 @@ async function handleSummarize(): Promise<any> {
   const { allowed } = await requireFeature('text_summarization');
   if (!allowed) throw new Error('Flow tier required for summarize');
   const context = await collectContext();
-  const text = context.selection || context.pageText || context.markdown || '';
+  const text = context.selection || context.markdown || '';
   const payload = { text, url: context.url, title: context.title, metadata: context.metadata };
   const result = await summarize(payload);
   const sourceOrigin = context.url || 'local-context';
@@ -218,28 +232,29 @@ async function handleExtract(preset?: string): Promise<any> {
   return result;
 }
 
-async function handleTranscribe(): Promise<any> {
-  const { allowed } = await requireFeature('audio_transcription');
-  if (!allowed) throw new Error('Feature blocked: upgrade tier for audio transcription');
-  const context = await collectContext();
-  if (!context.media?.audio) throw new Error('No audio element detected on page');
-  return transcribe({ audioUrl: context.media.audio, metadata: context.metadata });
-}
-
-async function handleVision(): Promise<any> {
-  const { allowed } = await requireFeature('image_ocr');
-  if (!allowed) throw new Error('Feature blocked: upgrade tier for vision OCR');
-  const context = await collectContext();
-  const image = context.media?.videoFrame || context.media?.image;
-  if (!image) throw new Error('No image or video frame available');
-  return vision({ imageBase64: image, url: context.url, metadata: context.metadata });
+async function handleFirstRunExtract(): Promise<any> {
+  const entitlement = await getEntitlementSnapshot();
+  const { allowed } = await requireFeature('structured_extraction');
+  if (!entitlement?.token || !allowed) {
+    throw new Error('Paid license required for deterministic extraction');
+  }
+  return extract({
+    text: FIRST_RUN_EXAMPLE.text,
+    preset: FIRST_RUN_EXAMPLE.preset,
+    url: FIRST_RUN_EXAMPLE.url,
+    title: FIRST_RUN_EXAMPLE.title,
+    metadata: {
+      source: 'selectpilot_first_run',
+      sample_version: FIRST_RUN_EXAMPLE.version,
+    },
+  });
 }
 
 async function handleAgent(prompt: string): Promise<any> {
   const { allowed } = await requireFeature('basic_local_agent');
   if (!allowed) throw new Error('Flow tier required for ask/rewrite transforms');
   const context = await collectContext();
-  const content = context.selection || context.pageText || context.markdown || '';
+  const content = context.selection || context.markdown || '';
   const result = await runPipeline(content, context, prompt);
   const sourceOrigin = context.url || 'local-context';
   await recordMemoryEvent({
@@ -262,10 +277,11 @@ async function handleSelectionPreview(): Promise<any> {
   const context = await collectContext();
   return {
     selection: context.selection || '',
-    pageText: context.pageText || '',
+    pageText: '',
     title: context.title || '',
     url: context.url || '',
     hasSelection: Boolean(context.selection && context.selection.trim()),
+    pageColor: typeof context.metadata?.pageColor === 'string' ? context.metadata.pageColor : '',
   };
 }
 
@@ -277,7 +293,7 @@ async function handleIntentCompile(intent: string): Promise<any> {
   return compileIntent({
     intent: trimmed,
     has_selection: Boolean(context.selection && context.selection.trim()),
-    has_page_text: Boolean(context.pageText && context.pageText.trim()),
+    has_page_text: false,
   });
 }
 
@@ -288,16 +304,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         sendResponse(await handleSummarize());
         return;
       }
-      if (msg.type === 'panel:transcribe') {
-        sendResponse(await handleTranscribe());
-        return;
-      }
       if (msg.type === 'panel:extract') {
         sendResponse(await handleExtract(msg.preset));
         return;
       }
-      if (msg.type === 'panel:vision') {
-        sendResponse(await handleVision());
+      if (msg.type === 'panel:extract_demo') {
+        sendResponse(await handleFirstRunExtract());
         return;
       }
       if (msg.type === 'panel:agent') {

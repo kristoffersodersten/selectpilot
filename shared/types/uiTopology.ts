@@ -1,3 +1,5 @@
+// module_name: shared_types_uiTopology_ts
+// spec_ref: "frontend_state_contract"
 export type InformationTopology =
   | 'system_state'
   | 'execution_state'

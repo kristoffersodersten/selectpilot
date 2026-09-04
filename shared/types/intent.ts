@@ -1,3 +1,5 @@
+// module_name: shared_types_intent_ts
+// spec_ref: "frontend_state_contract"
 export type OperationFamily = 'transform' | 'extract' | 'analyze' | 'classify' | 'generate' | 'unknown';
 
 export type IntentConstraints = {

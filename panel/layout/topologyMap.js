@@ -28,10 +28,12 @@ const REQUIRED_COMPONENTS = [
     'memory_shell',
     'status_footer',
 ];
+// @spec_ref frontend_state_contract
 export function getTopologyForComponent(componentId) {
     const topology = TOPOLOGY_MAP[componentId];
     return topology || null;
 }
+// @spec_ref frontend_state_contract
 export function validateTopologyMap(map = TOPOLOGY_MAP) {
     const errors = [];
     for (const componentId of REQUIRED_COMPONENTS) {

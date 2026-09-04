@@ -1,0 +1,5 @@
+**
+!services/
+!services/entitlement-authority/
+!services/entitlement-authority/server.mjs
+!services/entitlement-authority/Dockerfile

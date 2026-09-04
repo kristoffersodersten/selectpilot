@@ -42,15 +42,15 @@
   "repo_mapping": {
     "frontend": {
       "intent_popup_component": {
-        "path": "panel/components/IntentPopup.tsx",
+        "path": "panel/panel.ts",
         "spec_ref": "intent_popup"
       },
       "runtime_overlay_component": {
-        "path": "panel/components/RuntimeOverlay.tsx",
+        "path": "panel/panel.ts",
         "spec_ref": "observability_layer"
       },
       "runtime_step_list_component": {
-        "path": "panel/components/RuntimeStepList.tsx",
+        "path": "panel/panel.ts",
         "spec_ref": "observability_layer"
       },
       "runtime_store": {
@@ -58,21 +58,21 @@
         "spec_ref": "frontend_state_contract"
       },
       "suggestion_list_component": {
-        "path": "panel/components/SuggestionList.tsx",
+        "path": "panel/panel.ts",
         "spec_ref": "probabilistic_suggestion_engine"
       },
       "overlay_event_hook": {
-        "path": "panel/hooks/useRuntimeEvents.ts",
+        "path": "panel/state/runtimeStore.ts",
         "spec_ref": "runtime_event_contract"
       }
     },
     "backend": {
       "intent_compiler": {
-        "path": "server/intent/compiler.ts",
+        "path": "server/intent/intentCompiler.ts",
         "spec_ref": "intent_compilation_layer"
       },
       "intent_normalizer": {
-        "path": "server/intent/normalizer.ts",
+        "path": "server/intent/resolveIntent.ts",
         "spec_ref": "intent_model"
       },
       "ambiguity_detector": {
@@ -80,11 +80,11 @@
         "spec_ref": "intent_ambiguity_handling"
       },
       "operation_mapper": {
-        "path": "server/operations/mapper.ts",
+        "path": "server/operations/contractCompiler.ts",
         "spec_ref": "operation_mapping_layer"
       },
       "template_registry": {
-        "path": "server/operations/templates.ts",
+        "path": "server/operations/contractCompiler.ts",
         "spec_ref": "execution_layer"
       },
       "task_analyzer": {
@@ -92,85 +92,85 @@
         "spec_ref": "task_analysis_layer"
       },
       "hardware_detector": {
-        "path": "server/hardware/detector.ts",
+        "path": "server/runtime_profiles.py",
         "spec_ref": "hardware_detection_layer"
       },
       "model_registry": {
-        "path": "server/model/registry.ts",
+        "path": "server/model/runtimeSelectorAdapter.ts",
         "spec_ref": "model_registry"
       },
       "model_selector": {
-        "path": "server/model/selector.ts",
+        "path": "server/model/runtimeSelectorAdapter.ts",
         "spec_ref": "model_selection_layer"
       },
       "model_provisioner": {
-        "path": "server/model/provisioner.ts",
+        "path": "server/ollama_client.py",
         "spec_ref": "provisioning_layer"
       },
       "frontier_evaluator": {
-        "path": "server/model/frontier.ts",
+        "path": "scripts/runtime-policy-lib.mjs",
         "spec_ref": "dynamic_model_evaluation_layer"
       },
       "model_hysteresis": {
-        "path": "server/model/hysteresis.ts",
+        "path": "server/nano_server.py",
         "spec_ref": "model_switch_hysteresis"
       },
       "failure_isolation": {
-        "path": "server/model/quarantine.ts",
+        "path": "server/nano_server.py",
         "spec_ref": "failure_isolation"
       },
       "memory_guard": {
-        "path": "server/runtime/memoryGuard.ts",
+        "path": "server/runSelectPilot.ts",
         "spec_ref": "memory_guard"
       },
       "latency_budget_engine": {
-        "path": "server/runtime/latencyBudget.ts",
+        "path": "server/nano_server.py",
         "spec_ref": "latency_budget"
       },
       "prompt_registry": {
-        "path": "server/prompts/registry.ts",
+        "path": "server/ollama_client.py",
         "spec_ref": "prompt_determinism"
       },
       "pipeline_executor": {
-        "path": "server/execution/pipeline.ts",
+        "path": "server/runSelectPilot.ts",
         "spec_ref": "execution_layer"
       },
       "validator_engine": {
-        "path": "server/validation/engine.ts",
+        "path": "server/nano_server.py",
         "spec_ref": "validation_layer"
       },
       "output_enforcer": {
-        "path": "server/validation/enforcement.ts",
+        "path": "server/nano_server.py",
         "spec_ref": "output_enforcement"
       },
       "event_emitter": {
-        "path": "server/runtime/events.ts",
+        "path": "server/runtime/liveFeedback.ts",
         "spec_ref": "runtime_event_contract"
       },
       "metrics_collector": {
-        "path": "server/runtime/metrics.ts",
+        "path": "scripts/stress-runner.mjs",
         "spec_ref": "simulation_and_benchmarking.metrics"
       }
     },
     "tests": {
       "unit": {
-        "path": "tests/unit",
+        "path": "tests/panel",
         "spec_ref": "testing_strategy.unit_tests"
       },
       "integration": {
-        "path": "tests/integration",
+        "path": "tests/server",
         "spec_ref": "testing_strategy.integration_tests"
       },
       "simulation": {
-        "path": "tests/simulation",
+        "path": "scripts/stress-runner.mjs",
         "spec_ref": "simulation_and_benchmarking"
       },
       "benchmarks": {
-        "path": "tests/benchmarks",
+        "path": "scripts/benchmark-local-runtime.sh",
         "spec_ref": "simulation_and_benchmarking"
       },
       "privacy": {
-        "path": "tests/privacy",
+        "path": "tests/e2e",
         "spec_ref": "privacy_and_debug_policy"
       }
     },
@@ -180,7 +180,7 @@
         "spec_ref": "reporting"
       },
       "fixtures": {
-        "path": "fixtures",
+        "path": "tests/e2e/panel-harness.html",
         "spec_ref": "simulation_and_benchmarking.fixtures"
       }
     }

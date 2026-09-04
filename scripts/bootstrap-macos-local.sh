@@ -5,11 +5,14 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROFILE="auto"
 SKIP_OLLAMA_INSTALL="0"
 SKIP_MODEL_PULL="0"
+PLAN_ONLY="0"
 BRIDGE_HEALTH_URL="http://127.0.0.1:8083/health"
+GENERATION_KEEP_ALIVE_SECONDS="${CHROMEAI_OLLAMA_KEEP_ALIVE_SECONDS:--1}"
 
 STATUS_OLLAMA_INSTALL="pending"
 STATUS_OLLAMA_RUNNING="pending"
 STATUS_MODEL_PULL="pending"
+STATUS_MODEL_WARMUP="pending"
 STATUS_LAUNCHAGENT="pending"
 STATUS_BRIDGE_HEALTH="pending"
 
@@ -27,6 +30,10 @@ while [[ $# -gt 0 ]]; do
       SKIP_MODEL_PULL="1"
       shift
       ;;
+    --plan)
+      PLAN_ONLY="1"
+      shift
+      ;;
     *)
       echo "Unknown argument: $1" >&2
       exit 1
@@ -34,13 +41,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ "$(uname -s)" != "Darwin" ]]; then
-  echo "This bootstrapper currently supports macOS only." >&2
-  exit 1
-fi
-
 read_profile_json() {
-  python3 - "$PROFILE" "$ROOT" <<'PY'
+  python3 - "$PROFILE" "$ROOT" "$GENERATION_KEEP_ALIVE_SECONDS" <<'PY'
 import json
 import sys
 from pathlib import Path
@@ -49,19 +51,28 @@ profile = sys.argv[1]
 root = Path(sys.argv[2])
 sys.path.insert(0, str(root / "server"))
 
+from ollama_client import parse_generation_keep_alive_seconds
 from runtime_profiles import build_bootstrap_commands, get_runtime_profile, recommend_runtime_profile
 
 recommendation = recommend_runtime_profile()
 selected = recommendation["recommended_profile"] if profile == "auto" else profile
 runtime_profile = get_runtime_profile(selected)
 commands = build_bootstrap_commands(runtime_profile.key, root)
+reason = recommendation["reason"] if profile == "auto" else "Explicit profile selected by operator."
+generation_keep_alive_seconds = parse_generation_keep_alive_seconds(sys.argv[3])
 
 print(json.dumps({
     "selected_profile": runtime_profile.key,
     "label": runtime_profile.label,
-    "reason": recommendation["reason"],
+    "reason": reason,
     "generation_model": runtime_profile.generation_model,
+    "fast_generation_model": runtime_profile.fast_generation_model,
     "embedding_model": runtime_profile.embedding_model,
+    "num_ctx": runtime_profile.num_ctx,
+    "fast_num_ctx": runtime_profile.fast_num_ctx,
+    "max_input_chars": runtime_profile.max_input_chars,
+    "generation_keep_alive_seconds": generation_keep_alive_seconds,
+    "generation_routes": commands["generation_routes"],
     "command": commands["command"],
 }))
 PY
@@ -74,11 +85,32 @@ import shlex
 import sys
 
 payload = json.loads(sys.argv[1])
-for key in ("selected_profile", "generation_model", "embedding_model", "reason"):
+for key in (
+    "selected_profile", "generation_model", "fast_generation_model", "embedding_model",
+    "num_ctx", "fast_num_ctx", "max_input_chars", "reason",
+    "generation_keep_alive_seconds",
+):
     print(f"{key.upper()}={shlex.quote(str(payload[key]))}")
 PY
 )"
 eval "$PROFILE_VARS"
+
+: "${GENERATION_MODEL:?runtime profile did not provide generation_model}"
+: "${FAST_GENERATION_MODEL:?runtime profile did not provide fast_generation_model}"
+: "${EMBEDDING_MODEL:?runtime profile did not provide embedding_model}"
+: "${NUM_CTX:?runtime profile did not provide num_ctx}"
+: "${FAST_NUM_CTX:?runtime profile did not provide fast_num_ctx}"
+: "${MAX_INPUT_CHARS:?runtime profile did not provide max_input_chars}"
+
+if [[ "$PLAN_ONLY" == "1" ]]; then
+  printf '%s\n' "$PROFILE_JSON"
+  exit 0
+fi
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  echo "This bootstrapper currently supports macOS only." >&2
+  exit 1
+fi
 
 if [[ "$SKIP_OLLAMA_INSTALL" != "1" ]] && ! command -v ollama >/dev/null 2>&1; then
   if command -v brew >/dev/null 2>&1; then
@@ -100,36 +132,118 @@ fi
 if ! pgrep -x "ollama" >/dev/null 2>&1; then
   echo "Starting Ollama service..."
   nohup ollama serve >/tmp/selectpilot-ollama.log 2>&1 &
-  sleep 3
 fi
 
-if pgrep -x "ollama" >/dev/null 2>&1; then
-  STATUS_OLLAMA_RUNNING="ok"
-else
+for _attempt in $(seq 1 15); do
+  if curl -sSf "http://127.0.0.1:11434/api/tags" >/dev/null 2>&1; then
+    STATUS_OLLAMA_RUNNING="ok"
+    break
+  fi
+  sleep 1
+done
+
+if [[ "$STATUS_OLLAMA_RUNNING" != "ok" ]]; then
   STATUS_OLLAMA_RUNNING="failed"
-  echo "Ollama service did not start as expected." >&2
+  echo "Ollama API did not become reachable within 15 seconds." >&2
   exit 1
 fi
 
 if [[ "$SKIP_MODEL_PULL" != "1" ]]; then
-  echo "Pulling generation model: $GEN_MODEL"
-  ollama pull "$GEN_MODEL"
-  echo "Pulling embedding model: $EMBED_MODEL"
-  ollama pull "$EMBED_MODEL"
+  GENERATION_MODELS=("$FAST_GENERATION_MODEL")
+  if [[ "$GENERATION_MODEL" != "$FAST_GENERATION_MODEL" ]]; then
+    GENERATION_MODELS+=("$GENERATION_MODEL")
+  fi
+  for model in "${GENERATION_MODELS[@]}"; do
+    echo "Pulling generation model: $model"
+    ollama pull "$model"
+  done
+  echo "Pulling embedding model: $EMBEDDING_MODEL"
+  ollama pull "$EMBEDDING_MODEL"
   STATUS_MODEL_PULL="ok"
 else
   STATUS_MODEL_PULL="skipped"
 fi
 
-CHROMEAI_OLLAMA_MODEL="$GEN_MODEL" \
-CHROMEAI_OLLAMA_EMBED_MODEL="$EMBED_MODEL" \
+echo "Preparing local model bundle"
+python3 - "$GENERATION_MODEL" "$NUM_CTX" "$FAST_GENERATION_MODEL" "$FAST_NUM_CTX" "$GENERATION_KEEP_ALIVE_SECONDS" <<'PY'
+import json
+import sys
+from urllib.request import Request, urlopen
+
+routes = [(sys.argv[1], int(sys.argv[2])), (sys.argv[3], int(sys.argv[4]))]
+keep_alive_seconds = int(sys.argv[5])
+seen = set()
+for model, num_ctx in reversed(routes):
+    if model in seen:
+        continue
+    seen.add(model)
+    request = Request(
+        "http://127.0.0.1:11434/api/generate",
+        data=json.dumps({
+            "model": model,
+            "prompt": "Return only: ready",
+            "stream": False,
+            "keep_alive": keep_alive_seconds,
+            "options": {
+                "temperature": 0,
+                "seed": 42,
+                "num_ctx": num_ctx,
+                "num_predict": 8,
+            },
+        }).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urlopen(request, timeout=600) as response:
+        result = json.load(response)
+    if result.get("done") is not True:
+        raise SystemExit("Generation model did not finish preparing.")
+PY
+STATUS_MODEL_WARMUP="ok"
+
+CHROMEAI_OLLAMA_MODEL="$GENERATION_MODEL" \
+CHROMEAI_OLLAMA_FAST_MODEL="$FAST_GENERATION_MODEL" \
+CHROMEAI_OLLAMA_EMBED_MODEL="$EMBEDDING_MODEL" \
+CHROMEAI_OLLAMA_NUM_CTX="$NUM_CTX" \
+CHROMEAI_OLLAMA_FAST_NUM_CTX="$FAST_NUM_CTX" \
+CHROMEAI_MAX_INPUT_CHARS="$MAX_INPUT_CHARS" \
+CHROMEAI_OLLAMA_SEED=42 \
+CHROMEAI_OLLAMA_KEEP_ALIVE_SECONDS="$GENERATION_KEEP_ALIVE_SECONDS" \
 "$ROOT/scripts/install-macos-local.sh"
 STATUS_LAUNCHAGENT="ok"
 
-if curl -sSf "$BRIDGE_HEALTH_URL" >/dev/null; then
+HEALTH_JSON=""
+for _attempt in $(seq 1 15); do
+  HEALTH_JSON="$(curl -sSf "$BRIDGE_HEALTH_URL" 2>/dev/null || true)"
+  if [[ -n "$HEALTH_JSON" ]]; then
+    break
+  fi
+  sleep 1
+done
+if python3 - "$HEALTH_JSON" <<'PY'
+import json
+import sys
+
+try:
+    payload = json.loads(sys.argv[1])
+except (IndexError, json.JSONDecodeError):
+    raise SystemExit(1)
+
+ollama = payload.get("ollama") or {}
+raise SystemExit(0 if (
+    payload.get("ok") is True
+    and ollama.get("reachable") is True
+    and ollama.get("model_available") is True
+    and ollama.get("embed_model_available") is True
+) else 1)
+PY
+then
   STATUS_BRIDGE_HEALTH="ok"
 else
   STATUS_BRIDGE_HEALTH="failed"
+  echo "Local bridge is reachable but the exact configured runtime contract is not healthy." >&2
+  echo "$HEALTH_JSON" >&2
+  exit 1
 fi
 
 cat <<EOF
@@ -138,8 +252,10 @@ SelectPilot bootstrap complete.
 
 Profile: $SELECTED_PROFILE
 Reason: $REASON
-Generation model: $GEN_MODEL
-Embedding model: $EMBED_MODEL
+Generation model: $GENERATION_MODEL
+Structured model: $FAST_GENERATION_MODEL
+Embedding model: $EMBEDDING_MODEL
+Context window: $NUM_CTX
 
 Next recommended command:
   pnpm benchmark:local
@@ -147,6 +263,7 @@ Next recommended command:
 Bootstrap report:
   Ollama install:  $STATUS_OLLAMA_INSTALL
   Ollama running:  $STATUS_OLLAMA_RUNNING
+  Model prepared:  $STATUS_MODEL_WARMUP
   Model pull:      $STATUS_MODEL_PULL
   LaunchAgent:     $STATUS_LAUNCHAGENT
   Bridge health:   $STATUS_BRIDGE_HEALTH

@@ -1,5 +1,8 @@
 {
-  "generated_at": "2026-03-26T18:08:26.167Z",
+  "evidence_class": "deterministic_simulation",
+  "runtime_verified": false,
+  "promotion_eligible": false,
+  "generated_at": "2026-08-25T17:30:23.118Z",
   "scenario_matrix": {
     "dimensions": [
       "task_fixture",

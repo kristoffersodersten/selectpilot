@@ -1,29 +1,32 @@
 {
+  "evidence_class": "deterministic_simulation",
+  "runtime_verified": false,
+  "promotion_eligible": false,
   "totals": {
-    "execution_matrix_rows": 448,
-    "runs": 4480,
+    "execution_matrix_rows": 224,
+    "runs": 2240,
     "runs_per_matrix_row": 10
   },
   "latency": {
-    "p50_latency_ms": 951,
-    "p95_latency_ms": 3014,
-    "p99_latency_ms": 4000
+    "p50_latency_ms": 679,
+    "p95_latency_ms": 1505,
+    "p99_latency_ms": 1872
   },
   "correctness": {
-    "task_success_rate": 0.9314,
-    "schema_validity_rate": 0.9688,
+    "task_success_rate": 0.9396,
+    "schema_validity_rate": 0.9709,
     "retry_rate": 0.0593,
     "fallback_rate": 0.0157
   },
   "stability": {
-    "failure_rate": 0.0568,
-    "validation_failure_rate": 0.0387,
-    "quarantine_trigger_rate": 0.0245,
-    "oscillation_rate": 0.0399
+    "failure_rate": 0.0493,
+    "validation_failure_rate": 0.0334,
+    "quarantine_trigger_rate": 0.0236,
+    "oscillation_rate": 0.0401
   },
   "meta_metrics": {
-    "determinism_score": 0.9803,
-    "variance_across_runs": 0.0199,
-    "confidence_interval": 0.94
+    "determinism_score": 0.9804,
+    "variance_across_runs": 0.02,
+    "confidence_interval": 0.9402
   }
 }

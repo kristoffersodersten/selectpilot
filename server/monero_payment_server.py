@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# module_name: server_monero_payment_server_py
+# spec_ref: "validation_layer"
 """
 Minimal Monero -> entitlement bridge for local-first billing MVP.
 
@@ -19,18 +21,26 @@ import time
 from pathlib import Path
 from threading import Lock, Thread
 
-import requests
 from flask import Flask, jsonify, request
+from billing_security import (
+    admin_secret_matches,
+    call_wallet_rpc,
+    new_order_id,
+    save_private_json,
+    validated_wallet_rpc_url,
+)
+from entitlement_signer import EntitlementSigner, SigningError
 
 app = Flask(__name__)
 
 # ---- CONFIG ----
-RPC_URL = os.environ.get("CHROMEAI_MONERO_RPC_URL", "http://127.0.0.1:18083/json_rpc")
+RPC_URL = validated_wallet_rpc_url(os.environ.get("CHROMEAI_MONERO_RPC_URL", "http://127.0.0.1:18083/json_rpc"))
 DB_FILE = Path(os.environ.get("CHROMEAI_MONERO_DB_FILE", "monero-billing-db.json"))
-ADMIN_SECRET = os.environ.get("CHROMEAI_ADMIN_SECRET", "CHANGE_ME")
+ADMIN_SECRET = os.environ.get("CHROMEAI_ADMIN_SECRET", "")
 CONFIRMATIONS_REQUIRED = int(os.environ.get("CHROMEAI_MONERO_CONFIRMATIONS", "10"))
 POLL_INTERVAL_SECONDS = int(os.environ.get("CHROMEAI_MONERO_POLL_SECONDS", "20"))
 ORDER_EXPIRY_MS = int(os.environ.get("CHROMEAI_MONERO_ORDER_EXPIRY_MS", str(30 * 60 * 1000)))
+ENTITLEMENT_SIGNER = EntitlementSigner.from_environment()
 
 db_lock = Lock()
 
@@ -47,28 +57,12 @@ def load_db():
 
 
 def save_db(db):
-    tmp = DB_FILE.with_suffix(".tmp")
-    tmp.write_text(json.dumps(db, indent=2), encoding="utf-8")
-    tmp.replace(DB_FILE)
+    save_private_json(DB_FILE, db)
 
 
 # ---- RPC ----
 def rpc(method, params=None):
-    r = requests.post(
-        RPC_URL,
-        json={
-            "jsonrpc": "2.0",
-            "id": "0",
-            "method": method,
-            "params": params or {},
-        },
-        timeout=10,
-    )
-    r.raise_for_status()
-    payload = r.json()
-    if "error" in payload:
-        raise RuntimeError(f"Monero RPC error: {payload['error']}")
-    return payload["result"]
+    return call_wallet_rpc(RPC_URL, method, params)
 
 
 def xmr_to_atomic(xmr_amount: float) -> int:
@@ -95,7 +89,7 @@ def create_order():
     if tier not in {"essential", "plus", "pro"}:
         return jsonify({"error": "invalid_tier"}), 400
 
-    order_id = body.get("order_id") or ("SP-" + secrets.token_hex(4))
+    order_id = body.get("order_id") or new_order_id()
 
     res = rpc(
         "create_address",
@@ -234,19 +228,26 @@ def verify_license():
     if not record or record.get("revoked"):
         return jsonify({"error": "invalid"}), 401
 
-    return jsonify(
-        {
-            "tier": record["tier"],
-            "issuedAt": record["issuedAt"],
-            "expiresAt": record.get("expiresAt"),
-        }
-    )
+    entitlement = {
+        "token": token,
+        "tier": record["tier"],
+        "features": record.get("features") or [],
+        "issuedAt": record["issuedAt"],
+        "expiresAt": record.get("expiresAt"),
+    }
+    try:
+        return jsonify(ENTITLEMENT_SIGNER.sign(entitlement))
+    except SigningError as exc:
+        app.logger.error("Entitlement signing unavailable: %s", exc)
+        return jsonify({"error": "entitlement_signing_unavailable"}), 503
 
 
 # ---- ADMIN REVOKE ----
 @app.post("/admin/revoke")
 def revoke():
-    if request.headers.get("x-admin-secret") != ADMIN_SECRET:
+    if not ADMIN_SECRET:
+        return jsonify({"error": "admin_revoke_not_configured"}), 503
+    if not admin_secret_matches(ADMIN_SECRET, request.headers.get("x-admin-secret")):
         return jsonify({"error": "forbidden"}), 403
 
     body = request.get_json(silent=True) or {}

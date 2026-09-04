@@ -35,21 +35,22 @@ SelectPilot is built to keep the core workflow local-first and inspectable.
 - Generates canonical metadata (source, intent, timestamps)
 - Exports to adapter targets (e.g. Obsidian/Notion package formats)
 - Uses profile-based local runtime selection (Fast / Balanced / Advanced)
+- Uses editable, closed-schema extraction presets from `presets/extraction-presets.json`
 
 ---
 
 ## Quick Start
 
-1. Install Ollama
-2. Bootstrap local runtime + extension build:
+1. From the repository folder, run the one-command setup:
 
 ```bash
 pnpm setup:local
-pnpm build
 ```
 
-3. Load unpacked extension in `chrome://extensions`
-4. Select text → open side panel → click **Extract JSON**
+This installs dependencies, builds the extension, installs/starts Ollama when needed, selects the smallest qualified local profile by default, prepares the exact local model bundle, installs the LaunchAgent, and refuses to finish unless the bridge and configured models are healthy. Heavier profiles remain available only through explicit manual selection. Extraction and summaries use the smallest qualified local model; agent tasks use the selected profile's qualified general model. Structured generation uses a fixed zero-temperature sampling contract and seed so repeated requests follow the same decision path.
+
+2. Open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select this repository folder.
+3. Highlight text on a page → open SelectPilot → click **Extract JSON**.
 
 Optional local checks:
 
@@ -57,6 +58,18 @@ Optional local checks:
 curl http://127.0.0.1:8083/health
 pnpm test:privacy
 ```
+
+If setup stops, no fallback was applied. Copy/paste these diagnostics:
+
+```bash
+tail -n 80 ~/Library/Logs/SelectPilot/nano.err
+tail -n 80 ~/Library/Logs/SelectPilot/nano.log
+curl -sSf http://127.0.0.1:8083/health
+```
+
+Browser requests to the bridge are accepted only from a Chrome extension origin. Release operators should set `SELECTPILOT_EXTENSION_ORIGIN=chrome-extension://<store-extension-id>` to pin the exact installed identity; ordinary local command-line health checks omit `Origin` and remain available.
+
+The macOS installers bind the LaunchAgent to a deterministic `CHROMEAI_RUNTIME_HASH` covering the active bridge modules, extraction preset, model policy, runtime registry, and promotion audit. Any installed-file drift stops startup with `runtime_integrity_check_failed`; reinstall the exact authorized candidate instead of editing the installed runtime in place.
 
 ---
 
@@ -73,6 +86,8 @@ Ollama (local models)
 - All core inference runs locally
 - No external inference endpoints on core path
 - Privacy boundary is observable and testable
+
+Runtime authority and candidate-lane promotion rules are defined in [`docs/AI_RUNTIME_LANE_MATRIX.md`](docs/AI_RUNTIME_LANE_MATRIX.md).
 
 ---
 
@@ -102,20 +117,21 @@ Your hardware and selected profile determine latency/quality.
 
 ## Tiers
 
-### Core (Essential)
-- Structured extraction
-- Canonical metadata
-- Manual export/copy
+The repository configuration is authoritative for price and entitlement mapping:
 
-### Connect (Plus)
-- One-click connector exports
-- Target-specific format adapters
-- No persistent memory layer
+| Tier | Price | Product boundary |
+| --- | ---: | --- |
+| Essential | $1.99 | Local structured extraction, canonical metadata and manual copy/export |
+| Plus | $5.99 | Essential plus stateless summaries, batch clipping and connector-format exports |
+| Pro | $14.99 | Plus plus advanced local reasoning and an explicit opt-in local knowledge layer |
 
-### Knowledge (Deep)
-- Explicit opt-in local memory layer
-- Local embeddings/retrieval capabilities
-- Inspect / export / delete retained knowledge
+Essential and Plus do not retain a knowledge history. Pro stateful features must remain local, visible and user-controlled: retained data can be inspected, exported and deleted. A feature is available only when the signed entitlement and `pricing/tier-feature-map.json` both permit it; there is no silent downgrade or fallback.
+
+Displayed prices live in `pricing/pricing-global.json`. The extension opens SelectPilot's HTTPS pricing page; Paddle and its deployment-injected price IDs run only on that public site. Store packaging excludes checkout code and product identifiers from the extension runtime.
+
+### Team / self-hosted
+
+Team/self-hosted mode is planned, not shipped. Its admission contract requires an operator-owned Ollama endpoint, zero-access encrypted synchronization where synchronization is enabled, explicit tenant and retention controls, auditable entitlement administration, and the same no-cloud-fallback rule as the individual product. Until those paths pass real deployment, privacy, failure/recovery and multi-user isolation tests, SelectPilot makes no Team or self-hosted availability claim.
 
 ---
 
@@ -126,6 +142,7 @@ Your hardware and selected profile determine latency/quality.
 - `server/` — local Python bridge and runtime endpoints
 - `api/` — extension-to-local-bridge client layer
 - `tests/` — E2E + privacy/no-leakage tests
+- `presets/` — canonical editable extraction preset registry ([format](docs/extraction-presets.md))
 
 ---
 
@@ -147,7 +164,7 @@ Your hardware and selected profile determine latency/quality.
 
 Active development.
 Core local pipeline is functional and test-backed.
-Current focus: stability, deterministic structure, and trust consistency.
+Current focus: protected-main admission and physical Apple-hardware runtime verification. Team/self-hosted mode remains planned.
 
 ---
 
@@ -189,3 +206,20 @@ Current CI enforces:
 - typecheck (`pnpm typecheck`)
 - build (`pnpm build`)
 - baseline tests (`pnpm test`)
+- Chrome Web Store asset dimensions (`pnpm validate:store`)
+
+## Chrome Web Store Release
+
+Store listing copy, privacy language, and the release checklist live in:
+
+- [`docs/CHROME_WEB_STORE_SUBMISSION.md`](docs/CHROME_WEB_STORE_SUBMISSION.md)
+- [`docs/CHROME_WEB_STORE_RELEASE_CHECKLIST.md`](docs/CHROME_WEB_STORE_RELEASE_CHECKLIST.md)
+- [`docs/PRIVACY_POLICY.md`](docs/PRIVACY_POLICY.md)
+
+`pnpm package:store` builds and audits the upload ZIP. The repository keyring is deliberately unprovisioned; an authorized release must supply `SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_JSON`, which is validated and injected only into the isolated staging tree. The evidence report records the public key IDs and keyring digest. Missing identity, unsigned access, or remotely executed commercial logic blocks packaging.
+
+## Compute Distribution
+
+This project follows the Mac Mini / Hetzner split documented in `docs/compute-distribution.md`.
+Use VS Code Remote SSH for normal implementation and use GitHub Actions or Hetzner output as proof for heavy gates.
+See `docs/operator-tooling.md` and `docs/remote-workspace.md` for the operator contract and remote workspace proof rules.

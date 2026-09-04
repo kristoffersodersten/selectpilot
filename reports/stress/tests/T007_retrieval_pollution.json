@@ -69,24 +69,24 @@
     }
   },
   "runtime_selection": {
-    "selected_model_id": "qwen2.5:0.5b",
+    "selected_model_id": "gemma4:e4b-it-qat",
     "selection_path": "runtime_policy_preferred",
-    "selection_reason": "higher_correctness_same_or_lower_cost",
-    "policy_version": "runtime-policy-d7833f631d57",
-    "promotion_applied": true
+    "selection_reason": "baseline_registry_no_runtime_promotion",
+    "policy_version": "runtime-policy-8226a11e6ae3",
+    "promotion_applied": false
   },
-  "active_model": "qwen2.5:0.5b",
+  "active_model": "gemma4:e4b-it-qat",
   "external_calls": 0,
   "observed_behavior": {
     "runtime_selection": {
-      "selected_model_id": "qwen2.5:0.5b",
+      "selected_model_id": "gemma4:e4b-it-qat",
       "selection_path": "runtime_policy_preferred",
-      "selection_reason": "higher_correctness_same_or_lower_cost",
-      "policy_version": "runtime-policy-d7833f631d57",
-      "promotion_applied": true
+      "selection_reason": "baseline_registry_no_runtime_promotion",
+      "policy_version": "runtime-policy-8226a11e6ae3",
+      "promotion_applied": false
     },
-    "pipeline_trace_a": "sp_99f5e1f5d17a8dc2",
-    "pipeline_trace_b": "sp_99f5e1f5d17a8dc2",
+    "pipeline_trace_a": "sp_25cb6e9a24d96a7a",
+    "pipeline_trace_b": "sp_25cb6e9a24d96a7a",
     "deterministic_repeat_stable": true,
     "state_reset_checks": {
       "ephemeral_state_cleared": true,
@@ -163,7 +163,7 @@
         }
       },
       "runtime_selection": "runtime_policy_preferred",
-      "active_model": "qwen2.5:0.5b",
+      "active_model": "gemma4:e4b-it-qat",
       "memory_reads": [
         "runtime/model_policy.json",
         "runtime/model_registry.runtime.json"
@@ -233,7 +233,7 @@
     "memory_integrity": "warning",
     "contract_obedience": "pass",
     "ambiguity_handling": "warning",
-    "resource_efficiency": "warning",
+    "resource_efficiency": "fail",
     "privacy_boundary_integrity": "pass",
     "runtime_adaptivity": "warning",
     "recovery_capacity": "warning",
@@ -245,7 +245,7 @@
     "memory_integrity": 0.92,
     "contract_obedience": 0.98,
     "ambiguity_handling": 0.9,
-    "resource_efficiency": 0.9,
+    "resource_efficiency": 0.75,
     "privacy_boundary_integrity": 1,
     "runtime_adaptivity": 0.84,
     "recovery_capacity": 0.82,

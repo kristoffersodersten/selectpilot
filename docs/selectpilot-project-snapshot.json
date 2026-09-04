@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "project_key": "/home/krille/workspaces/selectpilot",
+  "repository": "kristoffersodersten/selectpilot",
+  "captured_at": "2026-08-18T18:45:00Z",
+  "delivery": {
+    "branch": "codex/ci-foundation-repair",
+    "head_sha": "bfab0eb3bff7fd4f1104cca93052e19ba73c3ab9",
+    "protected_base": "main",
+    "base_sha": "bc2f70bb71b51fbe1e94a4dbe74e427e27e35095",
+    "pull_request": 22,
+    "auto_merge": true,
+    "independent_approval_observed": false
+  },
+  "linear": {
+    "project": "SelectPilot — Lokal modell & runtime-stack",
+    "project_id": "ff713009-3fb7-4334-915d-12a1f732b543",
+    "active_issue": "SOD-617",
+    "active_issue_state": "In Review",
+    "active_issue_labels": ["Externally Blocked"]
+  },
+  "governance": {
+    "axiom_policy_result": "AXIOM_LIFECYCLE_POLICY_VERIFIED",
+    "axiom_policy_version": "1.0.0",
+    "axiom_policy_sha256": "932bbb231cb5e1aeb35d6bbe6327db6f3b1b3cf1e125e38366cbccbbc59434cf",
+    "axiom_public_key_sha256": "179b5520ccd5f32f04f0fc09df59a619975a2f1c93b24674883b07fa0ce301b8",
+    "novaforge_source_sha": "757e8e3151a96e88ff67b0aba78c6f785181ae90",
+    "operator_verification": "NOVAFORGE_OPERATOR_VERIFIED",
+    "remote_compute_audit": "PASS"
+  },
+  "fresh_baseline": {
+    "lint": "PASS",
+    "manifest_lint": "PASS",
+    "typecheck": "PASS",
+    "build": "PASS",
+    "unit_and_server_tests": "PASS: 5 panel, 25 server",
+    "e2e": "FAIL: 2 ECONNREFUSED, 4 pass, 1 skip",
+    "diff_check": "FAIL: server/runtime_profiles.py blank line at EOF"
+  },
+  "next_action": "Repair deterministic Playwright bridge lifecycle and required unpacked-extension proof, then rerun the complete remote baseline.",
+  "completion_state": "NOT_COMPLETE"
+}

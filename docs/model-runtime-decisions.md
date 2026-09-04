@@ -1,0 +1,28 @@
+# Model runtime decisions
+
+## Current production defaults
+
+- Fast / automatic default: `gemma4:e2b-it-qat`, `num_ctx=16384`.
+- Balanced / manual opt-in: `gemma4:e4b-it-qat`, `num_ctx=32768`.
+- Advanced: manual opt-in only, `qwen2.5:7b`, `num_ctx=32768`.
+- Embeddings: `nomic-embed-text-v2-moe:latest`.
+- Structured generation: `temperature=0` and `seed=42` for every production profile.
+
+Structured extraction and summaries use `gemma4:e2b-it-qat`, the smallest model qualified on the physical M1 acceptance machine. The Balanced profile keeps `gemma4:e4b-it-qat` for the more open-ended agent route. Every route declares its exact model and context window in bridge health; a missing routed model stops that operation rather than substituting another model.
+
+Selections above 16,000 characters are rejected before inference with a clear, local error. This keeps waiting time predictable and prevents hidden truncation.
+
+Explicit environment overrides remain authoritative and must fail visibly when invalid or unavailable. SelectPilot never substitutes a different installed model, downloads a model without consent, or routes generation to a cloud model.
+
+Installation prewarms the selected generation model with the same context window, deterministic sampling options, and keep-alive contract used at runtime. Generation requests set `keep_alive=-1` so Ollama keeps the smallest qualified model resident after idle instead of reloading it inside the interactive request timeout. The explicit `CHROMEAI_OLLAMA_KEEP_ALIVE_SECONDS` override accepts `-1` or a non-negative integer number of seconds and fails closed on invalid values. A failed prewarm is an explicit installation failure; SelectPilot does not report the runtime as ready and does not silently choose another model. `CHROMEAI_OLLAMA_SEED` may override the seed for controlled verification, but invalid or negative values fail closed.
+
+## Deferred decisions
+
+- Keep `nomic-embed-text-v2-moe:latest` until measured retrieval quality makes embeddings a product bottleneck (SOD-397/SOD-401).
+- Do not promote a larger Gemma 4 model for 32 GB machines until real M1 Max evidence qualifies its latency, memory use, structured-output validity, and failure behavior (SOD-398).
+- Do not adopt Qwen3 4B for long context without actual usage evidence that 32K is insufficient (SOD-399).
+- Do not replace Ollama with MLX/LM Studio without target-hardware measurements showing a material full-system advantage (SOD-400).
+
+## Evidence boundary
+
+Hetzner and GitHub Actions verify deterministic contracts, build integrity, privacy boundaries, and browser/server E2E behavior. They do not qualify Apple Silicon latency or memory claims. Target-hardware promotion remains blocked until evidence is captured on the named machine class under the repository benchmark contract.

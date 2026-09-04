@@ -1,3 +1,5 @@
+// module_name: panel_layout_topologyMap_ts
+// spec_ref: "frontend_state_contract"
 import type { InformationTopology } from '../../shared/types/uiTopology.js';
 
 export const TOPOLOGY_MAP: Record<string, InformationTopology> = {
@@ -33,11 +35,13 @@ const REQUIRED_COMPONENTS = [
   'status_footer',
 ];
 
+// @spec_ref frontend_state_contract
 export function getTopologyForComponent(componentId: string): InformationTopology | null {
   const topology = TOPOLOGY_MAP[componentId];
   return topology || null;
 }
 
+// @spec_ref frontend_state_contract
 export function validateTopologyMap(map: Record<string, string> = TOPOLOGY_MAP): { ok: boolean; errors: string[] } {
   const errors: string[] = [];
 

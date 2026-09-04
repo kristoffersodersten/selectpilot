@@ -154,10 +154,8 @@
   },
   "model_matrix": {
     "candidates": [
-      "qwen2:0.5b",
-      "qwen2:1.5b",
-      "qwen2:7b",
-      "qwen2:14b"
+      "gemma4:e2b-it-qat",
+      "gemma4:e4b-it-qat"
     ],
     "states": [
       "cold",

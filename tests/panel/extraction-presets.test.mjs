@@ -1,3 +1,5 @@
+// module_name: panel_unit_tests
+// spec_ref: "testing_strategy.unit_tests"
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -11,8 +13,6 @@ test('exposes the execution-layer extraction presets', () => {
   );
 });
 
-test('falls back to action brief for unknown presets', () => {
-  const preset = getExtractionPreset('unknown');
-  assert.equal(preset.key, 'action_brief');
-  assert.equal(preset.label, 'Action Brief');
+test('rejects unknown presets without fallback', () => {
+  assert.throws(() => getExtractionPreset('unknown'), /Unknown extraction preset/);
 });

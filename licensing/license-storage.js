@@ -1,3 +1,5 @@
+// module_name: licensing_license-storage_ts
+// spec_ref: "validation_layer"
 import { getDecrypted, setEncrypted } from '../utils/storage.js';
 const LICENSE_KEY = 'chromeai_license_token';
 const LICENSE_META = 'chromeai_license_metadata';

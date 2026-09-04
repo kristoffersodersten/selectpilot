@@ -1,3 +1,5 @@
+// module_name: task_analyzer
+// spec_ref: "task_analysis_layer"
 import type { CompiledIntent, OperationFamily } from '../../shared/types/intent.js';
 import type { OutputMode } from '../../shared/types/runtimePolicy.js';
 
@@ -44,6 +46,7 @@ function inferPrecisionRequirement(compiledIntent: CompiledIntent): TaskAnalysis
   return 'medium';
 }
 
+// @spec_ref task_analysis_layer
 export function analyzeTask(compiledIntent: CompiledIntent): TaskAnalysis {
   const runtimeEnv = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process;
   const hardwareProfile = String(runtimeEnv?.env?.CHROMEAI_HARDWARE_PROFILE || 'medium').trim() || 'medium';
@@ -57,3 +60,5 @@ export function analyzeTask(compiledIntent: CompiledIntent): TaskAnalysis {
     precision_requirement: inferPrecisionRequirement(compiledIntent),
   };
 }
+// module_name: task_analyzer
+// spec_ref: "task_analysis_layer"

@@ -11,6 +11,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  python-runtime-compat:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Use Python 3.9
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.9"
+
+      - name: Install local billing runtime dependencies
+        run: python -m pip install --requirement requirements-billing.txt
+
+      - name: Smoke macOS system-Python bridge import
+        run: python server/nano_server.py --help
+
+      - name: Test server on Python 3.9
+        run: python -m unittest discover -s tests/server -p 'test_*.py'
+
   validate:
     runs-on: ubuntu-latest
     permissions:
@@ -21,33 +43,42 @@ jobs:
         node-version: [20.x, 22.x]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+
+      - name: Use pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.33.0
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
-      - name: Use pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.33.0
-
       - name: Use Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install local billing runtime dependencies
+        run: python -m pip install --requirement requirements-billing.txt
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Lint
         run: pnpm lint
 
       - name: Lint manifest
         run: pnpm lint:manifest
+
+      - name: Lint shell contracts
+        run: shellcheck scripts/*.sh
 
       - name: Sync manifest version
         run: pnpm sync:manifest-version
@@ -58,5 +89,66 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Verify committed JavaScript matches TypeScript sources
+        run: git diff --exit-code -- '*.js'
+
+      - name: Validate Chrome Web Store assets
+        run: pnpm validate:store
+
+      - name: Verify Store packaging fails closed without production identity
+        env:
+          SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_JSON: ""
+        run: |
+          if node scripts/package-chrome-store.mjs >store-package.log 2>&1; then
+            echo "Store packaging unexpectedly succeeded without an authorized public identity." >&2
+            exit 1
+          fi
+          grep -q "SELECTPILOT_ENTITLEMENT_PUBLIC_KEYS_JSON is required" store-package.log
+          test ! -d dist/chrome-web-store
+
+      - name: Smoke direct server entrypoint
+        run: python3 server/nano_server.py --help
+
       - name: Test
         run: pnpm test
+
+      - name: Verify local billing runtime
+        run: pnpm test:billing
+
+      - name: Verify privacy boundary
+        run: pnpm test:privacy
+
+      - name: Verify unpacked extension E2E
+        run: pnpm test:e2e
+
+      - name: Compile fail-closed benchmark evidence
+        run: pnpm bench:frontier
+
+      - name: Compile runtime policy
+        run: pnpm runtime:compile-policy
+
+      - name: Validate runtime policy
+        run: pnpm runtime:validate-policy
+
+      - name: Verify deterministic stress contracts
+        run: node scripts/stress-runner.mjs
+
+      - name: Verify exact-SHA code admission evidence
+        run: pnpm verify:admission
+        env:
+          SELECTPILOT_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          SELECTPILOT_WORKFLOW_SHA: ${{ github.sha }}
+          SELECTPILOT_REF: ${{ github.ref }}
+
+      - name: Upload exact-SHA code admission evidence
+        if: matrix.node-version == '22.x'
+        uses: actions/upload-artifact@v7
+        with:
+          name: selectpilot-code-admission-${{ github.sha }}
+          path: reports/code_admission_evidence.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Build entitlement authority image
+        if: matrix.node-version == '22.x'
+        run: docker build -f services/entitlement-authority/Dockerfile -t selectpilot-entitlement:${{ github.sha }} .

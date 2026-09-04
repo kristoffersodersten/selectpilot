@@ -1,3 +1,5 @@
+// module_name: server_model_runtimeRollback_ts
+// spec_ref: "validation_layer"
 import fs from 'node:fs';
 import path from 'node:path';
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
@@ -29,6 +31,7 @@ function appendFeedback(record) {
     fs.mkdirSync(path.dirname(liveFeedbackPath), { recursive: true });
     fs.appendFileSync(liveFeedbackPath, `${JSON.stringify(record)}\n`, 'utf8');
 }
+// @spec_ref validation_layer
 export function performRuntimeRollback(reason = 'manual_runtime_rollback') {
     const policy = readJson(policyPath);
     if (!policy) {

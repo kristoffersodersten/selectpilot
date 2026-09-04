@@ -1,0 +1,88 @@
+#!/bin/sh
+set -eu
+
+CONSOLE_USER="$(stat -f '%Su' /dev/console)"
+if [ -z "$CONSOLE_USER" ] || [ "$CONSOLE_USER" = "root" ]; then
+  echo "A logged-in macOS user is required." >&2
+  exit 1
+fi
+
+USER_HOME="$(dscl . -read "/Users/$CONSOLE_USER" NFSHomeDirectory | awk '{print $2}')"
+USER_ID="$(id -u "$CONSOLE_USER")"
+SOURCE_ROOT="/Library/Application Support/SelectPilot"
+RUN_DIR="$USER_HOME/Library/Application Support/SelectPilot/run"
+STATE_DIR="$USER_HOME/Library/Application Support/SelectPilot/state"
+LOG_DIR="$USER_HOME/Library/Logs/SelectPilot"
+AGENT_DIR="$USER_HOME/Library/LaunchAgents"
+AGENT_PATH="$AGENT_DIR/com.selectpilot.bridge.plist"
+PYTHON_BIN=""
+for candidate in /opt/homebrew/bin/python3 /usr/local/bin/python3 /Library/Frameworks/Python.framework/Versions/Current/bin/python3 /usr/bin/python3; do
+  if [ -x "$candidate" ] && "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 1)'; then
+    PYTHON_BIN="$candidate"
+    break
+  fi
+done
+if [ -z "$PYTHON_BIN" ]; then
+  echo "SelectPilot requires Python 3.9 or newer." >&2
+  exit 1
+fi
+HASH="$(shasum -a 256 "$SOURCE_ROOT/server/nano_server.py" | awk '{print $1}')"
+CHROMEAI_RUNTIME_HASH="$(PYTHONPATH="$SOURCE_ROOT/server" "$PYTHON_BIN" - "$SOURCE_ROOT" <<'PY'
+import sys
+from pathlib import Path
+
+from nano_server import runtime_integrity_digest
+
+print(runtime_integrity_digest(Path(sys.argv[1])))
+PY
+)"
+
+PROFILE_VALUES="$(sudo -u "$CONSOLE_USER" "$PYTHON_BIN" - "$SOURCE_ROOT/server" <<'PY'
+import sys
+sys.path.insert(0, sys.argv[1])
+from runtime_profiles import get_runtime_profile, recommend_runtime_profile
+profile = get_runtime_profile(recommend_runtime_profile()["recommended_profile"])
+print("|".join(str(value) for value in (
+    profile.key,
+    profile.generation_model,
+    profile.fast_generation_model,
+    profile.embedding_model,
+    profile.num_ctx,
+    profile.fast_num_ctx,
+    profile.max_input_chars,
+)))
+PY
+)"
+IFS='|' read -r RUNTIME_PROFILE OLLAMA_MODEL OLLAMA_FAST_MODEL OLLAMA_EMBED_MODEL OLLAMA_NUM_CTX OLLAMA_FAST_NUM_CTX MAX_INPUT_CHARS <<EOF
+$PROFILE_VALUES
+EOF
+
+install -d -m 700 -o "$CONSOLE_USER" "$RUN_DIR" "$STATE_DIR" "$LOG_DIR" "$AGENT_DIR"
+sed \
+  -e "s|__PYTHON_BIN__|$PYTHON_BIN|g" \
+  -e "s|__PROJECT_ROOT__|$SOURCE_ROOT|g" \
+  -e "s|__RUN_DIR__|$RUN_DIR|g" \
+  -e "s|__STATE_DIR__|$STATE_DIR|g" \
+  -e "s|__LOG_DIR__|$LOG_DIR|g" \
+  -e "s|__BINARY_HASH__|$HASH|g" \
+  -e "s|__RUNTIME_HASH__|$CHROMEAI_RUNTIME_HASH|g" \
+  -e "s|__OLLAMA_BASE_URL__|http://127.0.0.1:11434|g" \
+  -e "s|__RUNTIME_PROFILE__|$RUNTIME_PROFILE|g" \
+  -e "s|__OLLAMA_MODEL__|$OLLAMA_MODEL|g" \
+  -e "s|__OLLAMA_FAST_MODEL__|$OLLAMA_FAST_MODEL|g" \
+  -e "s|__OLLAMA_EMBED_MODEL__|$OLLAMA_EMBED_MODEL|g" \
+  -e "s|__OLLAMA_NUM_CTX__|$OLLAMA_NUM_CTX|g" \
+  -e "s|__OLLAMA_FAST_NUM_CTX__|$OLLAMA_FAST_NUM_CTX|g" \
+  -e "s|__MAX_INPUT_CHARS__|$MAX_INPUT_CHARS|g" \
+  -e "s|__OLLAMA_SEED__|42|g" \
+  -e "s|__OLLAMA_KEEP_ALIVE_SECONDS__|-1|g" \
+  -e "s|__ENTITLEMENT_AUTHORITY_URL__|https://license.selectpilot.app|g" \
+  "$SOURCE_ROOT/launchd/com.selectpilot.bridge.plist.template" > "$AGENT_PATH"
+chown "$CONSOLE_USER" "$AGENT_PATH"
+chmod 600 "$AGENT_PATH"
+
+launchctl bootout "gui/$USER_ID" "$AGENT_PATH" >/dev/null 2>&1 || true
+launchctl bootstrap "gui/$USER_ID" "$AGENT_PATH"
+launchctl enable "gui/$USER_ID/com.selectpilot.bridge"
+
+exit 0

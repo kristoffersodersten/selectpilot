@@ -1,42 +1,28 @@
 [
   {
-    "baseline_model": "qwen2:1.5b",
-    "candidate_model": "qwen2:0.5b",
-    "decision": "promote",
-    "reason": "higher_correctness_same_or_lower_cost",
-    "latency_regression_ratio": 0.7612,
-    "schema_validity_rate": 0.9717,
-    "failure_rate": 0.0493,
-    "weighted_score": 0.8854
-  },
-  {
-    "baseline_model": "qwen2:1.5b",
-    "candidate_model": "qwen2:1.5b",
+    "evidence_class": "deterministic_simulation",
+    "runtime_verified": false,
+    "promotion_eligible": false,
+    "baseline_model": "gemma4:e2b-it-qat",
+    "candidate_model": "gemma4:e2b-it-qat",
     "decision": "reject",
     "reason": "higher_failure_rate",
     "latency_regression_ratio": 1,
-    "schema_validity_rate": 0.9709,
+    "schema_validity_rate": 0.9717,
     "failure_rate": 0.0493,
-    "weighted_score": 0.857
+    "weighted_score": 0.8822
   },
   {
-    "baseline_model": "qwen2:1.5b",
-    "candidate_model": "qwen2:7b",
+    "evidence_class": "deterministic_simulation",
+    "runtime_verified": false,
+    "promotion_eligible": false,
+    "baseline_model": "gemma4:e2b-it-qat",
+    "candidate_model": "gemma4:e4b-it-qat",
     "decision": "reject",
     "reason": "increases_latency_without_gain",
-    "latency_regression_ratio": 1.9176,
-    "schema_validity_rate": 0.9678,
+    "latency_regression_ratio": 1.6184,
+    "schema_validity_rate": 0.9701,
     "failure_rate": 0.0493,
-    "weighted_score": 0.7605
-  },
-  {
-    "baseline_model": "qwen2:1.5b",
-    "candidate_model": "qwen2:14b",
-    "decision": "reject",
-    "reason": "increases_latency_without_gain",
-    "latency_regression_ratio": 2.8,
-    "schema_validity_rate": 0.9648,
-    "failure_rate": 0.0793,
-    "weighted_score": 0.6719
+    "weighted_score": 0.8334
   }
 ]

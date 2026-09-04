@@ -33,6 +33,10 @@ Use this exact sequence when time is short. It maps directly to product value:
    - Explain that the app chooses the smallest viable model for the workload, not the largest available one
 
 3. Open the extension on a real page.
+   - On a fresh unlocked install, run `Try local example` once without selecting page text
+   - Show the real local Readable and Structured result, then the Markdown and JSON exports
+   - Reload once to show that the first-run prompt stays resolved
+   - Continue with the ordinary selected-text path
    - Highlight a paragraph
    - Open the side panel
    - Click `Extract JSON`

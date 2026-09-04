@@ -1,12 +1,7 @@
+// module_name: agent_agent-pipeline_ts
+// spec_ref: "execution_layer"
 import { runAgent } from './agent-client.js';
 import type { AgentContext, AgentOutput } from './agent-types.js';
-
-function detectInput(context: AgentContext): { kind: 'text' | 'audio' | 'video' | 'image'; summary: string } {
-  if (context.media?.videoFrame) return { kind: 'video', summary: 'video frame with OCR candidate' };
-  if (context.media?.image) return { kind: 'image', summary: 'image with OCR candidate' };
-  if (context.media?.audio) return { kind: 'audio', summary: 'audio snippet for transcription' };
-  return { kind: 'text', summary: 'text or markdown selection' };
-}
 
 function classifyContent(markdown: string): string {
   if (/```/m.test(markdown)) return 'technical_markdown';
@@ -43,24 +38,23 @@ function buildPrompt(
 }
 
 export async function runPipeline(input: string, context: AgentContext, userPrompt?: string): Promise<AgentOutput> {
-  const detected = detectInput(context);
-  const normalized = normalizeMarkdown(input || context.selection || context.pageText || context.markdown || '') || 'No content provided.';
+  const normalized = normalizeMarkdown(input || context.selection || context.markdown || '') || 'No content provided.';
   const contentClass = classifyContent(normalized);
   const chain = buildReasoningChain([
-    `Detect input (${detected.summary})`,
+    'Confirm selected text input',
     `Classify content (${contentClass})`,
     'Normalize to canonical markdown',
-    'Augment with metadata and optional multimodal references',
+    'Augment with declared page metadata',
     'Request structured response (JSON + Markdown) from local agent'
   ]);
 
-  const prompt = buildPrompt(normalized, context, contentClass, detected.kind, userPrompt);
+  const prompt = buildPrompt(normalized, context, contentClass, 'text', userPrompt);
   const agentOut = await runAgent(prompt, {
     ...context,
     markdown: normalized,
     metadata: {
       ...(context.metadata || {}),
-      detectedKind: detected.kind,
+      detectedKind: 'text',
       contentClass
     }
   });
@@ -68,6 +62,10 @@ export async function runPipeline(input: string, context: AgentContext, userProm
   return {
     reasoning: [...chain, ...(agentOut.reasoning || [])],
     markdown: agentOut.markdown,
-    json: agentOut.json
+    json: agentOut.json,
+    model: agentOut.model,
+    source: agentOut.source,
+    routing: agentOut.routing,
+    trace_id: agentOut.trace_id,
   };
 }

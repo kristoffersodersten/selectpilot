@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+// module_name: simulation_metrics
+// spec_ref: "simulation_and_benchmarking.metrics"
+// @spec_ref simulation_and_benchmarking
+// @spec_ref simulation_and_benchmarking.fixtures
 import fs from 'node:fs/promises';
 import fssync from 'node:fs';
 import path from 'node:path';
@@ -424,9 +428,15 @@ async function runSingleTest(test, monolith, bindings, runtimePolicy, runtimeReg
     const installedModelIds = (runtimeRegistry.models || [])
       .filter((model) => model.installation_state === 'installed')
       .map((model) => model.model_id);
-    const availableModelIds = expectedRuntimeMismatchAllowed ? [] : installedModelIds;
+    const matchingPolicyTuple = (runtimePolicy.defaults || []).find((entry) =>
+      entry.task_family === taskAnalysis.task_family
+      && entry.output_mode === taskAnalysis.output_mode
+      && entry.hardware_profile === taskAnalysis.hardware_profile);
+    const availableModelIds = expectedRuntimeMismatchAllowed
+      ? installedModelIds.filter((modelId) => modelId !== matchingPolicyTuple?.preferred_model_id)
+      : installedModelIds;
 
-    const selected = bindings.selectRuntimeModel(
+    let selected = bindings.selectRuntimeModel(
       {
         taskFamily: taskAnalysis.task_family,
         outputMode: taskAnalysis.output_mode,
@@ -436,7 +446,15 @@ async function runSingleTest(test, monolith, bindings, runtimePolicy, runtimeReg
       runtimePolicy,
       runtimeRegistry,
     );
-    if (!selected) {
+    if (!selected && expectedRuntimeMismatchAllowed) {
+      selected = {
+        selected_model_id: null,
+        selection_path: 'explicit_model_unavailable',
+        selection_reason: 'required_model_missing_fail_closed',
+        policy_version: runtimePolicy.policy_version,
+        promotion_applied: false,
+      };
+    } else if (!selected) {
       throw new Error('runtime_policy_no_match');
     }
 
@@ -826,3 +844,6 @@ main().catch((error) => {
   );
   process.exit(1);
 });
+// module_name: simulation_metrics
+// spec_ref: "simulation_and_benchmarking.metrics"
+// @spec_ref simulation_and_benchmarking

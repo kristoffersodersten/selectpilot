@@ -9,7 +9,7 @@
   <div class="panel">
     <header class="panel-header">
       <div class="identity">
-        <div class="eyebrow">Privacy-first execution layer</div>
+        <div class="eyebrow">Local text workspace</div>
         <div class="title-row">
           <div class="title">SelectPilot</div>
           <div class="tier" id="tier"></div>
@@ -18,26 +18,6 @@
       <button class="ghost-button" id="btn-refresh" type="button">Refresh</button>
     </header>
 
-    <section class="runtime-meta-overlay" id="runtime-meta-overlay" aria-live="polite">
-      <div class="runtime-meta-header">
-        <div>
-          <div class="section-kicker">Runtime meta</div>
-          <strong id="runtime-meta-status">Idle</strong>
-        </div>
-        <span class="runtime-meta-badge" id="runtime-meta-connection">Connecting…</span>
-      </div>
-      <p class="runtime-meta-copy" id="runtime-meta-summary">Waiting for deterministic local runtime events.</p>
-      <div class="runtime-meta-progress-shell" aria-hidden="true">
-        <div class="runtime-meta-progress-bar" id="runtime-meta-progress-bar"></div>
-      </div>
-      <div class="runtime-meta-grid">
-        <div><span class="section-kicker">Operation</span><strong id="runtime-meta-operation">—</strong></div>
-        <div><span class="section-kicker">Step</span><strong id="runtime-meta-step">—</strong></div>
-        <div><span class="section-kicker">Trace</span><strong id="runtime-meta-trace">—</strong></div>
-      </div>
-      <ul class="runtime-meta-events" id="runtime-meta-events"></ul>
-    </section>
-
     <section class="truth-strip" aria-label="Environment truth">
       <div class="truth-chip">
         <span class="truth-label">Execution</span>
@@ -45,7 +25,7 @@
       </div>
       <div class="truth-chip">
         <span class="truth-label">Model</span>
-        <strong id="truth-model">Checking</strong>
+        <strong id="truth-model">Detecting</strong>
       </div>
       <div class="truth-chip">
         <span class="truth-label">Boundary</span>
@@ -58,11 +38,7 @@
       </div>
       <div class="truth-chip">
         <span class="truth-label">Profile</span>
-        <strong id="truth-profile">Pending</strong>
-      </div>
-      <div class="truth-chip">
-        <span class="truth-label">Health</span>
-        <strong id="truth-latency">Measuring</strong>
+        <strong id="truth-profile">Detecting</strong>
       </div>
     </section>
 
@@ -94,19 +70,23 @@
       </div>
     </section>
 
-    <section class="memory-shell" aria-label="Billing entitlement sync">
+    <section class="memory-shell access-shell" aria-label="SelectPilot access">
       <div class="memory-header">
         <div>
-          <div class="section-kicker">Billing</div>
-          <h2>Attach paid token</h2>
+          <div class="section-kicker">Access</div>
+          <h2>Keep your flow available</h2>
         </div>
-        <button class="ghost-button" id="btn-sync-order" type="button">Sync order</button>
+        <button class="ghost-button" id="btn-start-trial" type="button">Start 7-day trial</button>
       </div>
       <section class="memory-export-config">
-        <label for="order-id">Order ID</label>
-        <input id="order-id" type="text" placeholder="SP-xxxx" />
+        <label for="license-token">License key</label>
+        <input id="license-token" type="password" autocomplete="off" spellcheck="false" placeholder="sp_live_..." />
       </section>
-      <p class="memory-copy" id="entitlement-status">No entitlement token attached yet.</p>
+      <div class="memory-actions">
+        <button id="btn-attach-license" type="button">Activate</button>
+        <button class="ghost-button" id="btn-view-plans" type="button">View plans</button>
+      </div>
+      <p class="memory-copy" id="entitlement-status">No active access yet.</p>
     </section>
 
     <section class="selection-shell" id="selection-shell">
@@ -157,16 +137,9 @@
         <textarea id="agent-prompt" rows="3">Turn the selected text into a concise, practical output.</textarea>
       </section>
 
-      <details class="advanced">
-        <summary>Advanced tools</summary>
-        <div class="advanced-grid">
-          <button id="btn-transcribe" type="button">Transcribe</button>
-          <button id="btn-vision" type="button">Vision OCR</button>
-        </div>
-      </details>
     </section>
 
-    <section class="result-shell">
+    <section class="result-shell" id="result-shell" aria-busy="false">
       <div class="result-header">
         <div>
           <div class="section-kicker">Result</div>
@@ -185,6 +158,9 @@
           <span>Highlight content, then run the primary action to generate structured output locally.</span>
         </div>
       </section>
+      <div class="processing-field" id="processing-field" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
     </section>
 
     <section class="exports" id="exports"></section>

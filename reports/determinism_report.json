@@ -1,9 +1,12 @@
 {
+  "evidence_class": "deterministic_simulation",
+  "runtime_verified": false,
+  "promotion_eligible": false,
   "target": 0.95,
-  "group_count": 448,
-  "bounded_output_variance": 0.9803,
+  "group_count": 224,
+  "bounded_output_variance": 0.9804,
   "same_model_selection": true,
   "no_random_fallbacks": true,
-  "score": 0.9803,
+  "score": 0.9804,
   "status": "pass"
 }

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# module_name: benchmark_fixtures
+# spec_ref: "simulation_and_benchmarking.fixtures"
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

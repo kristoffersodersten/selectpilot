@@ -1,4 +1,7 @@
 {
+  "evidence_class": "deterministic_simulation",
+  "runtime_verified": false,
+  "promotion_eligible": false,
   "recommendation": "keep_ts_runtime",
   "reason": "current_costs_within_thresholds",
   "thresholds": {
@@ -8,9 +11,9 @@
     "memory_management_cost_max": 15
   },
   "input": {
-    "orchestration_overhead_ratio": 0.056,
-    "validation_overhead_ratio": 0.0435,
-    "event_dispatch_cost": 8.1257,
-    "memory_management_cost": 8.8977
+    "orchestration_overhead_ratio": 0.0909,
+    "validation_overhead_ratio": 0.0592,
+    "event_dispatch_cost": 6.6657,
+    "memory_management_cost": 8.7236
   }
 }
