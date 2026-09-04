@@ -18,6 +18,11 @@ export type RuntimeProfile = {
   is_default_auto?: boolean;
 };
 
+export type BenchmarkProfileHint = {
+  auto_profile?: string | null;
+  recommended_profile?: string | null;
+};
+
 export const RUNTIME_PROFILES: RuntimeProfile[] = [
   {
     key: 'fast',
@@ -67,4 +72,13 @@ export const RUNTIME_PROFILES: RuntimeProfile[] = [
 // @spec_ref frontend_state_contract
 export function getRuntimeProfile(key: string | null | undefined): RuntimeProfile {
   return RUNTIME_PROFILES.find((profile) => profile.key === key) || RUNTIME_PROFILES[0];
+}
+
+// @spec_ref frontend_state_contract
+export function resolveRuntimeProfileKey(
+  configuredProfile: string | null | undefined,
+  backendRecommendedProfile: string | null | undefined,
+  benchmark: BenchmarkProfileHint | null | undefined,
+): RuntimeProfileKey {
+  return getRuntimeProfile(configuredProfile || benchmark?.auto_profile || backendRecommendedProfile).key;
 }

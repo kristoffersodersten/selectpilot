@@ -7,7 +7,7 @@ import { getJSON, setJSON } from '../utils/storage.js';
 import { endpoints } from '../api/endpoints.js';
 import { getRuntimeMetaHealth, getRuntimeMetaStreamUrl } from '../api/nano-client.js';
 import { EXTRACTION_PRESETS, getExtractionPreset } from './extraction-presets.js';
-import { getRuntimeProfile, RUNTIME_PROFILES } from './runtime-profiles.js';
+import { getRuntimeProfile, resolveRuntimeProfileKey, RUNTIME_PROFILES, } from './runtime-profiles.js';
 import { buildKnowledgePackage } from './knowledge-connectors.js';
 import { applyRuntimeEvent, setIntent, setSelectionContext, setVisiblePanels } from './state/runtimeStore.js';
 import { loadBottleneckReport, loadDeterminismReport, loadFrontierReport } from './state/reportStore.js';
@@ -575,7 +575,7 @@ function getEntitlementCacheState(snapshot) {
     return 'stale';
 }
 function getEffectiveRecommendedProfileKey() {
-    return benchmarkSnapshot?.recommended_profile || runtimeProfilesPayload.recommended_profile;
+    return resolveRuntimeProfileKey(privacyProofSnapshot?.runtime_profile, runtimeProfilesPayload.recommended_profile, benchmarkSnapshot);
 }
 function getEffectiveRecommendedProfile() {
     return getRuntimeProfile(getEffectiveRecommendedProfileKey());

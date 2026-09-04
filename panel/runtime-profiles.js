@@ -47,3 +47,7 @@ export const RUNTIME_PROFILES = [
 export function getRuntimeProfile(key) {
     return RUNTIME_PROFILES.find((profile) => profile.key === key) || RUNTIME_PROFILES[0];
 }
+// @spec_ref frontend_state_contract
+export function resolveRuntimeProfileKey(configuredProfile, backendRecommendedProfile, benchmark) {
+    return getRuntimeProfile(configuredProfile || benchmark?.auto_profile || backendRecommendedProfile).key;
+}
