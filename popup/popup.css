@@ -46,3 +46,7 @@ button {
   box-shadow: 0 14px 30px rgba(56, 189, 248, 0.2);
 }
 button:active { opacity: 0.9; }
+
+.popup-status {
+  color: #fca5a5;
+}

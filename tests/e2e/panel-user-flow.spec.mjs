@@ -1,6 +1,7 @@
 // module_name: tests_e2e_panel-user-flow_spec_mjs
 // spec_ref: "testing_strategy.integration_tests"
 import { test, expect } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -45,6 +46,12 @@ test('unlocked first-run uses the dedicated example route and resolves once', as
   await expect(page.locator('#workflow')).toContainText('Publishing waits for both checks');
   await expect(page.locator('#exports')).toContainText('Copy Markdown');
   await expect(page.locator('#exports')).toContainText('Copy JSON');
+  await expect(page.getByRole('button', { name: 'Download .txt' })).toBeVisible();
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download .txt' }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('selectpilot-first-result.txt');
+  expect(await readFile(await download.path(), 'utf8')).toContain('Maya: privacy check by Thursday');
   await expect(page.locator('#btn-first-run-example')).toHaveCount(0);
 
   const demoMessages = await page.evaluate(() => globalThis.__messageLog.filter((msg) => msg.type === 'panel:extract_demo'));

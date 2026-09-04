@@ -836,6 +836,14 @@ function renderExports({
       setStatus('Markdown downloaded');
     });
     actions.append(downloadMarkdown);
+
+    const downloadPlainText = document.createElement('button');
+    downloadPlainText.textContent = 'Download .txt';
+    downloadPlainText.addEventListener('click', () => {
+      triggerDownload(markdown, `${basename}.txt`, 'text/plain;charset=utf-8');
+      setStatus('Plain text downloaded');
+    });
+    actions.append(downloadPlainText);
   }
 
   if (json && Object.keys(json).length > 0) {
@@ -1591,7 +1599,7 @@ populatePresetOptions();
 bindActions();
 
 async function initialize() {
-  const storedSettings = await chrome.storage.sync.get('selectpilot_settings');
+  const storedSettings = await chrome.storage.local.get('selectpilot_settings');
   const settings = (storedSettings.selectpilot_settings || {}) as Record<string, unknown>;
   const textSize = typeof settings.textSize === 'string' ? settings.textSize : 'standard';
   document.body.dataset.controlSide = settings.controlSide === 'left' ? 'left' : 'right';
